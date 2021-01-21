@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
 import requests, time
+import httpx
 
 class API(object):
     _msgSeq = 0
     
     def __init__(self):
         self.req = requests.session()
+        self.req_h2 = httpx.Client(http2=True)
         self.headers = {
             "x-line-application": self.APP_NAME,
             "x-lhm": "POST",
             "x-le": "18",
             "x-lcs": self._encryptKey,
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lst": "300000000",
             "x-lal": "zh_TW",
         }
         self.authToken = None
+        self.revision = 0
         self.globalRev = 0
         self.individualRev = 0
 
-    def requestSQR(self):
+    def requestSQR(self, isSelf=True):
         _headers = {
             "x-lpqs": "/acct/lgn/sq/v1"
         }
@@ -41,7 +44,11 @@ class API(object):
             print(f"請輸入pincode: {c}")
             if self.checkPinCodeVerified(sqr):
                 e = self.qrCodeLogin(sqr)
-                self.authToken = e.decode()
+                if isSelf:
+                    self.authToken = e.decode()
+                    print(f"AuthToken: {self.authToken}")
+                else:
+                    return e.decode()
                 return self.authToken
         return False
         
@@ -269,8 +276,6 @@ class API(object):
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
         
     def unsendMessage(self, messageId):
         _headers = {
@@ -593,17 +598,14 @@ class API(object):
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 102, 105, 110, 100, 67, 104, 97, 116, 66, 121, 84, 105, 99, 107, 101, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
-        ticketId = str(ticketId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(ticketId))
-        for value in ticketId:
-            sqrd.append(ord(value))
+        sqrd += [11, 0, 1] + self.getStringBytes(ticketId)
         sqrd += [0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['findChatByTicket']
         
     def acceptChatInvitationByTicket(self, to, ticket):
         _headers = {
@@ -611,7 +613,7 @@ class API(object):
             'x-lpqs': "/S3"
         }
         a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 97, 99, 99, 101, 112, 116, 67, 104, 97, 116, 73, 110, 118, 105, 116, 97, 116, 105, 111, 110, 0, 0, 0, 0]
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 28, 97, 99, 99, 101, 112, 116, 67, 104, 97, 116, 73, 110, 118, 105, 116, 97, 116, 105, 111, 110, 66, 121, 84, 105, 99, 107, 101, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [11, 0, 2, 0, 0, 0, len(to)]
@@ -657,7 +659,7 @@ class API(object):
         data = self.decData(res.content)
         return self.tryReadData(data)
         
-    def sendMessage(self, to, text, contentType=0, contentMetadata={}, raw=False):
+    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, raw=False):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/S3"
@@ -683,26 +685,28 @@ class API(object):
         _toType = (toType).to_bytes(4, byteorder="big")
         for value in _toType:
             sqrd.append(value)
-        sqrd += [11, 0, 4, 0, 0, 0, 0] # 14629119
+        sqrd += [11, 0, 4, 0, 0, 0, 0]
         sqrd += [10, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0] # createTime
-        text = str(text).encode()
-        sqrd += [11, 0, 10] + self.getIntBytes(len(text))
-        for value2 in text:
-            sqrd.append(value2)
+        if text is not None:
+            text = str(text).encode()
+            sqrd += [11, 0, 10] + self.getIntBytes(len(text))
+            for value2 in text:
+                sqrd.append(value2)
         sqrd += [2, 0, 14, 0] # hasContent
         sqrd += [8, 0, 15] + self.getIntBytes(contentType)
         # [12, 0, 11] location
-        if contentMetadata and type(contentMetadata) == "dict":
-            _keys = contentMetadata.keys().copy()
-            sqrd += [13, 0, 12, 11, 11] + self.getIntBytes(len(_keys))# key and val must str
+        if contentMetadata and type(contentMetadata) == dict:
+            _keys = contentMetadata.copy().keys()
+            sqrd += [13, 0, 18, 11, 11] + self.getIntBytes(len(_keys))# key and val must str
             for _k in _keys:
                 _v = contentMetadata[_k]
                 sqrd += self.getStringBytes(_k)
                 sqrd += self.getStringBytes(_v)
         # [15, 0, 20] chunks
-        # [11, 0, 21] relatedMessageId
-        # [8, 0, 22] messageRelationType
-        # [8, 0, 24] relatedMessageServiceCode
+        if relatedMessageId is not None:
+            sqrd += [11, 0, 21] + self.getStringBytes(relatedMessageId)
+            sqrd += [8, 0, 22] + self.getIntBytes(3)
+            sqrd += [8, 0, 24] + self.getIntBytes(1)
         # [8, 0, 25] appExtensionType
         sqrd += [0, 0]
         sqr_rd = a + sqrd
@@ -713,6 +717,9 @@ class API(object):
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
+        
+    def sendContact(self, to, mid):
+        return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
         
     def getGroupIdsJoined(self):
         _headers = {
@@ -834,7 +841,7 @@ class API(object):
         data = self.decData(res.content)
         return self.tryReadData(data)
         
-    def getPreviousMessagesV2WithRequest(self, messageBoxId, endMessageId=0, messagesCount=0, withReadCount=0, receivedOnly=False):
+    def getPreviousMessagesV2WithRequest(self, messageBoxId, endMessageId=0, messagesCount=200, withReadCount=0, receivedOnly=False):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/S3"
@@ -846,9 +853,9 @@ class API(object):
         for value in messageBoxId:
             sqrd.append(ord(value))
         sqrd += [12, 0, 2]
-        sqrd += [10, 0, 1] + self.getIntBytes(int(time.time()*1000), 8)
+        sqrd += [10, 0, 1] + self.getIntBytes(1611064540822, 8)
         sqrd += [10, 0, 2] + self.getIntBytes(int(endMessageId), 8) + [0]
-        sqrd += [8, 0, 3, 0, 0, 0, 200]
+        sqrd += [8, 0, 3] +  self.getIntBytes(messagesCount)
         sqrd += [2, 0, 4, 1]
         sqrd += [2, 0, 5, 0]
         sqrd += [0]
@@ -1116,9 +1123,9 @@ class API(object):
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['acquireCallRoute']
         
-    def acquireGroupCallRoute(self, chatMid, mediaType, isInitialHost=None, capabilities=None):
+    def acquireGroupCallRoute(self, chatMid, mediaType=0, isInitialHost=None, capabilities=None):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/V3"
@@ -1137,7 +1144,7 @@ class API(object):
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['acquireGroupCallRoute']
         
     def acquireOACallRoute(self, searchId, fromEnvInfo=None, otp=None):
         _headers = {
@@ -1174,10 +1181,9 @@ class API(object):
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['acquireTestCallRoute']
         
     def inviteIntoGroupCall(self, chatMid, memberMids, mediaType=0):
-        """ DIED FUNC """
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/V3"
@@ -1269,7 +1275,7 @@ class API(object):
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['getConfigurations']
         
     def fetchOps(self, revision, count=500):
         _headers = {
@@ -1286,7 +1292,8 @@ class API(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        res = self.req.post("https://gfp.line.naver.jp/enc", data=data, headers=self.headers)
+        data_len = int(res.headers['content-length'])
         data = self.decData(res.content)
         data = self.tryReadData(data)
         if 'fetchOps' in data:
@@ -1320,7 +1327,7 @@ class API(object):
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['fetchOps']
+        return self.tryReadData(data)['fetchOperations']
         
     def openSession(self, udid, deviceModel):
         _headers = {
@@ -1393,6 +1400,120 @@ class API(object):
         data = self.decData(res.content)
         return self.tryReadData(data)
         
+    def inviteIntoSquareChat(self, inviteeMids, squareChatMid):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 105, 110, 118, 105, 116, 101, 73, 110, 116, 111, 83, 113, 117, 97, 114, 101, 67, 104, 97, 116, 0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [15, 0, 1, 11, 0, 0, 0, len(inviteeMids)]
+        for mid in inviteeMids:
+            sqrd += [0, 0, 0, len(mid)]
+            for value in mid:
+                sqrd.append(ord(value))
+        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        print(data)
+        return self.tryReadData(data)
+        
+    def inviteToSquare(self, squareMid, invitees, squareChatMid):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes("inviteToSquare") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [11, 0, 2] + self.getStringBytes(squareMid)
+        sqrd += [15, 0, 3, 11, 0, 0, 0, len(invitees)]
+        for mid in invitees:
+            sqrd += [0, 0, 0, len(mid)]
+            for value in mid:
+                sqrd.append(ord(value))
+        sqrd += [11, 0, 4] + self.getStringBytes(squareChatMid)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)
+        
+    def getJoinedSquares(self, continuationToken=None, limit=50):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 74, 111, 105, 110, 101, 100, 83, 113, 117, 97, 114, 101, 115, 0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        #sqrd += [11, 0, 2] + self.getStringBytes(continuationToken)
+        sqrd += [8, 0, 3] + self.getIntBytes(limit)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/SQS1", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)
+        
+    def inviteFriends(self, friendMids, message, messageMetadata={}, imageObsPath="/r/myhome/c/0f3a02b6f993d3b627eeca97d2095b9b"):
+        """ old ? """
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/PY3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 105, 110, 118, 105, 116, 101, 70, 114, 105, 101, 110, 100, 115, 0, 0, 0, 0]
+        sqrd += [15, 0, 1, 11, 0, 0, 0, len(friendMids)]
+        for mid in friendMids:
+            sqrd += [0, 0, 0, len(mid)]
+            for value in mid:
+                sqrd.append(ord(value))
+        sqrd += [11, 0, 2] + self.getStringBytes(message)
+        _keys = messageMetadata.copy().keys()
+        sqrd += [13, 0, 3, 11, 11] + self.getIntBytes(len(_keys))# key and val must str
+        for _k in _keys:
+            _v = messageMetadata[_k]
+            sqrd += self.getStringBytes(_k)
+            sqrd += self.getStringBytes(_v)
+        sqrd += [11, 0, 4] + self.getStringBytes(imageObsPath)
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        #data = self.decData(res.content)
+        return self.tryReadData(data)
+        
+    def inviteFriendsBySms(self, phoneNumberList):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 105, 110, 118, 105, 116, 101, 70, 114, 105, 101, 110, 100, 115, 0, 0, 0, 0]
+        sqrd += [15, 0, 2, 11, 0, 0, 0, len(phoneNumberList)]
+        for mid in phoneNumberList:
+            sqrd += [0, 0, 0, len(mid)]
+            for value in mid:
+                sqrd.append(ord(value))
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        print(data)
+        return self.tryReadData(data)
+        
     def testFunc(self, path, funcName, funcValue=None, funcValueId=1):
         _headers = {
             'X-Line-Access': self.authToken, 
@@ -1454,7 +1575,7 @@ class API(object):
         self.tryReadTCompactData(data)
         return data
     
-    def testTMore(self):
+    def testTMoreCompact(self):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/P5"

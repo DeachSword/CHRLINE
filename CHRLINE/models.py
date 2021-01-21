@@ -5,6 +5,7 @@ from base64 import b64encode, b64decode
 from Crypto.Util.Padding import pad, unpad
 from hashlib import md5, sha1
 import xxhash
+from datetime import datetime
 
 class Models(object):
 
@@ -16,6 +17,9 @@ class Models(object):
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
+        
+    def log(self, text):
+        print("[{}] {}".format(str(datetime.now()), text))
 
     def encHeaders(self, headers):
         t = headers.keys()
@@ -119,11 +123,15 @@ class Models(object):
             res.append(value)
         return res
         
-    def getStringBytes(self, text):
+    def getStringBytes(self, text, isCompact=False):
         text = str(text).encode()
-        sqrd = self.getIntBytes(len(text))
+        if isCompact:
+            sqrd = [len(text)]
+        else:
+            sqrd = self.getIntBytes(len(text))
         for value in text:
-            sqrd.append(value2)
+            sqrd.append(value)
+        return sqrd
         
     def tryReadData(self, data):
         _data = {}
@@ -146,21 +154,8 @@ class Models(object):
                 elif c == 13:
                     _data[b] = self.readContainerStruct(data[a + 4:])
                 elif c == 15:
-                    type = data[a + 7]
-                    d = data[a + 11]
-                    _data[b] = []
-                    e = a + 15
-                    for _d in range(d):
-                        if type == 11:
-                            f = data[e]
-                            _data[b].append(data[e+1:e+1+f].decode())
-                            e += f + 4
-                        elif type == 12:
-                            f = self.readContainerStruct(data[a + 12:], True)
-                            _data[b].append(f[0])
-                            a += f[1] + 1
-                        else:
-                            print(f"[tryReadData_LIST(15)]不支援Type: {type}")
+                    _data[b] = self.readContainerStruct(data[a + 4:], stopWithFirst=True)[0]
+                   
                 else:
                     print(f"[tryReadData]不支援Type: {c} => ID: {id}")
             else:
@@ -174,13 +169,23 @@ class Models(object):
                         'code': int.from_bytes(code, "big"),
                         'message': data[a + 21:a + 21 + t_l].decode()
                     }
+                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE"]:
+                        raise Exception(f"LOGIN OUT: {error['message']}")
                 _data[b] = {
                     "error": error
                 }
                 print(_data)
+        else:
+            if data[6:24] == b"x-line-next-access":
+                a = data[25]
+                print(f"AuthToken len: {a}")
+                b = data[26:26 + a]
+                print(f"Next-AuthToken: {b.decode()}")
+                
+                
         return _data
         
-    def readContainerStruct(self, data, get_data_len=False):
+    def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
         _data = {}
         nextPos = 0
         dataType = data[0]
@@ -190,7 +195,7 @@ class Models(object):
             if a == 1:
                 _data[id] = True
             else:
-                 _data[id] = False
+                _data[id] = False
             nextPos = 4
         elif data[0] == 3:
             a = int.from_bytes(data[3:4], "big")
@@ -219,7 +224,7 @@ class Models(object):
         elif data[0] == 12:
             if data[3] == 0:
                 _data[id] = {}
-                nextPos = 5
+                nextPos = 4
             else:
                 a = self.readContainerStruct(data[3:], True)
                 _data[id] = a[0]
@@ -247,7 +252,12 @@ class Models(object):
                         g = int.from_bytes(data[f + 1:f + 5], "big") # value len
                         _key = data[c + 1:f + 1].decode()
                         h = f + g + 5
-                        if a == 12:
+                        if a == 10:
+                            __value = int.from_bytes(data[f+1:f+9], "big")
+                            _value = __value
+                            h = f + 9
+                            c = h + 3
+                        elif a == 12:
                             __value = self.readContainerStruct(data[f+1:], True)
                             _value = __value[0]
                             h = f + __value[1]
@@ -263,7 +273,7 @@ class Models(object):
                     _d[_key] = _value
                 _data[id] = _d
                 nextPos = c
-                if a == 11:
+                if a in [10, 11]:
                     nextPos -= 3
             else:
                 nextPos = 9
@@ -287,10 +297,11 @@ class Models(object):
                         e += f[1] + 1
                 else:
                     print(f"[readContainerStruct_LIST(15)]不支援Type: {type}")
-            if d > 0:
-                nextPos += e + 1
-            else:
-                nextPos = 8
+            if not stopWithFirst:
+                if d > 0:
+                    nextPos += e + 1
+                else:
+                    nextPos = 8
         elif data[0] != 0:
             print(f"[readContainerStruct]不支援Type: {data[0]} => ID: {id}")
         if nextPos > 0:

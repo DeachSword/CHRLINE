@@ -7,7 +7,7 @@
 Welcome join our [Discord](https://discord.gg/vQrMbjA)
 
 ## About Project
-This project is for debug only, because it does not use thrift \
+This project is for debug only, because it does not use thrift
 
 So I don’t recommend you to use this to run the bot, even if it has many functions
 
@@ -49,7 +49,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - getGroupsV2
     - getCompactGroup
     - getChats
-    - sendMessage (text only)
+    - sendMessage
+        - sendContact
     - getGroupIdsJoined
     - getGroupIdsInvited
     - getAllContactIds
@@ -89,9 +90,15 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - acquireGroupCallRoute
     - acquireOACallRoute
     - acquireTestCallRoute
-    - inviteIntoGroupCall (DIED)
+    - inviteIntoGroupCall
     - issueRequestTokenWithAuthScheme
     - fetchOperations
     - openSession
     - connectEapAccount
     - verifyEapLogin
+    - inviteIntoSquareChat
+    - inviteToSquare
+    - getJoinedSquares
+    - inviteFriends (old?)
+    - inviteFriendsBySms (old?)
+
