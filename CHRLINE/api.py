@@ -659,7 +659,7 @@ class API(object):
         data = self.decData(res.content)
         return self.tryReadData(data)
         
-    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, raw=False):
+    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, location=None, raw=False):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/S3"
@@ -694,7 +694,13 @@ class API(object):
                 sqrd.append(value2)
         sqrd += [2, 0, 14, 0] # hasContent
         sqrd += [8, 0, 15] + self.getIntBytes(contentType)
-        # [12, 0, 11] location
+        if location  and type(location) == dict:
+            sqrd += [12, 0, 11]
+            sqrd += [11, 0, 2] + self.getStringBytes(location.get(2, ''))
+            sqrd += [4, 0, 3] + self.getFloatBytes(location.get(3, 0))
+            sqrd += [4, 0, 4] + self.getStringBytes(location.get(4, 0))
+            sqrd += [11, 0, 6] + self.getStringBytes(location.get(6, ''))
+            sqrd += [0]
         if contentMetadata and type(contentMetadata) == dict:
             _keys = contentMetadata.copy().keys()
             sqrd += [13, 0, 18, 11, 11] + self.getIntBytes(len(_keys))# key and val must str
@@ -720,6 +726,11 @@ class API(object):
         
     def sendContact(self, to, mid):
         return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
+        
+    def sendLocation(self, to, title, la, lb, subTile=''):
+        data = {2: title, 3: la, 4: lb, 6: subTile}
+        #return self.sendMessage(to, "test", location=data)
+        return self.sendMessage(to, None, contentType=13, location=data)
         
     def getGroupIdsJoined(self):
         _headers = {

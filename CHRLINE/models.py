@@ -6,6 +6,7 @@ from Crypto.Util.Padding import pad, unpad
 from hashlib import md5, sha1
 import xxhash
 from datetime import datetime
+import struct
 
 class Models(object):
 
@@ -133,6 +134,12 @@ class Models(object):
             sqrd.append(value)
         return sqrd
         
+    def getFloatBytes(self, val):
+        res = []
+        for value in struct.pack('!d', val):
+            res.append(value)
+        return res
+        
     def tryReadData(self, data):
         _data = {}
         if data[4] == 128:
@@ -201,6 +208,11 @@ class Models(object):
             a = int.from_bytes(data[3:4], "big")
             _data[id] = a
             nextPos = 4
+        elif data[0] == 4:
+            a = data[3:11]
+            a = struct.unpack('!d', a)[0]
+            _data[id] = a
+            nextPos = 11
         elif data[0] == 8:
             a = int.from_bytes(data[3:7], "big")
             _data[id] = a

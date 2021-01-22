@@ -51,6 +51,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - getChats
     - sendMessage
         - sendContact
+        - sendLocation
     - getGroupIdsJoined
     - getGroupIdsInvited
     - getAllContactIds
