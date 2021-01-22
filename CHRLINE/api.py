@@ -433,14 +433,14 @@ class API(object):
         data = self.decData(res.content)
         return self.tryReadData(data)
         
-    def getChats(self, mids):
+    def getChats(self, mids, withMembers=True, withInvitees=True):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/S3"
         }
         a = self.encHeaders(_headers)
-        
-        
+        if type(mids) is not list:
+            raise Exception("[getChats] mids must be a list")
         sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 103, 101, 116, 67, 104, 97, 116, 115, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [15, 0, 1, 11, 0, 0, 0, len(mids)]
@@ -448,14 +448,15 @@ class API(object):
             sqrd += [0, 0, 0, 33]
             for value in mid:
                 sqrd.append(ord(value))
+        sqrd += [2, 0, 2, int(withMembers)]
+        sqrd += [2, 0, 3, int(withMembers)]
         sqrd += [0, 0]
-        
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['getChats']
         
     def getCompactGroup(self, mid):
         _headers = {
@@ -1524,6 +1525,55 @@ class API(object):
         data = self.decData(res.content)
         print(data)
         return self.tryReadData(data)
+        
+    def issueLiffView(self, chatMid, liffId="1562242036-RW04okm", lang='zh_TW', deviceSetting=None):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/LIFF1"
+        }
+        a = self.encHeaders(_headers)
+        b = self.TCompactProtocol()
+        sqrd = [130, 33, 00] + self.getStringBytes('issueLiffView', isCompact=True)
+        sqrd += b.getFieldHeader(12, 1)
+        c = self.TCompactProtocol()
+        sqrd += c.getFieldHeader(8, 1)
+        sqrd += self.getStringBytes(liffId, isCompact=True)
+        sqrd += c.getFieldHeader(12, 2)
+        d = self.TCompactProtocol()
+        if chatMid[0] not in ['u', 'c', 'r']:
+            sqrd += d.getFieldHeader(12, 3)
+        else:
+            sqrd += d.getFieldHeader(12, 2)
+        e = self.TCompactProtocol()
+        sqrd += e.getFieldHeader(8, 1)
+        sqrd += self.getStringBytes(chatMid, isCompact=True)
+        sqrd += [0, 0, 0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        return self.tryReadTCompactData(data)['issueLiffView']
+        
+    def getLiffViewWithoutUserContext(self, liffId="1562242036-RW04okm"):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/LIFF1"
+        }
+        a = self.encHeaders(_headers)
+        b = self.TCompactProtocol()
+        sqrd = [130, 33, 00] + self.getStringBytes('getLiffViewWithoutUserContext', isCompact=True)
+        sqrd += b.getFieldHeader(12, 1)
+        c = self.TCompactProtocol()
+        sqrd += c.getFieldHeader(8, 1)
+        sqrd += self.getStringBytes(liffId, isCompact=True)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.headers)
+        data = self.decData(res.content)
+        return self.tryReadTCompactData(data)['getLiffViewWithoutUserContext']
         
     def testFunc(self, path, funcName, funcValue=None, funcValueId=1):
         _headers = {

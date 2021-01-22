@@ -188,8 +188,6 @@ class Models(object):
                 print(f"AuthToken len: {a}")
                 b = data[26:26 + a]
                 print(f"Next-AuthToken: {b.decode()}")
-                
-                
         return _data
         
     def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
@@ -334,34 +332,50 @@ class Models(object):
             a = 8 + data[7]
             b = data[8:a].decode()
             _data[b] = {}
-            c = data[a]
-            id = data[a + 1]
-            d = 0 # def id
-            print(f'Func Name: {b}')
-            print(f'Recv Id  : {id}')
-            print(f'Recv Type: {c}')
-            if c == 12:
-                _data[b] = self.tryReadTCompactContainerStruct(data[a + 2:], d)
-        print(_data)
+            _dec = self.TCompactProtocol()
+            (fname, ftype, fid, offset) = _dec.readFieldBegin(data[a:])
+            offset += a + 1
+            if ftype == 12:
+                _data[b] = self.tryReadTCompactContainerStruct(data[a:])[0]
+        return _data
         
     def tryReadTCompactContainerStruct(self, data, id=0, get_data_len=False):
         _data = {}
-        _a = data[0:1].hex()
-        print(f'{_a}')
-        id, dataType = int(_a[0], 16) + id, int(_a[1], 16)
+        _dec = self.TCompactProtocol()
+        (fname, ftype, fid, offset) = _dec.readFieldBegin(data)
         nextPos = 0
-        print(f'Decode Type: {id}/{dataType}')
-        if dataType == 8:
-            nextPos = data[1] + 2
-            _data[id] = data[2:nextPos].decode()
+        fid += id
+        if ftype == 8:
+            (_data[fid], nextPos) = _dec.readBinary(data[offset:])
+        elif ftype == 2:
+            _data[fid] = _dec.readBool()
+            nextPos = 1
+        elif ftype == 5:
+            (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
+            nextPos += 1
+        elif ftype == 9:
+            (vtype, vsize) = _dec.readCollectionBegin(data[offset:])
+            offset += 1
+            _data[fid] = []
+            _nextPos = 0
+            for i in range(vsize):
+                if vtype == 8:
+                    (__data, _nextPos) = _dec.readBinary(data[offset:])
+                    _data[fid].append(__data)
+                    offset += _nextPos - 1
+            nextPos += offset
+        elif ftype == 12:
+            (__data, nextPos) = self.tryReadTCompactContainerStruct(data[offset:], get_data_len=True)
+            nextPos += 2
+            _data[fid] = __data
+        elif ftype != 0:
+            print(f"[readContainerStruct]不支援Type: {ftype} => ID: {fid}")
         if nextPos > 0:
             data = data[nextPos:]
-            c = self.tryReadTCompactContainerStruct(data, id=id, get_data_len=True)
+            c = self.tryReadTCompactContainerStruct(data, id=fid, get_data_len=True)
             if c[0]:
                 _data.update(c[0])
                 nextPos += c[1]
-                if c[2] != 0:
-                    dataType = c[2]
         if get_data_len:
-            return [_data, nextPos, dataType]
+            return [_data, nextPos]
         return _data

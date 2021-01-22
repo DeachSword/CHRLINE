@@ -35,6 +35,11 @@ print('/S5 - len: %s' % len(cl.testTMoreCompact()))
 This shows that TMoreCompact has the best compression\
 If you want to write TMoreCompact, only need to sniff results and reverse engineer
 
+####  Requirement
+- Python 3
+    - pycrypto
+    - xxhash
+    - httpx[http2]
 
 ## Function overview
 - SQR 

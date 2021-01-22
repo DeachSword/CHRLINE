@@ -3,6 +3,7 @@ from .config import Config
 from .api import API
 from .thrift import Thrift
 from .poll import Poll
+from os import system
 
 class CHRLINE(Models, API, Thrift, Config, Poll):
 
@@ -24,6 +25,6 @@ class CHRLINE(Models, API, Thrift, Config, Poll):
         if 'error' in self.profile:
             raise Exception(f"登入失敗... {self.profile['error']}")
         print(f"[{self.profile[20]}] 登入成功 ({self.profile[1]})")
-        self.headers_h2['X-Line-Access'] = self.authToken
+        system(f"title CHRLINE - {self.profile[20]}")
         self.revision = self.getLastOpRevision()
         Poll.__init__(self)
