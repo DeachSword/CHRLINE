@@ -7,6 +7,9 @@ from hashlib import md5, sha1
 import xxhash
 from datetime import datetime
 import struct
+import time
+import json
+import os
 
 class Models(object):
 
@@ -21,6 +24,60 @@ class Models(object):
         
     def log(self, text):
         print("[{}] {}".format(str(datetime.now()), text))
+        
+    def genOBSParams(self, newList, returnAs='json', ext='jpg'):
+        oldList = {'name': f'CHRLINE-{int(time.time())}.{ext}','ver': '1.0'}
+        if returnAs not in ['json','b64','default']:
+            raise Exception('Invalid parameter returnAs')
+        oldList.update(newList)
+        if 'range' in oldList:
+            new_range = 'bytes 0-%s\/%s' % ( str(oldList['range']-1), str(oldList['range']) )
+            oldList.update({'range': new_range})
+        if returnAs == 'json':
+            oldList = json.dumps(oldList)
+            return oldList
+        elif returnAs == 'b64':
+            oldList = json.dumps(oldList)
+            return b64encode(oldList.encode('utf-8'))
+        elif returnAs == 'default':
+            return oldList
+        
+    def checkNextToken(self):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.tokens')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = md5(self.authToken.encode()).hexdigest()
+        if os.path.exists(savePath + f"/{fn}"):
+            self.authToken = open(savePath + f"/{fn}", "r").read()
+            print(f"New Token: {self.authToken}")
+            self.checkNextToken()
+        return self.authToken
+        
+    def handleNextToken(self, newToken):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.tokens')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = md5(self.authToken.encode()).hexdigest()
+        open(savePath + f"/{fn}", "w").write(newToken)
+        self.authToken = newToken
+        print(f"New Token: {newToken}")
+        
+    def getCustomData(self):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = md5(self.profile[1].encode()).hexdigest()
+        if os.path.exists(savePath + f"/{fn}"):
+            self.custom_data = json.loads(open(savePath + f"/{fn}", "r").read())
+        return True
+        
+    def saveCustomData(self):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = md5(self.profile[1].encode()).hexdigest()
+        open(savePath + f"/{fn}", "w").write(json.dumps(self.custom_data))
+        return True
 
     def encHeaders(self, headers):
         t = headers.keys()
@@ -160,9 +217,8 @@ class Models(object):
                     _data[b] = self.readContainerStruct(data[a + 7:])
                 elif c == 13:
                     _data[b] = self.readContainerStruct(data[a + 4:])
-                elif c == 15:
+                elif c == 14 or c == 15:
                     _data[b] = self.readContainerStruct(data[a + 4:], stopWithFirst=True)[0]
-                   
                 else:
                     print(f"[tryReadData]不支援Type: {c} => ID: {id}")
             else:
@@ -183,11 +239,13 @@ class Models(object):
                 }
                 print(_data)
         else:
+            print(data.hex())
             if data[6:24] == b"x-line-next-access":
                 a = data[25]
                 print(f"AuthToken len: {a}")
                 b = data[26:26 + a]
-                print(f"Next-AuthToken: {b.decode()}")
+                self.handleNextToken(b.decode())
+                return self.tryReadData(data[26 + a:])
         return _data
         
     def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
@@ -288,6 +346,17 @@ class Models(object):
             else:
                 nextPos = 9
                 _data[id] = {}
+        elif data[0] == 14:
+            type = data[3]
+            count = int.from_bytes(data[4:8], "big")
+            _data[id] = []
+            nextPos = 8
+            if count != 0:
+                for i in range(count):
+                    a = int.from_bytes(data[nextPos:nextPos + 4], "big")
+                    b = data[nextPos + 4:nextPos + 4 + a].decode()
+                    _data[id].append(b)
+                    nextPos += 4 + a
         elif data[0] == 15:
             type = data[3]
             d = data[7]

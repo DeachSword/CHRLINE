@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, sys, threading, time
+import os, sys, threading, time, traceback
 
 class Poll(object):
     opFuncs = {}
@@ -11,9 +11,9 @@ class Poll(object):
     
     def __execute(self, op, func):
         try:
-            func(op)
+            func(op, self)
         except Exception as e:
-            self.log(e)
+            self.log(traceback.format_exc())
 
     def addOpFunc(self, opType, func):
         self.opFuncs[opType] = func
@@ -28,7 +28,10 @@ class Poll(object):
                 raise Exception(ops['error'])
             for op in ops:
                 if op[3] != 0:
-                    _td = threading.Thread(target=self.__execute, args=(op, func))
-                    _td.daemon = False
-                    _td.start()
                     self.setRevision(op[1])
+                    if isThreading:
+                        _td = threading.Thread(target=self.__execute, args=(op, func))
+                        _td.daemon = True
+                        _td.start()
+                    else:
+                        self.__execute(op, func)
