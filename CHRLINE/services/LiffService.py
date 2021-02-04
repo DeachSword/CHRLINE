@@ -70,6 +70,6 @@ class LiffService(object):
             messages = {"messages":messages}
         else:
             messages = {"messages":[messages]}
-        resp = requests.post("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
+        resp = self.req.post("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
         return resp.text
         
