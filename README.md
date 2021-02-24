@@ -116,6 +116,9 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getJoinedSquares
         - markAsRead
         - reactToMessage
+        - findSquareByInvitationTicket
+        - fetchMyEvents
+        - sendSquareMessage (text only)
     - ObsService
         - forwardObjectMsg
         - trainingImage

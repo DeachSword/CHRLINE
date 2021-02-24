@@ -111,14 +111,78 @@ class SquareService(object):
         }
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes("reactToMessage") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
         sqrd += [8, 0, 1] + self.getIntBytes(0) # reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
         sqrd += [11, 0, 3] + self.getStringBytes(messageId)
         sqrd += [8, 0, 4] + self.getIntBytes(reactionType)
-        sqrd += [0]
+        sqrd += [0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['reactToMessage']
+        
+    def findSquareByInvitationTicket(self, invitationTicket):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes("findSquareByInvitationTicket") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [11, 0, 2] + self.getStringBytes(invitationTicket)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['findSquareByInvitationTicket']
+        
+    def fetchMyEvents(self, subscriptionId=0, syncToken='', continuationToken=None, limit=50):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes("fetchMyEvents") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [10, 0, 1] + self.getIntBytes(subscriptionId, 8)
+        sqrd += [11, 0, 2] + self.getStringBytes(syncToken)
+        sqrd += [8, 0, 3] + self.getIntBytes(limit)
+        sqrd += [11, 0, 4] + self.getStringBytes(continuationToken)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['fetchMyEvents']
+        
+    def sendSquareMessage(self, squareChatMid, text):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQS1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes("sendMessage") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [8, 0, 1] + self.getIntBytes(0) # reqSeq
+        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
+        sqrd += [12, 0, 3]
+        sqrd += [12, 0, 1]
+        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
+        sqrd += [11, 0, 10] + self.getStringBytes(text)
+        sqrd += [8, 0, 15] + self.getIntBytes(0) # contentType
+        sqrd += [0]
+        sqrd += [8, 0, 3] + self.getIntBytes(4) # fromType
+        #sqrd += [10, 0, 4] + self.getIntBytes(0, 8) # squareMessageRevision
+        sqrd += [0, 0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['sendMessage']
