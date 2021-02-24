@@ -6,9 +6,12 @@ import httpx
 from .services.TalkService import TalkService
 from .services.ShopService import ShopService
 from .services.LiffService import LiffService
+from .services.ChannelService import ChannelService
+from .services.SquareService import SquareService
 
-class API(TalkService, ShopService, LiffService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService):
     _msgSeq = 0
+    url = "https://gf.line.naver.jp/enc"
     
     def __init__(self):
         self.server = Server()
@@ -16,15 +19,14 @@ class API(TalkService, ShopService, LiffService):
         self.req_h2 = httpx.Client(http2=True)
         self.server.Headers = {
             "x-line-application": self.APP_NAME,
-            "x-lhm": "POST",
             "x-le": "18",
             "x-lap": "4",
             "x-lpv": "1",
             "x-lcs": self._encryptKey,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
             "content-type": "application/x-thrift; protocol=TBINARY",
-            "x-lst": "300000000",
-            "x-lal": "zh_TW",
+            "x-lal": self.LINE_LANGUAGE,
+            "x-lhm": "POST",
         }
         self.authToken = None
         self.revision = 0
@@ -40,17 +42,24 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         
         data = self.decData(res.content)
         sqr = data[39:105].decode()
         url = self.createSession(sqr)
         yield f"URL: {url}"
         if self.checkQrCodeVerified(sqr):
-            b = self.verifyCertificate(sqr)
-            c = self.createPinCode(sqr)
-            yield f"請輸入pincode: {c}"
-            if self.checkPinCodeVerified(sqr):
+            b = self.verifyCertificate(sqr, self.getSqrCert())
+            print(b)
+            isCheck = False
+            if 'error' in b:
+                c = self.createPinCode(sqr)
+                yield f"請輸入pincode: {c}"
+                if self.checkPinCodeVerified(sqr):
+                    isCheck = True
+            else:
+                isCheck = True
+            if isCheck:
                 e = self.qrCodeLogin(sqr)
                 if isSelf:
                     self.authToken = e.decode()
@@ -72,7 +81,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         #[127, 95, 38, 16]
         data = self.decData(res.content)
         url = data[38:128].decode()
@@ -91,12 +100,12 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         if res.status_code == 200:
             return True
         return False
         
-    def verifyCertificate(self, qrcode):
+    def verifyCertificate(self, qrcode, cert=None):
         _headers = {
             "x-lpqs": "/acct/lgn/sq/v1"
         }
@@ -104,14 +113,16 @@ class API(TalkService, ShopService, LiffService):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 118, 101, 114, 105, 102, 121, 67, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
         for qr in qrcode:
             sqrd.append(ord(qr))
+        if cert is not None:
+            sqrd += [11, 0, 2] + self.getStringBytes(cert)
         sqrd += [0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return data
-        
+        return self.tryReadData(data)['verifyCertificate']
+
     def createPinCode(self, qrcode):
         _headers = {
             "x-lpqs": "/acct/lgn/sq/v1"
@@ -124,7 +135,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return data[39:43].decode()
         
@@ -141,7 +152,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         if res.status_code == 200:
             return True
         return False
@@ -161,9 +172,10 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        pem = data[36:101] #64dig?
+        pem = data[37:101]
+        self.saveSqrCert(pem.decode())
         print("證書: ", pem.decode())
         _token = data[108:]
         return bytes(_token[:88]) # 88dig?
@@ -184,43 +196,9 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return bytes(data)
-        
-    def issueChannelToken(self, channelId="1433572998"):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/CH3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 105, 115, 115, 117, 101, 67, 104, 97, 110, 110, 101, 108, 84, 111, 107, 101, 110, 0, 0, 0, 0, 11, 0, 1, 0, 0, 0, len(channelId)]
-        for value in str(channelId):
-            sqrd.append(ord(value))
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['issueChannelToken']
-        
-    def getChannelInfo(self, channelId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/CH3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 14, 103, 101, 116, 67, 104, 97, 110, 110, 101, 108, 73, 110, 102, 111, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, len(channelId)]
-        for value in str(channelId):
-            sqrd.append(ord(value))
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getChannelInfo']
         
     def returnTicket(self, searchId, fromEnvInfo, otp):
         _headers = {
@@ -241,7 +219,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -257,7 +235,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -276,57 +254,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def getProduct(self, shopId, productId, language="zh-TW", country="TW"):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/TSHOP4"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116, 80, 114, 111, 100, 117, 99, 116, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(shopId)] # e.g. stickershop
-        for value in shopId:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 3, 0, 0, 0, len(productId)]
-        for value in productId:
-            sqrd.append(ord(value))
-        sqrd += [12, 0, 4]
-        sqrd += [11, 0, 1, 0, 0, 0, len(language)]
-        for value in language:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 2, 0, 0, 0, len(country)]
-        for value in country:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def markAsRead(self, squareChatMid, messageId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/SQS1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 109, 97, 114, 107, 65, 115, 82, 101, 97, 100, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2, 0, 0, 0, len(squareChatMid)]
-        for value in squareChatMid:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 4, 0, 0, 0, len(messageId)]
-        for value in messageId:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -350,23 +278,9 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
-        
-    def getCommonDomains(self, lastSynced=0):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/CH3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 67, 111, 109, 109, 111, 110, 68, 111, 109, 97, 105, 110, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getCommonDomains']
         
     def acquireCallRoute(self, to, callType, fromEnvInfo=None):
         _headers = {
@@ -384,7 +298,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['acquireCallRoute']
         
@@ -405,7 +319,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['acquireGroupCallRoute']
         
@@ -428,7 +342,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -442,7 +356,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['acquireTestCallRoute']
         
@@ -465,36 +379,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def issueRequestTokenWithAuthScheme(self, channelId, otpId, authScheme, returnUrl):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/CH3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 31, 105, 115, 115, 117, 101, 82, 101, 113, 117, 101, 115, 116, 84, 111, 107, 101, 110, 87, 105, 116, 104, 65, 117, 116, 104, 83, 99, 104, 101, 109, 101, 0, 0, 0, 0]
-        sqrd += [11, 0, 1, 0, 0, 0, len(channelId)]
-        for value in channelId:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 2, 0, 0, 0, len(otpId)]
-        for value in otpId:
-            sqrd.append(ord(value))
-        sqrd += [15, 0, 3, 11, 0, 0, 0, len(authScheme)]
-        for mid in authScheme:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 4, 0, 0, 0, len(returnUrl)]
-        for value in returnUrl:
-            sqrd.append(ord(value))
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -519,7 +404,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -539,7 +424,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -565,71 +450,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def inviteIntoSquareChat(self, inviteeMids, squareChatMid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/SQS1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 105, 110, 118, 105, 116, 101, 73, 110, 116, 111, 83, 113, 117, 97, 114, 101, 67, 104, 97, 116, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [15, 0, 1, 11, 0, 0, 0, len(inviteeMids)]
-        for mid in inviteeMids:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        print(data)
-        return self.tryReadData(data)
-        
-    def inviteToSquare(self, squareMid, invitees, squareChatMid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/SQS1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes("inviteToSquare") +  [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2] + self.getStringBytes(squareMid)
-        sqrd += [15, 0, 3, 11, 0, 0, 0, len(invitees)]
-        for mid in invitees:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 4] + self.getStringBytes(squareChatMid)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def getJoinedSquares(self, continuationToken=None, limit=50):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/SQS1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 74, 111, 105, 110, 101, 100, 83, 113, 117, 97, 114, 101, 115, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        #sqrd += [11, 0, 2] + self.getStringBytes(continuationToken)
-        sqrd += [8, 0, 3] + self.getIntBytes(limit)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req_h2.post("https://gf.line.naver.jp/SQS1", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -658,7 +479,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         #data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -681,7 +502,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
     
@@ -698,7 +519,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return data
     
@@ -718,7 +539,7 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         self.tryReadTCompactData(data)
         return data
@@ -736,6 +557,6 @@ class API(TalkService, ShopService, LiffService):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return data

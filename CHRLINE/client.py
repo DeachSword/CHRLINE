@@ -4,9 +4,10 @@ from .api import API
 from .thrift import Thrift
 from .poll import Poll
 from .object import Object
+from .timeline import Timeline
 from os import system
 
-class CHRLINE(Models, Config, API, Thrift, Poll, Object):
+class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline):
 
     def __init__(self, authToken=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False):
         Models.__init__(self)
@@ -41,6 +42,8 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object):
             'X-Line-ChannelToken': self.issueChannelToken()[5] # or 1
         }
         Poll.__init__(self)
+        
+        self.is_login = True
         
         self.custom_data = {}
         self.getCustomData()

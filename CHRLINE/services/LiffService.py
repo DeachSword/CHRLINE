@@ -32,7 +32,7 @@ class LiffService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadTCompactData(data)['issueLiffView']
         
@@ -52,7 +52,7 @@ class LiffService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadTCompactData(data)['getLiffViewWithoutUserContext']
     
@@ -70,6 +70,6 @@ class LiffService(object):
             messages = {"messages":messages}
         else:
             messages = {"messages":[messages]}
-        resp = self.req.post("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
+        resp = self.server.postContent("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
         return resp.text
         

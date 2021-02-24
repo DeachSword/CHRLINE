@@ -31,7 +31,7 @@ class ShopService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getProduct']
 
@@ -52,7 +52,7 @@ class ShopService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getProductsByAuthor']
     
@@ -68,6 +68,28 @@ class ShopService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getStudentInformation']
+    
+    def canReceivePresent(self, shopId, productId, recipientMid):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/TSHOP4"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('canReceivePresent') + [0, 0, 0, 0]
+        sqrd += [11, 0, 2] + self.getStringBytes(shopId)
+        sqrd += [11, 0, 3] + self.getStringBytes(productId)
+        sqrd += [12, 0, 4]
+        sqrd += [11, 0, 1] + self.getStringBytes('zh_TW') #language
+        sqrd += [11, 0, 2] + self.getStringBytes('TW') #country
+        sqrd += [0]
+        sqrd += [11, 0, 5] + self.getStringBytes(recipientMid)
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['canReceivePresent']

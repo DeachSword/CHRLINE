@@ -3,7 +3,9 @@ import re
 
 class Config(object):
     LINE_ENC_HOST_DOMAIN        = 'https://gf.line.naver.jp/enc'
-    LINE_OBS_DOMAIN             = 'https://obs-jp.line-apps.com'
+    LINE_OBS_DOMAIN             = 'https://obs.line-apps.com'
+    
+    LINE_LANGUAGE = 'zh-Hant_TW'
 
     APP_TYPE    = "CHROMEOS"
     APP_VER     = '8.7.0'

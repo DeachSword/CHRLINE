@@ -51,7 +51,10 @@ class Server(object):
     def postContent(self, url, data=None, files=None, headers=None, json=None):
         if headers is None:
             headers = self.Headers
-        return self._session.post(url, headers=headers, data=data, files=files, json=json)
+        res = self._session.post(url, headers=headers, data=data, files=files, json=json)
+        if 'x-ls' in res.headers:
+            print(f"{url} -> {res.headers}")
+        return res
 
     def getContent(self, url, headers=None):
         if headers is None:

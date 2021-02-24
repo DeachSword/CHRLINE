@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import time
 import json
+import requests
 
 class TalkService(object):
-
+    url = "https://gf.line.naver.jp/enc"
+    
     def __init__(self):
         pass
 
@@ -70,7 +72,7 @@ class TalkService(object):
         data = self.encData(_data)
         if raw:
             return data
-        res = self.req.post("https://gxx.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['sendMessage']
     
@@ -95,7 +97,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getEncryptedIdentity']
         
@@ -109,7 +111,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getProfile']
         
@@ -123,7 +125,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getSettings']
     
@@ -146,7 +148,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         
     def unsendMessage(self, messageId):
         _headers = {
@@ -163,7 +165,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -180,7 +182,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -199,7 +201,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -222,7 +224,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -245,7 +247,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -262,7 +264,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getGroup']
         
@@ -281,7 +283,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getGroups']
         
@@ -300,7 +302,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getGroupsV2']
         
@@ -325,7 +327,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getChats']
         
@@ -345,7 +347,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getAllChatMids']
         
@@ -362,7 +364,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -371,6 +373,12 @@ class TalkService(object):
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/S3"
         }
+        if type(mid) is 'list':
+            _lastReq = None
+            for _mid in mid:
+                print(f'[deleteOtherFromChat] The parameter \'mid\' should be str')
+                _lastReq = self.deleteOtherFromChat(to, _mid)
+            return _lastReq
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 19, 100, 101, 108, 101, 116, 101, 79, 116, 104, 101, 114, 70, 114, 111, 109, 67, 104, 97, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
@@ -385,7 +393,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -410,7 +418,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
         
@@ -433,7 +441,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['cancelChatInvitation']
         
@@ -457,7 +465,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['deleteSelfFromChat']
         
@@ -477,7 +485,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         self.sendMessage(to, 'Power by CHRLINE API')
         return self.tryReadData(data)['acceptChatInvitation']
@@ -496,7 +504,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['reissueChatTicket']
         
@@ -513,7 +521,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['findChatByTicket']
         
@@ -536,7 +544,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         self.sendMessage(to, 'Power by CHRLINE API')
         return self.tryReadData(data)['acceptChatInvitationByTicket']
@@ -578,7 +586,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['updateChat']
         
@@ -598,7 +606,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getGroupIdsJoined']
         
@@ -612,7 +620,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getGroupIdsInvited']
         
@@ -626,7 +634,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getAllContactIds']
         
@@ -640,7 +648,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getBlockedContactIds']
         
@@ -654,7 +662,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getBlockedRecommendationIds']
         
@@ -669,7 +677,7 @@ class TalkService(object):
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         print('Korone is my wife :p')
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getAllReadMessageOps']
         
@@ -704,7 +712,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['sendPostback']
         
@@ -731,7 +739,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getPreviousMessagesV2WithRequest']
         
@@ -760,7 +768,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getMessageBoxes']
         
@@ -781,7 +789,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getMessageReadRange']
         
@@ -802,7 +810,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getChatRoomAnnouncementsBulk']
         
@@ -818,7 +826,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getChatRoomAnnouncements']
         
@@ -838,7 +846,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['removeChatRoomAnnouncement']
         
@@ -862,9 +870,44 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['createChatRoomAnnouncement']
+
+    def leaveRoom(self, roomIds):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('leaveRoom') + [0, 0, 0, 0]
+        sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
+        sqrd += [11, 0, 2] + self.getStringBytes(roomIds)
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['leaveRoom']
+
+    def getRoomsV2(self, roomIds):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getRoomsV2') + [0, 0, 0, 0]
+        sqrd += [15, 0, 2, 11, 0, 0, 0, len(roomIds)]
+        for mid in roomIds:
+            sqrd += self.getStringBytes(mid)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getRoomsV2']
 
     def createRoomV2(self, contactIds):
         _headers = {
@@ -881,7 +924,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['createRoomV2']
 
@@ -897,7 +940,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getCountries']
 
@@ -913,7 +956,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['acquireEncryptedAccessToken']
 
@@ -930,7 +973,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['blockContact']
 
@@ -947,7 +990,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['unblockContact']
 
@@ -961,7 +1004,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getLastOpRevision']
         
@@ -975,7 +1018,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getServerTime']
         
@@ -989,7 +1032,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getConfigurations']
         
@@ -1005,7 +1048,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getRSAKeyInfo']
         
@@ -1024,19 +1067,23 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gfp.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        data = self.tryReadData(data)
-        if 'fetchOps' in data:
-            for op in data['fetchOps']:
-                if op[3] == 0:
-                    if 10 in op:
-                        a = op[10].split('\x1e')
-                        self.individualRev = a[0]
-                    if 11 in op:
-                        b = op[11].split('\x1e')
-                        self.globalRev = b[0]
-            return data['fetchOps']
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            "x-lst": "180000",
+        })
+        res = self.server.postContent("https://gfp.line.naver.jp/enc", data=data, headers=hr)
+        if res.status_code == 200:
+            data = self.decData(res.content)
+            data = self.tryReadData(data)
+            if 'fetchOps' in data:
+                for op in data['fetchOps']:
+                    if op[3] == 0:
+                        if 10 in op:
+                            a = op[10].split('\x1e')
+                            self.individualRev = a[0]
+                        if 11 in op:
+                            b = op[11].split('\x1e')
+                            self.globalRev = b[0]
+                return data['fetchOps']
         return []
         
     def fetchOperations(self, deviceId, offsetFrom):
@@ -1056,7 +1103,10 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.req.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            "x-lst": "180000",
+        })
+        res = self.req_poll.post(self.url, data=data, headers=hr)
         data = self.decData(res.content)
         return self.tryReadData(data)['fetchOperations']
         

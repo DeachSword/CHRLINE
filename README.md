@@ -38,6 +38,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
 ####  Requirement
 - Python 3
     - pycrypto
+    - pycryptodemo
     - xxhash
     - httpx[http2]
 
@@ -98,31 +99,60 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getProduct
         - getProductsByAuthor
         - getStudentInformation
+        - canReceivePresent
     - LiffService
         - issueLiffView
         - getLiffViewWithoutUserContext
         - sendLiff
+    - ChannelService
+        - issueChannelToken
+        - approveChannelAndIssueChannelToken
+        - getChannelInfo
+        - getCommonDomains
+        - issueRequestTokenWithAuthScheme
+    - SquareService
+        - inviteIntoSquareChat
+        - inviteToSquare
+        - getJoinedSquares
+        - markAsRead
+        - reactToMessage
     - ObsService
         - forwardObjectMsg
         - trainingImage
+        - updateProfileImage
+        - updateProfileCover
+        - uploadObjHome
+        - uploadObjTalk
+    - TimelineService
+        - MyHome
+            - getProfileCoverDetail
+            - updateProfileCoverById
+            - sendContactV2
+        - Post
+            - getPost
+            - createComment
+            - deleteComment
+            - listComment
+            - createLike
+            - cancelLike
+            - listLike
+            - searchNote
+        - Album
+            - changeGroupAlbumName
+            - deleteGroupAlbum
+            - addImageToAlbum
+            - getAlbumImages
+            - deleteAlbumImages
     - Others
-        - issueChannelToken
-        - getChannelInfo
         - returnTicket (test)
         - getModulesV2
-        - markAsRead
         - setClovaCredential (test)
-        - getCommonDomains
         - acquireCallRoute
         - acquireGroupCallRoute
         - acquireOACallRoute
         - acquireTestCallRoute
         - inviteIntoGroupCall
-        - issueRequestTokenWithAuthScheme
         - openSession
         - connectEapAccount
         - verifyEapLogin
-        - inviteIntoSquareChat
-        - inviteToSquare
-        - getJoinedSquares
 

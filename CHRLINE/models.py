@@ -78,6 +78,23 @@ class Models(object):
         fn = md5(self.profile[1].encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(json.dumps(self.custom_data))
         return True
+        
+    def getSqrCert(self):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = "cert.pem"
+        if os.path.exists(savePath + f"/{fn}"):
+            return open(savePath + f"/{fn}", "r").read()
+        return None
+        
+    def saveSqrCert(self, cert):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = "cert.pem"
+        open(savePath + f"/{fn}", "w").write(cert)
+        return True
 
     def encHeaders(self, headers):
         t = headers.keys()
@@ -222,7 +239,9 @@ class Models(object):
                 else:
                     print(f"[tryReadData]不支援Type: {c} => ID: {id}")
             else:
-                if c == 11:
+                if c == 0:
+                    error = {}
+                elif c == 11:
                     t_l = data[a + 10]
                     error = data[a + 11:a + 11 + t_l].decode()
                 else:
@@ -232,7 +251,8 @@ class Models(object):
                         'code': int.from_bytes(code, "big"),
                         'message': data[a + 21:a + 21 + t_l].decode()
                     }
-                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE"]:
+                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
+                        self.is_login = False
                         raise Exception(f"LOGIN OUT: {error['message']}")
                 _data[b] = {
                     "error": error
@@ -378,7 +398,7 @@ class Models(object):
                     print(f"[readContainerStruct_LIST(15)]不支援Type: {type}")
             if not stopWithFirst:
                 if d > 0:
-                    nextPos += e + 1
+                    nextPos += e
                 else:
                     nextPos = 8
         elif data[0] != 0:

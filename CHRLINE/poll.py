@@ -22,7 +22,7 @@ class Poll(object):
         self.revision = max(revision, self.revision)
 
     def trace(self, func, isThreading=True):
-        while True:
+        while self.is_login:
             ops = self.__fetchOps(self.revision)
             if 'error' in ops:
                 raise Exception(ops['error'])
