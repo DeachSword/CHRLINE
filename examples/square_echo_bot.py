@@ -10,5 +10,6 @@ while True:
         print(e)
         if e[3] == 29:
             message = e[4][30][2][1]
-            if message[10] is not None:
-                cl.sendSquareMessage(message[2], message[10])
+            if not cl.squareMemberIdIsMe(message[1]):
+                if message.get(10) is not None:
+                    cl.sendSquareMessage(message[2], message[10])

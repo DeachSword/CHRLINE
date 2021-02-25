@@ -9,4 +9,7 @@ while True:
     for e in events[2]:
         print(e)
         if e[3] == 29:
-            cl.reactToMessage(message[2], message[4], 3)
+            message = e[4][30][2][1]
+            if not cl.squareMemberIdIsMe(message[1]):
+                reactId = random.choice([2, 3, 4, 5, 6, 7])
+                cl.reactToMessage(message[2], message[4], reactId)

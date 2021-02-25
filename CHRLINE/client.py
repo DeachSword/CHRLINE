@@ -5,9 +5,10 @@ from .thrift import Thrift
 from .poll import Poll
 from .object import Object
 from .timeline import Timeline
+from .helpers import Helpers
 from os import system
 
-class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline):
+class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers):
 
     def __init__(self, authToken=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False):
         Models.__init__(self)
@@ -44,6 +45,14 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline):
         Poll.__init__(self)
         
         self.is_login = True
+        self.can_use_square = False
+        self.squares = None
+        _squares = self.getJoinedSquares()
+        if 'error' not in _squares:
+            self.can_use_square = True
+            self.squares = _squares
+        else:
+            print('Not support Square')
         
         self.custom_data = {}
         self.getCustomData()
