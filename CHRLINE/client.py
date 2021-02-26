@@ -6,9 +6,10 @@ from .poll import Poll
 from .object import Object
 from .timeline import Timeline
 from .helpers import Helpers
+from .cube import LineCube
 from os import system
 
-class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers):
+class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, LineCube):
 
     def __init__(self, authToken=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False):
         Models.__init__(self)
@@ -43,6 +44,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers):
             'X-Line-ChannelToken': self.issueChannelToken()[5] # or 1
         }
         Poll.__init__(self)
+        LineCube.__init__(self)
         
         self.is_login = True
         self.can_use_square = False

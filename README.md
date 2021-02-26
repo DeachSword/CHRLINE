@@ -146,6 +146,12 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - addImageToAlbum
             - getAlbumImages
             - deleteAlbumImages
+    - CubeService (beta)
+        - issueBillSplitId
+        - getBillSplitShareLink
+        - getBillSplitSurvey
+        - putBillSplitBills (test)
+        - snedBillSplitBills
     - Others
         - returnTicket (test)
         - getModulesV2
