@@ -55,7 +55,7 @@ class Models(object):
             print(f"New Token: {self.authToken}")
             self.checkNextToken()
         return self.authToken
-        
+
     def handleNextToken(self, newToken):
         savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.tokens')
         if not os.path.exists(savePath):
@@ -119,16 +119,15 @@ class Models(object):
         return True
     
     def initWithAndroid(self):
-        # 4e09483e38f5ff7280127b9efb5c2d33
-        self.le = "7"
         self.lcsStart = "0008"
-        self.PUBLIC_KEY = int("B0C0BA1C061E32AE11E7D7B6C91C3A5B53964F6B7D69EA62029E1F6D2097CD18FB036F41380140BCA97302E6F8A31375DCDB7C75B701F88080B9FC839CDE4D777FAF5E00F111767FB31DBFC2E15B0B70777AF48D291E2129CB3CD2CB91B3C68BE847968BE6C0536A1821CEFC05BAA1373C74582CD94896CC045C35565B14FC743F5DD894B9FA299794126B44B6E3A5D79B026699744ED2FEDB36FAF168D57471BBE21A43AF4E506DD7E45EAC8147313C374B02C39C23A8953CF70AE1395763AB3D90A60B49E598F473C147F1A31C6CFFAA8576964DA0E447FECE6641E9D2CAA3E4987F1304E9472563C7DDE37593A6992252B94B9E267146FFA0D451ABDC03D7", 16)
-        self.key = rsa.PublicKey(self.PUBLIC_KEY, 65537)
-        self.encryptKey = b"DearSakura+2020/"
+        self.le = "7"
+        self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
+        self.key = RSA.importKey(self.PUBLIC_KEY)
+        self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
-        self._encryptKey = self.lcsStart + b64encode(rsa.encrypt(self.encryptKey, self.key)).decode()
+        self.encEncKey()
         print(self._encryptKey)
 
     def encHeaders(self, headers):
