@@ -19,8 +19,8 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
         Thrift.__init__(self)
         if authTokenOrEmail is not None and password is not None:
             self.requestEmailLogin(authTokenOrEmail, password)
-        elif authToken:
-            self.authToken = authToken
+        elif authTokenOrEmail is not None:
+            self.authToken = authTokenOrEmail
         else:
             if not noLogin:
                 for b in self.requestSQR():
