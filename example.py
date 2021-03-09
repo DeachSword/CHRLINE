@@ -1,7 +1,8 @@
 from CHRLINE import *
 
 cl = CHRLINE()
-#cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11") with IOSIPAD
+#cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")#with IOSIPAD
+#cl = CHRLINE("your email", "your password") #with Email
 token = cl.authToken
 print(f"authToken: {token}")
 

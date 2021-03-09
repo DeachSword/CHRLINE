@@ -75,7 +75,7 @@ class TalkService(object):
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['sendMessage']
-    
+        
     def sendContact(self, to, mid):
         return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
         
@@ -148,7 +148,7 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)['sendChatChecked']
         
     def unsendMessage(self, messageId):
         _headers = {
@@ -1036,22 +1036,6 @@ class TalkService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['getConfigurations']
         
-    def getRSAKeyInfo(self, provider=1):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('getRSAKeyInfo') + [0, 0, 0, 0]
-        sqrd += [8, 0, 1] + self.getIntBytes(provider)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getRSAKeyInfo']
-        
     def fetchOps(self, revision, count=500):
         _headers = {
             'X-Line-Access': self.authToken, 
@@ -1109,4 +1093,79 @@ class TalkService(object):
         res = self.req_poll.post(self.url, data=data, headers=hr)
         data = self.decData(res.content)
         return self.tryReadData(data)['fetchOperations']
+        
+    def sendEchoPush(self, text):
+        # for long poll? check conn is alive
+        # text: 1614384862517 = time
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('sendEchoPush') + [0, 0, 0, 0]
+        sqrd += [11, 0, 2] + self.getStringBytes(text)
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['sendEchoPush']
+        
+    def getRepairElements(self):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getRepairElements') + [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [2, 0, 1, 1] # profile
+        sqrd += [2, 0, 2, 1] # settings
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getRepairElements']
+        
+    def getSettingsAttributes2(self, attributesToRetrieve):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        if type(attributesToRetrieve) != 'list':
+            attributesToRetrieve = [attributesToRetrieve]
+            print('[attributesToRetrieve] plz using LIST')
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getSettingsAttributes2') + [0, 0, 0, 0]
+        sqrd += [14, 0, 2, 11, 0, 0, 0, len(attributesToRetrieve)]
+        for value in attributesToRetrieve:
+            sqrd += self.getStringBytes(value)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getSettingsAttributes2']
+        
+    def rejectChatInvitation(self, chatMid):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('rejectChatInvitation') + [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
+        sqrd += [11, 0, 2] + self.getStringBytes(chatMid)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['rejectChatInvitation']
         

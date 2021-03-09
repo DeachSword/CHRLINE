@@ -197,6 +197,125 @@ class Timeline():
         res = r.json()
         return res["result"]["feeds"]
 
+    def sendPostToTalk(self, postId, receiveMids):
+        data = {
+            "postId": postId,
+            "receiveMids": receiveMids
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/mh/api/v56/post/sendPostToTalk.json',
+            {}
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        r = self.server.postContent(url, headers=hr, data=json.dumps(data))
+        return r.json()
+
+    def getHashtagPosts(self, query, homeId=None, scrollId=None, range=["GROUP"]):
+        # range: GROUP or unset
+        data = {
+           "query" : query,
+           "homeId" : homeId,
+           "scrollId" : scrollId,
+           "range" : range
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/mh/api/v52/hashtag/posts.json',
+            {}
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.postContent(url, headers=hr, data=json.dumps(data))
+        return r.json()
+
+    def getHashtagSuggest(self, query):
+        data = {
+           "query" : query
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/mh/api/v52/hashtag/suggest.json',
+            {}
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.postContent(url, headers=hr, data=json.dumps(data))
+        return r.json()
+
+    def getHashtagPopular(self, homeId, limit=20):
+        data = {
+           "homeId" : homeId,
+           "limit" : limit
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/mh/api/v52/hashtag/popular.json',
+            {}
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.postContent(url, headers=hr, data=json.dumps(data))
+        return r.json()
+
+    def getTimelineUrl(self, homeId):
+        data = {
+           "homeId" : homeId
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/mh/api/v55/web/getUrl.json',
+            data
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.getContent(url, headers=hr)
+        return r.json()
+
+    def getPostShareLink(self, postId):
+        data = {
+           "postId" : postId
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/api/v55/post/getShareLink.json',
+            data
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.getContent(url, headers=hr)
+        return r.json()
+
+    def getDiscoverRecommendFeeds(self, sourcePostId, contents=["CP", "PI", "PV", "PL", "AD"]):
+        data = {
+            "sourcePostId": sourcePostId, 
+            "contents" : contents
+        }
+        url = self.server.urlEncode(
+            'https://gwz.line.naver.jp',
+            '/tl/discover/api/v1/recommendFeeds',
+            {}
+        )
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            "x-lal": self.LINE_LANGUAGE
+        })
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
     """ ALBUM """
 
     def changeGroupAlbumName(self, mid, albumId, name):
@@ -274,4 +393,56 @@ class Timeline():
         url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/photos/delete/%s' % albumId, params)
         r = self.server.postContent(url, data=data, headers=hr)
         #{"code":0,"message":"success","result":true}
+        return r.json()
+        
+        
+        return res["result"]["feeds"]
+
+
+    """ STORY """
+
+    def uploadStoryObject(self, mid, albumId, name):
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-obs-params': 'eyJuYW1lIjoidGltZWxpbmVfMjAyMTAyMjZfMDQzODExLmpwZyIsIm9pZCI6IjgzNTY2YWVmM2ZhNWRhMjllMGNkNGJkMzFiM2QzM2IxdGZmZmZmZmZmIiwicmFuZ2UiOiJieXRlcyAwLTIxNzEwXC8yMTcxMSIsInF1YWxpdHkiOiI3MCIsInR5cGUiOiJpbWFnZSIsInZlciI6IjEuMCJ9'
+        })
+        url = self.server.urlEncode('https://obs-tw.line-apps.com', '/story/st/upload.nhn')
+        r = self.server.postContent(url, data=data, headers=hr)
+        return r.json()
+
+    def createStoryContent(self, mid, albumId, name):
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'POST',
+            'content-type': "application/json"
+        })
+        data = {"content":{"sourceType":"USER","contentType":"USER","media":[{"oid":"83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3","service":"story","sid":"st","hash":"0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ","mediaType":"IMAGE"}]},"shareInfo":{"shareType":"FRIEND"}}
+        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/content/create')
+        r = self.server.postContent(url, data=data, headers=hr)
+        #{"code":0,"message":"success","result":{"contentId":"0000xJ6PYy3Rl1PWLBJvdwFL0GUqNtOP6qZlJH2uJu7YMWobd4wA993IHAIGEqH0UVfmg489jEiy0HzA8PTCKX7bhmSKWXFmK3OGNNj05SNwrUPEaDoHuB1dIlzw9V9buRs-EfiRAOfSr8eunreL46774ow"}}
+        return r.json()
+
+    def getRecentstoryStory(self, lastRequestTime=None):
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'POST',
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/recentstory/list')
+        r = self.server.postContent(url, data=data, headers=hr)
+        #{"code":0,"message":"success","result":{"hasNewMyStory":false,"hasNewFriendsStory":false,"hasMore":false,"recentStories":[{"mid":"u040c247a87dc1a3292280cd5b5fe42ce","recentCreatedTime":1614286397673,"readTime":0}],"lastActivityTime":1614286397673}}
+        return r.json()
+
+    def sendMessageForStoryAuthor(self, userMid, contentId, message):
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'POST',
+            'content-type': "application/json"
+        })
+        data = {
+            "to": {
+                "userMid": userMid,
+                "friendType": "",
+                "tsId":""
+            },
+            "contentId": contentId,
+            "message": message}
+        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/message/send')
+        r = self.server.postContent(url, data=data, headers=hr)
         return r.json()

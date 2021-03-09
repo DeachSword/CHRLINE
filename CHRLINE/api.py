@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .server import Server
-import requests, time, json
+import requests, time, json, rsa, binascii
 import httpx
 
 from .services.TalkService import TalkService
@@ -8,8 +8,9 @@ from .services.ShopService import ShopService
 from .services.LiffService import LiffService
 from .services.ChannelService import ChannelService
 from .services.SquareService import SquareService
+from .services.BuddyService import BuddyService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -19,7 +20,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService):
         self.req_h2 = httpx.Client(http2=True)
         self.server.Headers = {
             "x-line-application": self.APP_NAME,
-            "x-le": "18",
+            "x-le": self.le,
             "x-lap": "4",
             "x-lpv": "1",
             "x-lcs": self._encryptKey,
@@ -32,6 +33,27 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService):
         self.revision = 0
         self.globalRev = 0
         self.individualRev = 0
+
+    def requestEmailLogin(self, email, pw):
+        rsaKey = self.getRSAKeyInfo()
+        keynm = rsaKey[1]
+        nvalue = rsaKey[2]
+        evalue = rsaKey[3]
+        sessionKey = rsaKey[4]
+        certificate = self.getEmailCert(email)
+        message = (chr(len(sessionKey)) + sessionKey +
+           chr(len(email)) + email +
+           chr(len(pw)) + pw).encode('utf-8')
+        pub_key = rsa.PublicKey(int(nvalue, 16), int(evalue, 16))
+        crypto = binascii.hexlify(rsa.encrypt(message, pub_key)).decode()
+        res = self.loginZ(keynm, crypto, certificate=certificate)
+        if 1 not in res:
+            verifier = self.checkLoginZPinCode(res[3])['verifier']
+            res = self.loginZ(keynm, crypto, verifier=verifier)
+            self.saveEmailCert(email, res[2])
+        self.authToken = res[1]
+        print(f"AuthToken: {self.authToken}")
+        return True
 
     def requestSQR(self, isSelf=True):
         _headers = {
@@ -482,6 +504,114 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService):
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         #data = self.decData(res.content)
         return self.tryReadData(data)
+        
+    def getCountrySettingV4(self):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/PY3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getCountrySettingV4') + [0, 0, 0, 0]
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getCountrySettingV4']
+        
+    def getRSAKeyInfo(self, provider=1):
+        """
+        provider:
+         - UNKNOWN(0),
+         - LINE(1),
+         - NAVER_KR(2),
+         - LINE_PHONE(3)
+        """
+        _headers = {
+            'x-lpqs': "/api/v3/TalkService.do"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getRSAKeyInfo') + [0, 0, 0, 0]
+        sqrd += [8, 0, 2] + self.getIntBytes(provider)
+        sqrd += [0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getRSAKeyInfo']
+        
+    def loginV2(self, provider, keynm, encData, deviceName='Chrome'):
+        """ same loginZ , but i using it for E2EE :D and not work now :P"""
+        _headers = {
+            'x-lpqs': "/api/v3p/rs"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('loginV2') + [0, 0, 0, 0]
+        sqrd += [12, 0, 2]
+        sqrd += [8, 0, 1] + self.getIntBytes(2)
+        sqrd += [8, 0, 2] + self.getIntBytes(provider)
+        sqrd += [11, 0, 3] + self.getStringBytes(keynm)
+        sqrd += [11, 0, 4] + self.getStringBytes(encData)
+        sqrd += [2, 0, 5, 1]
+        sqrd += [11, 0, 7] + self.getStringBytes(deviceName)
+        sqrd += [8, 0, 11] + self.getIntBytes(1)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['loginV2']
+        
+    def loginZ(self, keynm, encData, systemName='Chrome', certificate=None, verifier=None):
+        _headers = {
+            'x-lpqs': "/api/v3p/rs"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('loginZ') + [0, 0, 0, 0]
+        sqrd += [12, 0, 2]
+        loginType = 0
+        if verifier is not None:
+            loginType = 1
+        sqrd += [8, 0, 1] + self.getIntBytes(loginType) # 2 if e2ee
+        sqrd += [8, 0, 2] + self.getIntBytes(1) #provider
+        sqrd += [11, 0, 3] + self.getStringBytes(keynm)
+        sqrd += [11, 0, 4] + self.getStringBytes(encData)
+        sqrd += [2, 0, 5, 0]
+        sqrd += [11, 0, 6] + self.getStringBytes("") #accessLocation
+        sqrd += [11, 0, 7] + self.getStringBytes(systemName)
+        sqrd += [11, 0, 8] + self.getStringBytes(certificate)
+        if verifier is not None:
+            sqrd += [11, 0, 9] + self.getStringBytes(verifier)
+        #sqrd += [11, 0, 10] + self.getStringBytes("") #secret
+        sqrd += [8, 0, 11] + self.getIntBytes(1)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['loginZ']
+        
+    def checkLoginZPinCode(self, accessSession):
+        _headers = {
+            'X-Line-Access': accessSession,
+            'x-lpqs': "/Q"
+        }
+        a = self.encHeaders(_headers)
+        sqr_rd = a
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            'x-lhm': 'GET'
+        })
+        res = self.server.postContent(self.url, data=data, headers=hr)
+        if res.status_code != 200:
+            raise Exception("checkLoginZPinCode failed")
+        data = self.decData(res.content)
+        return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         
     def testFunc(self, path, funcName, funcValue=None, funcValueId=1):
         _headers = {

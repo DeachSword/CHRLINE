@@ -93,3 +93,24 @@ class ShopService(object):
         res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['canReceivePresent']
+    
+    def getOwnedProductSummaries(self, shopId, offset=0, limit=200, language='zh_TW', country='TW'):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/TSHOP4"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('getOwnedProductSummaries') + [0, 0, 0, 0]
+        sqrd += [11, 0, 2] + self.getStringBytes(shopId)
+        sqrd += [8, 0, 3] + self.getIntBytes(offset)
+        sqrd += [8, 0, 4] + self.getIntBytes(limit)
+        sqrd += [12, 0, 5]
+        sqrd += [11, 0, 1] + self.getStringBytes(language)
+        sqrd += [11, 0, 2] + self.getStringBytes(country)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['getOwnedProductSummaries']

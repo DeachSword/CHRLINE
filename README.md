@@ -43,7 +43,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - httpx[http2]
 
 ## Function overview
-- SQR 
+- SQR Login
+- Email Login
 - Services
     - TalkService
         - getEncryptedIdentity
@@ -95,11 +96,16 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - createChatRoomAnnouncement
         - getAllChatMids
         - reissueChatTicket
+        - sendEchoPush
+        - getRepairElements
+        - getSettingsAttributes2
+        - rejectChatInvitation
     - ShopService
         - getProduct
         - getProductsByAuthor
         - getStudentInformation
         - canReceivePresent
+        - getOwnedProductSummaries
     - LiffService
         - issueLiffView
         - getLiffViewWithoutUserContext
@@ -119,6 +125,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - findSquareByInvitationTicket
         - fetchMyEvents
         - sendSquareMessage (text only)
+    - BuddyService
+        - getPromotedBuddyContacts
     - ObsService
         - forwardObjectMsg
         - trainingImage
@@ -140,12 +148,24 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - cancelLike
             - listLike
             - searchNote
+            - sendPostToTalk
+            - getHashtagPosts
+            - getHashtagSuggest
+            - getHashtagPopular
+            - getTimelineUrl
+            - getPostShareLink
+            - getDiscoverRecommendFeeds
         - Album
             - changeGroupAlbumName
             - deleteGroupAlbum
             - addImageToAlbum
             - getAlbumImages
             - deleteAlbumImages
+        - Story (WIP)
+            - uploadStoryObject (WIP)
+            - createStoryContent (WIP)
+            - getRecentstoryStory
+            - sendMessageForStoryAuthor
     - CubeService (beta)
         - issueBillSplitId
         - getBillSplitShareLink
@@ -164,4 +184,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - openSession
         - connectEapAccount
         - verifyEapLogin
+        - getCountrySettingV4
+        - getRSAKeyInfo
+        - loginZ
+        - loginV2 (WIP)
 

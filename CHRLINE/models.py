@@ -10,10 +10,13 @@ import struct
 import time
 import json
 import os
+import rsa
 
 class Models(object):
 
-    def __init__(self):    
+    def __init__(self):
+        self.lcsStart = "0005"
+        self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
         self.encryptKey = b"DearSakura+2020/"
@@ -61,6 +64,8 @@ class Models(object):
         open(savePath + f"/{fn}", "w").write(newToken)
         self.authToken = newToken
         print(f"New Token: {newToken}")
+        self.server.timelineHeaders['X-Line-Access'] = self.authToken
+        self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[5] #need?
         
     def getCustomData(self):
         savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
@@ -95,6 +100,36 @@ class Models(object):
         fn = "cert.pem"
         open(savePath + f"/{fn}", "w").write(cert)
         return True
+        
+    def getEmailCert(self, email):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{email}.crt"
+        if os.path.exists(savePath + f"/{fn}"):
+            return open(savePath + f"/{fn}", "r").read()
+        return None
+        
+    def saveEmailCert(self, email, cert):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{email}.crt"
+        open(savePath + f"/{fn}", "w").write(cert)
+        return True
+    
+    def initWithAndroid(self):
+        # 4e09483e38f5ff7280127b9efb5c2d33
+        self.le = "7"
+        self.lcsStart = "0008"
+        self.PUBLIC_KEY = int("B0C0BA1C061E32AE11E7D7B6C91C3A5B53964F6B7D69EA62029E1F6D2097CD18FB036F41380140BCA97302E6F8A31375DCDB7C75B701F88080B9FC839CDE4D777FAF5E00F111767FB31DBFC2E15B0B70777AF48D291E2129CB3CD2CB91B3C68BE847968BE6C0536A1821CEFC05BAA1373C74582CD94896CC045C35565B14FC743F5DD894B9FA299794126B44B6E3A5D79B026699744ED2FEDB36FAF168D57471BBE21A43AF4E506DD7E45EAC8147313C374B02C39C23A8953CF70AE1395763AB3D90A60B49E598F473C147F1A31C6CFFAA8576964DA0E447FECE6641E9D2CAA3E4987F1304E9472563C7DDE37593A6992252B94B9E267146FFA0D451ABDC03D7", 16)
+        self.key = rsa.PublicKey(self.PUBLIC_KEY, 65537)
+        self.encryptKey = b"DearSakura+2020/"
+        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
+        self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
+        self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
+        self._encryptKey = self.lcsStart + b64encode(rsa.encrypt(self.encryptKey, self.key)).decode()
+        print(self._encryptKey)
 
     def encHeaders(self, headers):
         t = headers.keys()
@@ -113,7 +148,7 @@ class Models(object):
     def encEncKey(self):
         # heh
         a = rsaenc.new(self.key)
-        self._encryptKey = "0005" + b64encode(a.encrypt(self.encryptKey)).decode()
+        self._encryptKey = self.lcsStart + b64encode(a.encrypt(self.encryptKey)).decode()
         
     def encData(self, data):
         _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).encrypt(pad(data, AES.block_size))
@@ -199,9 +234,12 @@ class Models(object):
         return res
         
     def getStringBytes(self, text, isCompact=False):
+        if text is None:
+            text = ""
         text = str(text).encode()
         if isCompact:
-            sqrd = [len(text)]
+            _compact = self.TCompactProtocol()
+            sqrd = _compact.writeVarint(len(text))
         else:
             sqrd = self.getIntBytes(len(text))
         for value in text:
@@ -425,7 +463,21 @@ class Models(object):
             (fname, ftype, fid, offset) = _dec.readFieldBegin(data[a:])
             offset += a + 1
             if ftype == 12:
-                _data[b] = self.tryReadTCompactContainerStruct(data[a:])[0]
+                _data[b] = self.tryReadTCompactContainerStruct(data[a:])
+                if 0 in _data[b]:
+                    _data[b] = _data[b][0]
+                else:
+                    error = {
+                        'code': _data[b][1][1],
+                        'message': _data[b][1][2]
+                    }
+                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
+                        self.is_login = False
+                        raise Exception(f"LOGIN OUT: {error['message']}")
+                    _data[b] = {
+                        "error": error
+                    }
+                    print(_data)
         return _data
         
     def tryReadTCompactContainerStruct(self, data, id=0, get_data_len=False):

@@ -27,8 +27,7 @@ class SquareService(object):
         data = self.encData(_data)
         res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        print(data)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['inviteIntoSquareChat']
         
     def inviteToSquare(self, squareMid, invitees, squareChatMid):
         _headers = {
@@ -51,7 +50,7 @@ class SquareService(object):
         data = self.encData(_data)
         res = self.req_h2.post(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['inviteToSquare']
         
     def getJoinedSquares(self, continuationToken=None, limit=50):
         _headers = {
@@ -69,7 +68,7 @@ class SquareService(object):
         data = self.encData(_data)
         res = self.req_h2.post("https://gf.line.naver.jp/SQS1", data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['getJoinedSquares']
         
     def markAsRead(self, squareChatMid, messageId):
         _headers = {
@@ -91,7 +90,7 @@ class SquareService(object):
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.tryReadData(data)['markAsRead']
         
     def reactToMessage(self, squareChatMid, messageId, reactionType=2):
         """

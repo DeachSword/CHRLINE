@@ -32,8 +32,8 @@ class Thrift(object):
             if 0 < delta <= 15:
                 res.append(delta << 4 | type)
             else:
-                self.__writeByte(type)
-                self.__writeI16(fid)
+                res += self.__writeByte(type)
+                res += self.__writeI16(fid)
             self.__last_fid = fid
             return res
             
@@ -50,6 +50,20 @@ class Thrift(object):
                         return [result, i]
                     return result
                 shift += 7
+            
+        def writeVarint(self, data):
+            out = []
+            while True:
+                if data & ~0x7f == 0:
+                  out.append(data)
+                  break
+                else:
+                  out.append((data & 0xff) | 0x80)
+                  data = data >> 7
+            return out
+            
+        def __writeByte(self, byte):
+            return list(pack('!b', byte))
                 
         def __readVarint(self, data, return_len=False):
             return self.readVarint(data, return_len)
@@ -58,6 +72,13 @@ class Thrift(object):
             result, = unpack('!B', data)
             return result
             
+        def __writeI16(self, i16):
+            return self.writeVarint(self.makeZigZag(i16, 16))
+            
+        def makeZigZag(self, n, bits):
+            checkIntegerLimits(n, bits)
+            return (n << 1) ^ (n >> (bits - 1))
+
         def fromZigZag(self, n):
             return (n >> 1) ^ -(n & 1)
             
@@ -112,4 +133,18 @@ class Thrift(object):
         readI16 = __readZigZag
         readI32 = __readZigZag
         readI64 = __readZigZag
+
+def checkIntegerLimits(i, bits):
+    if bits == 8 and (i < -128 or i > 127):
+        raise Exception('INVALID_DATA',
+                                 "i8 requires -128 <= number <= 127")
+    elif bits == 16 and (i < -32768 or i > 32767):
+        raise Exception('INVALID_DATA',
+                                 "i16 requires -32768 <= number <= 32767")
+    elif bits == 32 and (i < -2147483648 or i > 2147483647):
+        raise Exception('INVALID_DATA',
+                                 "i32 requires -2147483648 <= number <= 2147483647")
+    elif bits == 64 and (i < -9223372036854775808 or i > 9223372036854775807):
+         raise Exception('INVALID_DATA',
+                                  "i64 requires -9223372036854775808 <= number <= 9223372036854775807")
             
