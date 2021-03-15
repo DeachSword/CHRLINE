@@ -2,6 +2,7 @@
 from datetime import datetime
 import copy
 import json, time, ntpath, re, hashlib
+from base64 import b64encode
 
 class Object(object):
 
@@ -86,11 +87,54 @@ class Object(object):
         if r.status_code != 201:
             raise Exception(f"Upload object home failure. Receive statue code: {r.status_code}")
         return objId
+    
+    def uploadMultipleImageToTalk(self, paths, to):
+        if type(paths) != list:
+            raise Exception('paths must be list')
+        sqrd_base = [13, 0, 18, 11, 11]
+        hashmap = {
+            "GID" : "0",
+            "GSEQ": "1",
+            "GTOTAL": str(len(paths))
+        }
+        sqrd = sqrd_base + self.getIntBytes(len(hashmap.keys()))
+        for hm in hashmap.keys():
+            sqrd += self.getStringBytes(hm)
+            sqrd += self.getStringBytes(hashmap[hm])
+        sqrd += [0]
+        data = bytes(sqrd)
+        msg = json.dumps({
+            "message": b64encode(data).decode('utf-8')
+        })
+        talkMeta = b64encode(msg.encode('utf-8')).decode('utf-8')
+        res = self.uploadObjTalk(paths[0], to=to, talkMeta=talkMeta, returnHeaders=True)
+        gid = res['x-line-message-gid']
+        msgIds = [res['x-obs-oid']]
+        if len(paths) > 1:
+            hashmap["GID"] = gid
+            nc = 2
+            for img in paths[1:]:
+                print(f"Upload image-{nc} with GID-{gid}...")
+                hashmap["GSEQ"] = str(nc)
+                sqrd = sqrd_base + self.getIntBytes(len(hashmap.keys()))
+                for hm in hashmap.keys():
+                    sqrd += self.getStringBytes(hm)
+                    sqrd += self.getStringBytes(hashmap[hm])
+                sqrd += [0]
+                data = bytes(sqrd)
+                msg = json.dumps({
+                    "message": b64encode(data).decode('utf-8')
+                })
+                talkMeta = b64encode(msg.encode('utf-8')).decode('utf-8')
+                res = self.uploadObjTalk(img, to=to, talkMeta=talkMeta, returnHeaders=True)
+                msgIds.append(res['x-obs-oid'])
+                nc += 1
+        return gid
         
-    def uploadObjTalk(self, path=None, type='image', objId=None, to=None):
+    def uploadObjTalk(self, path=None, type='image', objId=None, to=None, talkMeta=None, returnHeaders=False):
         if type not in ['image','gif','video','audio','file']:
             raise Exception('Invalid type value')
-        headers=None
+        headers=self.server.timelineHeaders
         files = {'file': open(path, 'rb')}
         #url = self.LINE_OBS_DOMAIN + '/talk/m/upload.nhn' #if reqseq not working
         url = self.LINE_OBS_DOMAIN + '/r/talk/m/reqseq'
@@ -127,11 +171,17 @@ class Object(object):
                 'x-obs-params': self.genOBSParams(params,'b64'), #base64 encode
                 'X-Line-Access': self.acquireEncryptedAccessToken()[7:]
             })
+        if talkMeta != None:
+            headers = self.server.additionalHeaders(headers, {
+                'X-Talk-Meta': talkMeta
+            })
         r = self.server.postContent(url, data=data, headers=headers, files=files)
         if r.status_code != 201:
-            console.log("uploadObjTalk: ", r.text)
+            print("uploadObjTalk: ", r.status_code)
             raise Exception('Upload %s failure.' % type)
         else:
+            if returnHeaders:
+                return r.headers
             if objId is None:
                 objId = r.headers['x-obs-oid'] #the message seq, if u oid using reqseq
             objHash = r.headers['x-obs-hash']  #for view on cdn

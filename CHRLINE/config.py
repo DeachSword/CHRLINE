@@ -15,6 +15,7 @@ class Config(object):
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
     def __init__(self, type="CHROME"):
+        self.isSecondary = False
         if type == "DESKTOPWIN":
             self.APP_VER = "6.5.2.2431"
             self.SYSTEM_NAME = "WINDOWS"
@@ -24,23 +25,24 @@ class Config(object):
             self.SYSTEM_NAME = "DESKTOPMAC"
         elif type == "CHROMEOS":
             self.APP_VER = "2.4.1"
-            self.SYSTEM_NAME = "Chrome_OS"
+            self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
         elif type == "ANDROIDLITE":
-            self.APP_VER = "2.15.0"
-            self.SYSTEM_NAME = "Android_OS"
+            self.APP_VER = "2.16.0"
+            self.SYSTEM_NAME = "Android OS"
+            self.isSecondary = True
         elif type == "IOSIPAD":
-            self.APP_VER = "10.16.2"
+            self.APP_VER = "11.2.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "ANDROID":
             self.APP_VER = "10.16.2"
-            self.SYSTEM_NAME = "Android_OS"
+            self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
             self.APP_VER = "12.1.2"
             self.SYSTEM_NAME = "iOS"
         elif type == "WATCHOS":
             self.APP_VER = "10.16.2"
-            self.SYSTEM_NAME = "watchOS"
+            self.SYSTEM_NAME = "Watch OS"
         else:
             raise Exception(f"未知的Device , 請至 config.py 新增")
         self.USER_AGENT = 'Line/%s' % self.APP_VER
@@ -56,3 +58,5 @@ class Config(object):
         if os_version is not None:
             self.SYSTEM_VER = os_version
         self.APP_NAME = "%s\t%s\t%s\t%s"%(self.APP_TYPE, self.APP_VER, self.SYSTEM_NAME, self.SYSTEM_VER)
+        if self.isSecondary:
+            self.APP_NAME += ';SECONDARY'

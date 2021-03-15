@@ -134,11 +134,14 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - updateProfileCover
         - uploadObjHome
         - uploadObjTalk
+        - uploadMultipleImageToTalk
     - TimelineService
         - MyHome
             - getProfileCoverDetail
             - updateProfileCoverById
             - sendContactV2
+            - getProfileDetail
+            - getTimelintTab
         - Post
             - getPost
             - createComment
@@ -166,6 +169,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - createStoryContent (WIP)
             - getRecentstoryStory
             - sendMessageForStoryAuthor
+        - Search
+            - Search
     - CubeService (beta)
         - issueBillSplitId
         - getBillSplitShareLink

@@ -122,11 +122,10 @@ class Models(object):
         self.lcsStart = "0008"
         self.le = "7"
         self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
-        self.key = RSA.importKey(self.PUBLIC_KEY)
+        self.PUBLIC_KEY = RSA.construct((a, b))
+        self.key = self.PUBLIC_KEY
         self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
-        self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
-        self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
         print(self._encryptKey)
 
@@ -296,13 +295,12 @@ class Models(object):
                 }
                 print(_data)
         else:
-            print(data.hex())
             if data[6:24] == b"x-line-next-access":
                 a = data[25]
-                print(f"AuthToken len: {a}")
                 b = data[26:26 + a]
                 self.handleNextToken(b.decode())
-                return self.tryReadData(data[26 + a:])
+                data = bytes([0, 0, 0, 0]) + data[26 + a:]
+                return self.tryReadData(data)
         return _data
         
     def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):

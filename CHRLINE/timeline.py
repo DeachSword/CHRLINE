@@ -7,6 +7,20 @@ class Timeline():
 
     """ TIMELINE """
     
+    def getProfileDetail(self, mid, styleMediaVersion='v2', storyVersion='v6'):
+        params = {
+            'homeId': mid,
+            'styleMediaVersion': styleMediaVersion,
+            'storyVersion': storyVersion
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'x-line-global-config': "discover.enable=true; follow.enable=true", #why get follow count with this?
+        })
+        url = self.server.urlEncode('https://ga2.line.naver.jp/hm', '/api/v1/home/profile.json', params)
+        r = self.server.postContent(url, headers=hr, data='')
+        return r.json()
+    
     def getProfileCoverDetail(self, mid):
         params = {
             'homeId': mid
@@ -39,6 +53,43 @@ class Timeline():
         url = 'https://ga2.line.naver.jp/hm/api/v1/home/profile/share'
         data = {"homeId":homeId,"shareType":"FLEX_OA_HOME_PROFILE_SHARING","targetMids":targetMids}
         r = self.server.postContent(url, headers=self.server.timelineHeaders, data=json.dumps(data))
+        result =  r.json()
+        if result['message'] == 'success':
+            return  result['result']
+        else:
+            return False
+            
+    def getTimelintTab(self, postLimit=20, likeLimit=6, commentLimit=10, requestTime=0):
+        url = 'https://ga2.line.naver.jp/tl/api/v57/timeline/tab.json'
+        data = {
+            "feedRequests": {
+                "FEED_LIST": {
+                    "version": "v57",
+                    "queryParams": {
+                        "postLimit": postLimit,
+                        "likeLimit": likeLimit,
+                        "commentLimit": commentLimit,
+                        "requestTime": 0,
+                        "userAction": "TAP-REFRESH_UEN",
+                        "order": "RANKING"
+                    },
+                    "requestBody": {
+                        "discover": {
+                            "contents": ["CP", "PI", "PV", "PL", "LL"]
+                        }
+                    }
+                },
+                "STORY": {
+                    "version": "v6"
+                }
+            }
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            'x-lsr': 'TW'
+        })
+        r = self.server.postContent(url, headers=hr, data=json.dumps(data))
         result =  r.json()
         if result['message'] == 'success':
             return  result['result']
@@ -445,4 +496,19 @@ class Timeline():
             "message": message}
         url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/message/send')
         r = self.server.postContent(url, data=data, headers=hr)
+        return r.json()
+        
+        
+    """ Search """
+        
+    def Search(self, q):
+        params = {
+            'q': q
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            #x-line-channeltoken: 1557852768
+        })
+        url = self.server.urlEncode('https://search.line.me', '/lnexearch', params)
+        r = self.server.postContent(url, headers=hr)
         return r.json()
