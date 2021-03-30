@@ -512,3 +512,4 @@ class Timeline():
         url = self.server.urlEncode('https://search.line.me', '/lnexearch', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
+        

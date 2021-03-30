@@ -10,6 +10,7 @@ class Server(object):
         self.Headers = {}
         self.timelineHeaders = {}
         self.channelHeaders = {}
+        self._session = requests.session()
 
     def parseUrl(self, path):
         return self.LINE_HOST_DOMAIN + path

@@ -127,6 +127,16 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - sendSquareMessage (text only)
     - BuddyService
         - getPromotedBuddyContacts
+    - PrimaryAccountInitService
+        - openPrimarySession
+        - getCountryInfo
+        - getPhoneVerifMethod
+        - sendPinCodeForPhone
+        - verifyPhone
+        - validateProfile
+        - exchangeEncryptionKey
+        - setPassword
+        - registerPrimaryUsingPhone
     - ObsService
         - forwardObjectMsg
         - trainingImage

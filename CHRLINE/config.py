@@ -2,8 +2,10 @@
 import re
 
 class Config(object):
-    LINE_ENC_HOST_DOMAIN        = 'https://gf.line.naver.jp/enc'
+    LINE_HOST_DOMAIN        = 'https://ga2.line.naver.jp'
     LINE_OBS_DOMAIN             = 'https://obs.line-apps.com'
+    
+    LINE_TALK_ENDPOINT        = '/enc'
     
     LINE_LANGUAGE = 'zh-Hant_TW'
 
@@ -35,7 +37,7 @@ class Config(object):
             self.APP_VER = "11.2.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "ANDROID":
-            self.APP_VER = "10.16.2"
+            self.APP_VER = "11.4.1"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
             self.APP_VER = "12.1.2"

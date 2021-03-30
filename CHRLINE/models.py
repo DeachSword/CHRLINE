@@ -19,7 +19,7 @@ class Models(object):
         self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
-        self.encryptKey = b"DearSakura+2020/"
+        self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
@@ -122,8 +122,7 @@ class Models(object):
         self.lcsStart = "0008"
         self.le = "7"
         self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
-        self.PUBLIC_KEY = RSA.construct((a, b))
-        self.key = self.PUBLIC_KEY
+        self.key = RSA.importKey(self.PUBLIC_KEY)
         self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
         self.encEncKey()
@@ -250,8 +249,10 @@ class Models(object):
             res.append(value)
         return res
         
-    def tryReadData(self, data):
+    def tryReadData(self, data, mode=1):
         _data = {}
+        if mode == 0:
+            data = bytes(4) + data
         if data[4] == 128:
             a = 12 + data[11]
             b = data[12:a].decode()
@@ -285,7 +286,8 @@ class Models(object):
                     t_l = data[a + 20]
                     error = {
                         'code': int.from_bytes(code, "big"),
-                        'message': data[a + 21:a + 21 + t_l].decode()
+                        'message': data[a + 21:a + 21 + t_l].decode(),
+                        'metadata': self.readContainerStruct(data[a + 21 + t_l:])
                     }
                     if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
                         self.is_login = False
@@ -418,7 +420,11 @@ class Models(object):
             _data[id] = []
             e = 8
             for _d in range(d):
-                if type == 11:
+                if type == 8:
+                    f = int.from_bytes(data[e:e+4], "big")
+                    _data[id].append(f)
+                    e += 4
+                elif type == 11:
                     f = data[e+3]
                     _data[id].append(data[e+4:e+4+f].decode())
                     e += f + 4

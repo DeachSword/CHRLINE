@@ -2,9 +2,11 @@
 import time
 import json
 import requests
+import http.client as http_client
 
 class TalkService(object):
-    url = "https://gf.line.naver.jp/enc"
+    url = "https://ga2.line.naver.jp/enc"
+    testConn = http_client.HTTPSConnection("gf.line.naver.jp", 443)
     
     def __init__(self):
         pass
@@ -72,8 +74,14 @@ class TalkService(object):
         data = self.encData(_data)
         if raw:
             return data
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
+        
+        #self.testConn.request("POST", "/enc", data, self.server.Headers)
+        #response = self.testConn.getresponse()
+        #print(response.status, response.reason)
+        #data = response.read()
+        res = self.server.postContent(self.LINE_HOST_DOMAIN + self.LINE_TALK_ENDPOINT, data=data, headers=self.server.Headers)
+        data = res.content
+        data = self.decData(data)
         return self.tryReadData(data)['sendMessage']
         
     def sendContact(self, to, mid):
@@ -104,13 +112,14 @@ class TalkService(object):
     def getProfile(self):
         _headers = {
             'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S2"
+            'x-lpqs': "/S3"
         }
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116, 80, 114, 111, 102, 105, 108, 101, 0, 0, 0, 0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
+        print(self.server.Headers)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getProfile']
@@ -148,7 +157,9 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)['sendChatChecked']
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['sendChatChecked']
         
     def unsendMessage(self, messageId):
         _headers = {
@@ -487,7 +498,7 @@ class TalkService(object):
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        self.sendMessage(to, 'Power by CHRLINE API')
+        self.sendMessage(to, 'Powered by CHRLINE API')
         return self.tryReadData(data)['acceptChatInvitation']
         
     def reissueChatTicket(self, groupMid):
@@ -546,7 +557,7 @@ class TalkService(object):
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        self.sendMessage(to, 'Power by CHRLINE API')
+        self.sendMessage(to, 'Powered by CHRLINE API')
         return self.tryReadData(data)['acceptChatInvitationByTicket']
         
     def updateChat(self, chatMid, chatSet, updatedAttribute=1):

@@ -9,8 +9,9 @@ from .services.LiffService import LiffService
 from .services.ChannelService import ChannelService
 from .services.SquareService import SquareService
 from .services.BuddyService import BuddyService
+from .services.PrimaryAccountInitService import PrimaryAccountInitService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -33,6 +34,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.revision = 0
         self.globalRev = 0
         self.individualRev = 0
+        PrimaryAccountInitService.__init__(self)
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -565,7 +567,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.decData(res.content)
         return self.tryReadData(data)['loginV2']
         
-    def loginZ(self, keynm, encData, systemName='Chrome', certificate=None, verifier=None):
+    def loginZ(self, keynm, encData, systemName='DeachSword-2021', certificate=None, verifier=None):
         _headers = {
             'x-lpqs': "/api/v3p/rs"
         }
@@ -689,4 +691,52 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
+        return data
+    
+    def testTMoreCompactSendMessage(self, to, text):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S4"
+        }
+        a = self.encHeaders(_headers)
+        
+        #sqrd = bytearray.fromhex('92 00 00 00 02 02 84 05 7B B0 19 9D 94 9F EE 69 DD 44 5E AA D3 21 CD 2B 34 EF BB BF 69 6F 67 69 6F 64 67 6A 7A 69 6F 64 66 67 75 79 69 6F 78 67 6A 73 64 66 6B 78 67 68 75 69 78 64 72 67 7A 69 73 6A 73 65 75 67 6A 75 75 75 75 75 75 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00')
+        #print(sqrd)
+        #00 02 00 00 92 41 01 04 D9 CB 6A 40 01 75 04 0C 24 7A 87 DC 1A 32 92 28 0C D5 B5 FE 42 CE 01 B2 80 23 00 BA B9 C4 A7 8F 99 06 80 D3 A9 ED FB 5D 00 00 00 0D 0D 0D 0D 0D 0D 0D 0D 0D 0D 0D 0D 0D 98 CD A2 82 AA E5 3F D9 5F BF B2 9F 9E AD D9 E4
+        #8221000d69737375654c696666566965771c18001c2c182163376262303139396439343966656536396464343435656161643332316364326200000000
+        
+        #sqrd = bytearray.fromhex('92 00 00 00 02 02 84 05 7B B0 19 9D 94 9F EE 69 DD 44 5E AA D3 21 CD 2B 34 EF BB BF 69 6F 67 69 6F 64 67 6A 7A 69 6F 64 66 67 75 79 69 6F 78 67 6A 73 64 66 6B 78 67 68 75 69 78 64 72 67 7A 69 73 6A 73 65 75 67 6A 75 75 75 75 75 75 02 00 00 00 00')
+        #sqrd = bytearray.fromhex('82 21 01 0B 73 65 6E 64 4D 65 73 73 61 67 65 15 98 05 1C 28 21 63 37 62 62 30 31 39 39 64 39 34 39 66 65 65 36 39 64 64 34 34 35 65 61 61 64 33 32 31 63 64 32 62 36 00 16 00 48 16 64 74 63 68 76 74 76 78 63 74 68 6E 76 79 63 79 6E 40 42 41 4F 20 42 15 00 3B 05 88 13 50 52 45 56 49 45 57 5F 55 52 4C 5F 45 4E 41 42 4C 45 44 04 74 72 75 65 10 61 70 70 5F 76 65 72 73 69 6F 6E 5F 63 6F 64 65 09 31 31 30 31 31 30 33 32 37 15 4E 4F 54 49 46 49 43 41 54 49 4F 4E 5F 44 49 53 41 42 4C 45 44 04 6E 75 6C 6C 12 61 70 70 5F 65 78 74 65 6E 73 69 6F 6E 5F 74 79 70 65 04 6E 75 6C 6C 07 4D 45 4E 54 49 4F 4E 4C 7B 22 4D 45 4E 54 49 4F 4E 45 45 53 22 3A 5B 7B 22 53 22 3A 22 31 37 22 2C 22 45 22 3A 22 32 31 22 2C 22 4D 22 3A 22 75 36 37 63 34 33 32 33 39 63 38 36 35 64 66 63 65 36 61 64 64 62 34 31 63 36 62 33 63 30 65 64 64 22 7D 5D 7D 13 00 00 00 00 00 00 00') #S4?
+        #92 41 01 0B C0 5A ?
+        #92 41 01 0B C0 5A 6C 8F 29 6D 6A 90 59 38 A0 03 75 
+        #92 41 01 06 C0 59 38 2C 9C 50 03 63 7B 
+        #92 41 01 0F C0 59 E8 0B 4D 91 E
+        #92 41 01 04 D9 CB 6A 40 01
+        
+        #c7bb0199d949fee69dd445eaad321cd2b
+        #u5756b96eef9cbb1963bbe3bfc0aec38a
+
+        #75 04 0C 24 7A 87 DC 1A 32 92 28 0C D5 B5 FE 42 CE mid?
+        #                                                                                  C
+        sqrd = bytearray.fromhex('02 02 55 7B B0 19 9D 94 9F EE 69 DD 44 5E AA D3 21 CD 2B 14 EF BB BF 54 54 45 54 53 54 53 59 55 54 53 59 55 46 53 59 46 0A 02 00 00 00 00 00 00 00')
+        sqrd = bytearray.fromhex('02 00 72 57 56 B9 6E EF 9C EE 19 63 BB E3 BF C0 AE C3 8A 0B EF BB BF 35 37 36 35 34 35 36 34 36 38 34 36 35 34 36 35 0A 02 B4 02 15 02 11 16 C0 D3 B5 FC AD 5E 59 1C 16 FC EF 98 E7 02 15 20 00')
+        sqrd = bytearray.fromhex('02 02 08 7B B0 19 9D 94 9F EE 69 DD 44 5E AA D3 21 CD 2B 14 EF BB BF 74 65 73 74 2F 43 41 35 36 38 34 36 35 34 36 35 02 B4 02 15 02 11 16 C0 D3 B5 FC AD 5E 59 1C 16 FC EF 98 E7 02 15 20 00')
+        #sqrd = bytearray.fromhex('02 02 08 7B B0 19 9D 94 9F EE 69 DD 44 5E AA D3 21 CD 2B 07 EF BB BF 40 35 0A 0A 02 00 00 00 00')
+        sqrd = bytearray.fromhex('92 41 01 09 C0 5A 6C 8F 29 6D 6A 91 40 02 75 D4 04 53 03 D1 CF 30 0E CA 5F 32 FB 1B A8 53 76 75 57 56 B9 6E EF 9C BB 19 63 BB E3 BF C0 AE C3 8A 01 2C 9E 88 40 B4 D2 91 0E CE EF D9 C1 FD 5D 32 B6 17 01 30 BE 88 33 00 01 00 E6 A9 EB A2 F5 99 06 CA EF D9 C1 FD 5D 26 73 63 65 6C 74 73 6D 72 68 69 75 73 6C 69 68 76 69 73 64 63 2C 72 6D 64 75 69 72 68 78 63 6C 63 6B 67 63 72 67 68 00 00')
+        sqrd = bytearray.fromhex('82 21 01 0B 73 65 6E 64 4D 65 73 73 61 67 65 15 98 05 1C 28 21 63 37 62 62 30 31 39 39 64 39 34 39 66 65 65 36 39 64 64 34 34 35 65 61 61 64 33 32 31 63 64 32 62 36 00 16 00 48 16 64 74 63 68 76 74 76 78 63 74 68 6E 76 79 63 79 6E 40 42 41 4F 20 42 15 00 3B 05 88 13 50 52 45 56 49 45 57 5F 55 52 4C 5F 45 4E 41 42 4C 45 44 04 74 72 75 65 10 61 70 70 5F 76 65 72 73 69 6F 6E 5F 63 6F 64 65 09 31 31 30 31 31 30 33 32 37 15 4E 4F 54 49 46 49 43 41 54 49 4F 4E 5F 44 49 53 41 42 4C 45 44 04 6E 75 6C 6C 12 61 70 70 5F 65 78 74 65 6E 73 69 6F 6E 5F 74 79 70 65 04 6E 75 6C 6C 07 4D 45 4E 54 49 4F 4E 4C 7B 22 4D 45 4E 54 49 4F 4E 45 45 53 22 3A 5B 7B 22 53 22 3A 22 31 37 22 2C 22 45 22 3A 22 32 31 22 2C 22 4D 22 3A 22 75 36 37 63 34 33 32 33 39 63 38 36 35 64 66 63 65 36 61 64 64 62 34 31 63 36 62 33 63 30 65 64 64 22 7D 5D 7D 13 00 00 00 00 00 00 00')
+        #4 -> 1
+        #7 -> 4
+        #9 -> 6
+        #10 -> 7
+        #15 -> 12
+        #16 -> 13
+        #20 -> 16
+        
+        print(sqrd)
+        sqr_rd = sqrd
+        _data = bytes(a) + bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        print(data.hex())
         return data
