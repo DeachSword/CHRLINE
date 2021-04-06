@@ -1180,7 +1180,7 @@ class TalkService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['rejectChatInvitation']
         
-    def updateProfileAttribute(self, int: attr, string: value):
+    def updateProfileAttribute(self, attr: int, value: str):
         """
         attr:
             ALL(0),
@@ -1201,16 +1201,13 @@ class TalkService(object):
         }
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('updateProfileAttribute') + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [8, 0, 2] + self.getIntBytes(attr)
         sqrd += [11, 0, 3] + self.getStringBytes(value)
-        sqrd += [0, 0]
+        sqrd += [0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['updateProfileAttribute']
-        
-        
