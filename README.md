@@ -100,6 +100,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getRepairElements
         - getSettingsAttributes2
         - rejectChatInvitation
+        - updateProfileAttribute
     - ShopService
         - getProduct
         - getProductsByAuthor

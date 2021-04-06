@@ -1180,3 +1180,37 @@ class TalkService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['rejectChatInvitation']
         
+    def updateProfileAttribute(self, int: attr, string: value):
+        """
+        attr:
+            ALL(0),
+            EMAIL(1),
+            DISPLAY_NAME(2),
+            PHONETIC_NAME(4),
+            PICTURE(8),
+            STATUS_MESSAGE(16),
+            ALLOW_SEARCH_BY_USERID(32),
+            ALLOW_SEARCH_BY_EMAIL(64),
+            BUDDY_STATUS(128),
+            MUSIC_PROFILE(256),
+            AVATAR_PROFILE(512);
+        """
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/S3"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('updateProfileAttribute') + [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
+        sqrd += [8, 0, 2] + self.getIntBytes(attr)
+        sqrd += [11, 0, 3] + self.getStringBytes(value)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
+        data = self.decData(res.content)
+        return self.tryReadData(data)['updateProfileAttribute']
+        
+        
