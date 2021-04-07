@@ -1,6 +1,7 @@
 from CHRLINE import *
 import os, hashlib, hmac, base64, time
 import axolotl_curve25519 as Curve25519
+from Crypto.Cipher import AES
 
 def getSHA256Sum(*args):
     instance = hashlib.sha256()
@@ -63,15 +64,18 @@ if 'error' in verify:
 
 cl.validateProfile(session, 'yinmo')
 
-exchangeEncryptionKey = cl.exchangeEncryptionKey(session, b64_public_key, b64_nonce, 2)
-print(exchangeEncryptionKey)
+exchangeEncryptionKey = cl.exchangeEncryptionKey(session, b64_public_key.decode(), b64_nonce.decode(), 1)
+print(f'exchangeEncryptionKey: {exchangeEncryptionKey}')
 
-sign = Curve25519.calculateAgreement(private_key, exchangeEncryptionKey[1])
+exc_key = base64.b64decode(exchangeEncryptionKey[0])
+exc_nonce = base64.b64decode(exchangeEncryptionKey[1])
+
+sign = Curve25519.calculateAgreement(private_key, exc_key)
 print(f"sign: {sign}")
 
 password = 'test2021Chrline'
 
-master_key = getSHA256Sum(b'master_key', sign, nonce, exchangeEncryptionKey[2])
+master_key = getSHA256Sum(b'master_key', sign, nonce, exc_nonce)
 aes_key = getSHA256Sum(b'aes_key', master_key)
 hmac_key = getSHA256Sum(b'hmac_key', master_key)
 
