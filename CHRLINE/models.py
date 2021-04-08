@@ -11,7 +11,7 @@ import time
 import json
 import os
 import rsa
-
+        
 class Models(object):
 
     def __init__(self):
@@ -276,26 +276,26 @@ class Models(object):
                 else:
                     print(f"[tryReadData]不支援Type: {c} => ID: {id}")
             else:
-                if c == 0:
+                if c != 0:
                     error = {}
-                elif c == 11:
-                    t_l = data[a + 10]
-                    error = data[a + 11:a + 11 + t_l].decode()
-                else:
-                    code = data[a + 10:a + 14]
-                    t_l = data[a + 20]
-                    error = {
-                        'code': int.from_bytes(code, "big"),
-                        'message': data[a + 21:a + 21 + t_l].decode(),
-                        'metadata': self.readContainerStruct(data[a + 21 + t_l:])
+                    if c == 11:
+                        t_l = data[a + 10]
+                        error = data[a + 11:a + 11 + t_l].decode()
+                    else:
+                        code = data[a + 10:a + 14]
+                        t_l = data[a + 20]
+                        error = {
+                            'code': int.from_bytes(code, "big"),
+                            'message': data[a + 21:a + 21 + t_l].decode(),
+                            'metadata': self.readContainerStruct(data[a + 21 + t_l:])
+                        }
+                        if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
+                            self.is_login = False
+                            raise Exception(f"LOGIN OUT: {error['message']}")
+                    _data[b] = {
+                        "error": error
                     }
-                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
-                        self.is_login = False
-                        raise Exception(f"LOGIN OUT: {error['message']}")
-                _data[b] = {
-                    "error": error
-                }
-                print(_data)
+                    print(_data)
         else:
             if data[6:24] == b"x-line-next-access":
                 a = data[25]

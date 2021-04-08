@@ -1211,3 +1211,4 @@ class TalkService(object):
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['updateProfileAttribute']
+        

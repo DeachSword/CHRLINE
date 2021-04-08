@@ -15,6 +15,9 @@ class PrimaryAccountInitService(object):
             "x-lpv": "1",
         }
         self.uuid = uuid.uuid4().hex
+    
+    def setPrimaryUuid(self, uuid):
+        self.uuid = uuid
         
     def openPrimarySession(self):
         _headers = {
@@ -78,6 +81,7 @@ class PrimaryAccountInitService(object):
         sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
         sqrd += [12, 0, 2]
         sqrd += [11, 0, 1] + self.getStringBytes(self.uuid)
+        print(f"UUID: {self.uuid}")
         sqrd += [11, 0, 2] + self.getStringBytes(deviceModel)
         sqrd += [0]
         sqrd += [12, 0, 3]
@@ -133,16 +137,18 @@ class PrimaryAccountInitService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['validateProfile']
         
-    def exchangeEncryptionKey(self, publicKey, nonce):
+    def exchangeEncryptionKey(self, authSessionId, publicKey, nonce, authKeyVersion=1):
         _headers = {
             'x-lpqs': "/acct/pais/v1"
         }
         a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('exchangeEncryptionKey') + [0, 0, 0, 0]
-        #sqrd += [8, 0, 1] + self.getIntBytes(authKeyVersion)
-        sqrd += [12, 0, 2] + self.getStringBytes(publicKey)
-        sqrd += [12, 0, 3] + self.getStringBytes(nonce)
-        sqrd += [0]
+        sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
+        sqrd += [12, 0, 2]
+        sqrd += [8, 0, 1] + self.getIntBytes(authKeyVersion)
+        sqrd += [11, 0, 2] + self.getStringBytes(publicKey)
+        sqrd += [11, 0, 3] + self.getStringBytes(nonce)
+        sqrd += [0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
@@ -150,7 +156,7 @@ class PrimaryAccountInitService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['exchangeEncryptionKey']
         
-    def setPassword(self, authSessionId, cipherText, encryptionKeyVersion=2):
+    def setPassword(self, authSessionId, cipherText, encryptionKeyVersion=1):
         _headers = {
             'x-lpqs': "/acct/pais/v1"
         }
