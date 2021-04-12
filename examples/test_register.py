@@ -2,6 +2,7 @@ from CHRLINE import *
 import os, hashlib, hmac, base64, time
 import axolotl_curve25519 as Curve25519
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
 
 def getSHA256Sum(*args):
     instance = hashlib.sha256()
@@ -67,8 +68,8 @@ cl.validateProfile(session, 'yinmo')
 exchangeEncryptionKey = cl.exchangeEncryptionKey(session, b64_public_key.decode(), b64_nonce.decode(), 1)
 print(f'exchangeEncryptionKey: {exchangeEncryptionKey}')
 
-exc_key = base64.b64decode(exchangeEncryptionKey[0])
-exc_nonce = base64.b64decode(exchangeEncryptionKey[1])
+exc_key = base64.b64decode(exchangeEncryptionKey[1])
+exc_nonce = base64.b64decode(exchangeEncryptionKey[2])
 
 sign = Curve25519.calculateAgreement(private_key, exc_key)
 print(f"sign: {sign}")
@@ -86,11 +87,17 @@ hmacd = hmac.new(
     msg=doFinal,
     digestmod=hashlib.sha256
 ).digest()
-encPwd = base64.b64encode(doFinal + hmacd)
+encPwd = base64.b64encode(doFinal + hmacd).decode()
 
 setPwd = cl.setPassword(session, encPwd, 1)
 print(setPwd)
 
 
 register = cl.registerPrimaryUsingPhone(session)
-print(f"[REGISTER] {register}") #authKey, using create_token(the key)
+print(f"[REGISTER] {register}")
+
+authKey = register[1] #authKey, using create_token(the key)
+authToken = create_token(authKey) #authToken for login
+
+print(f"authKey: {authKey}")
+print(f"authToken: {authToken}")
