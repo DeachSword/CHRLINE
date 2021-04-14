@@ -6,6 +6,7 @@ class Config(object):
     LINE_OBS_DOMAIN             = 'https://obs.line-apps.com'
     
     LINE_TALK_ENDPOINT        = '/enc'
+    LINE_SQUARE_QUERY_PATH        = '/SQ1'
     
     LINE_LANGUAGE = 'zh-Hant_TW'
 
@@ -40,8 +41,9 @@ class Config(object):
             self.APP_VER = "11.4.1"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "12.1.2"
+            self.APP_VER = "11.5.1"
             self.SYSTEM_NAME = "iOS"
+            self.SYSTEM_NAME = "12.1.2"
         elif type == "WATCHOS":
             self.APP_VER = "10.16.2"
             self.SYSTEM_NAME = "Watch OS"

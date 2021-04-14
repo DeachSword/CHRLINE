@@ -252,7 +252,7 @@ class Models(object):
     def tryReadData(self, data, mode=1):
         _data = {}
         if mode == 0:
-            data = bytes(4) + data
+            data = bytes(4) + data + bytes(4)
         if data[4] == 128:
             a = 12 + data[11]
             b = data[12:a].decode()

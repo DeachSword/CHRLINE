@@ -2,9 +2,6 @@
 import json, requests, urllib
 
 class Server(object):
-    _session        = requests.session()
-    timelineHeaders = {}
-    Headers         = {}
 
     def __init__(self):
         self.Headers = {}

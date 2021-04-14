@@ -36,7 +36,7 @@ This shows that TMoreCompact has the best compression\
 If you want to write TMoreCompact, only need to sniff results and reverse engineer
 
 ####  Requirement
-- Python 3
+- Python 3.6
     - pycrypto
     - pycryptodemo
     - xxhash

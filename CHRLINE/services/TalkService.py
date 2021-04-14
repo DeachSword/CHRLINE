@@ -2,14 +2,13 @@
 import time
 import json
 import requests
-import http.client as http_client
 
 class TalkService(object):
     url = "https://ga2.line.naver.jp/enc"
-    testConn = http_client.HTTPSConnection("gf.line.naver.jp", 443)
     
     def __init__(self):
-        pass
+        self.testTalkConn = requests.session()
+        self.testPollConn = requests.session()
 
     def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, location=None, raw=False):
         _headers = {
@@ -74,12 +73,7 @@ class TalkService(object):
         data = self.encData(_data)
         if raw:
             return data
-        
-        #self.testConn.request("POST", "/enc", data, self.server.Headers)
-        #response = self.testConn.getresponse()
-        #print(response.status, response.reason)
-        #data = response.read()
-        res = self.server.postContent(self.LINE_HOST_DOMAIN + self.LINE_TALK_ENDPOINT, data=data, headers=self.server.Headers)
+        res = self.testTalkConn.post(self.url, data=data, headers=self.server.Headers)
         data = res.content
         data = self.decData(data)
         return self.tryReadData(data)['sendMessage']
@@ -1047,7 +1041,7 @@ class TalkService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['getConfigurations']
         
-    def fetchOps(self, revision, count=500):
+    def fetchOps(self, revision, count=100):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/P3"
@@ -1065,7 +1059,8 @@ class TalkService(object):
         hr = self.server.additionalHeaders(self.server.Headers, {
             "x-lst": "180000",
         })
-        res = self.server.postContent("https://gfp.line.naver.jp/enc", data=data, headers=hr)
+        print(f'fetchOps: {self.mid}')
+        res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180.0)
         if res.status_code == 200:
             data = self.decData(res.content)
             data = self.tryReadData(data)
@@ -1079,6 +1074,8 @@ class TalkService(object):
                             b = op[11].split('\x1e')
                             self.globalRev = b[0]
                 return data['fetchOps']
+            else:
+                raise Exception(f"no data")
         return []
         
     def fetchOperations(self, deviceId, offsetFrom):

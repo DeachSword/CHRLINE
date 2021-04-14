@@ -37,6 +37,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
         if 'error' in self.profile:
             raise Exception(f"登入失敗... {self.profile['error']}")
         print(f"[{self.profile[20]}] 登入成功 ({self.profile[1]})")
+        self.mid = self.profile[1]
         system(f"title CHRLINE - {self.profile[20]}")
         self.revision = self.getLastOpRevision()
         self.groups = self.getAllChatMids()[1]
@@ -59,6 +60,14 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
         self.is_login = True
         self.can_use_square = False
         self.squares = None
+        self.square_headers = {
+            'x-line-application': self.server.Headers['x-line-application'],
+            'User-Agent': self.server.Headers['User-Agent'],
+            'X-Line-Access': self.authToken,
+            "content-type": "application/x-thrift; protocol=TBINARY",
+            "x-lal": self.LINE_LANGUAGE,
+            "x-lhm": "POST",
+        }
         _squares = self.getJoinedSquares()
         if 'error' not in _squares:
             self.can_use_square = True

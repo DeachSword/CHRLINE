@@ -34,6 +34,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.revision = 0
         self.globalRev = 0
         self.individualRev = 0
+        TalkService.__init__(self)
         PrimaryAccountInitService.__init__(self)
 
     def requestEmailLogin(self, email, pw):
