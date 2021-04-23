@@ -51,6 +51,27 @@ class SquareService(object):
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
         return self.tryReadData(data, mode=0)['getJoinedSquares']
+
+    def getJoinedSquares2(self, continuationToken=None, limit=50):
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/SQ1"
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 74, 111, 105, 110, 101, 100, 83, 113, 117, 97, 114, 101, 115, 0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        #sqrd += [11, 0, 2] + self.getStringBytes(continuationToken)
+        sqrd += [8, 0, 3] + self.getIntBytes(limit)
+        sqrd += [0, 0]
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
+        print(res.headers)
+        print(len(res.content))
+        data = self.decData(res.content)
+        print(len(data))
+        return self.tryReadData(data, mode=0)['getJoinedSquares']
         
     def markAsRead(self, squareChatMid, messageId):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 109, 97, 114, 107, 65, 115, 82, 101, 97, 100, 0, 0, 0, 0]

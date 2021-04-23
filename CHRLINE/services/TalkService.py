@@ -1057,10 +1057,9 @@ class TalkService(object):
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         hr = self.server.additionalHeaders(self.server.Headers, {
-            "x-lst": "180000",
+            "x-lst": "110000",
         })
-        print(f'fetchOps: {self.mid}')
-        res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180.0)
+        res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180)
         if res.status_code == 200:
             data = self.decData(res.content)
             data = self.tryReadData(data)

@@ -472,7 +472,8 @@ class Models(object):
                 else:
                     error = {
                         'code': _data[b][1][1],
-                        'message': _data[b][1][2]
+                        'message': _data[b][1][2],
+                        'metadata': _data[b][1].get(3, None)
                     }
                     if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
                         self.is_login = False
@@ -497,7 +498,9 @@ class Models(object):
         elif ftype == 5:
             (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
             nextPos += 1
-        elif ftype == 9:
+        elif ftype == 9 or ftype == 10:
+            ### todo:
+            #       ftype == 10 == SET
             (vtype, vsize) = _dec.readCollectionBegin(data[offset:])
             offset += 1
             _data[fid] = []
@@ -513,7 +516,7 @@ class Models(object):
             nextPos += 2
             _data[fid] = __data
         elif ftype != 0:
-            print(f"[readContainerStruct]不支援Type: {ftype} => ID: {fid}")
+            print(f"[tryReadTCompactContainerStruct]不支援Type: {ftype} => ID: {fid}")
         if nextPos > 0:
             data = data[nextPos:]
             c = self.tryReadTCompactContainerStruct(data, id=fid, get_data_len=True)

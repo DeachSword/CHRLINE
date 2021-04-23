@@ -133,6 +133,8 @@ class Thrift(object):
         readI16 = __readZigZag
         readI32 = __readZigZag
         readI64 = __readZigZag
+        readSetBegin = readCollectionBegin
+        readListBegin = readCollectionBegin
 
 def checkIntegerLimits(i, bits):
     if bits == 8 and (i < -128 or i > 127):

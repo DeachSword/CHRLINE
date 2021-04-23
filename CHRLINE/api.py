@@ -28,7 +28,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lal": self.LINE_LANGUAGE,
-            "x-lhm": "POST",
+            "x-lhm": "POST"
         }
         self.authToken = None
         self.revision = 0
@@ -67,8 +67,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        
+        res = self.req.post(self.url, data=data, headers=self.server.Headers)
+        print(res.headers)
+        print(len(res.content))
         data = self.decData(res.content)
         sqr = data[39:105].decode()
         url = self.createSession(sqr)

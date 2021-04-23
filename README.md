@@ -110,7 +110,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - LiffService
         - issueLiffView
         - getLiffViewWithoutUserContext
-        - sendLiff
+        - issueSubLiffView
     - ChannelService
         - issueChannelToken
         - approveChannelAndIssueChannelToken
