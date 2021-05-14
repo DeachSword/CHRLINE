@@ -52,7 +52,7 @@ class Models(object):
         fn = md5(self.authToken.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.authToken = open(savePath + f"/{fn}", "r").read()
-            print(f"New Token: {self.authToken}")
+            self.log(f"New Token: {self.authToken}")
             self.checkNextToken()
         return self.authToken
 
@@ -63,7 +63,7 @@ class Models(object):
         fn = md5(self.authToken.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(newToken)
         self.authToken = newToken
-        print(f"New Token: {newToken}")
+        self.log(f"New Token: {newToken}")
         self.server.timelineHeaders['X-Line-Access'] = self.authToken
         self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[5] #need?
         
@@ -223,7 +223,12 @@ class Models(object):
             t = 0 - (t - 1 ^ 255)
         return t
         
-    def getIntBytes(self, i, l=4):
+    def getIntBytes(self, i, l=4, isCompact=False):
+        if isCompact:
+            _compact = self.TCompactProtocol()
+            a = _compact.makeZigZag(i, 16)
+            b = _compact.writeVarint(a)
+            return b
         _seq = int(i).to_bytes(l, byteorder="big")
         res = []
         for value in _seq:

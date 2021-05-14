@@ -30,6 +30,10 @@ def create_token(auth_key: str) -> str:
     return mid + ":" + iat + "." + digest
 
 
+UPDATE_NAME = True
+DISPLAY_NAME = "yinmo"
+
+
 
 cl = CHRLINE(noLogin=True)
 session = cl.openPrimarySession()
@@ -101,3 +105,12 @@ authToken = create_token(authKey) #authToken for login
 
 print(f"authKey: {authKey}")
 print(f"authToken: {authToken}")
+
+
+if UPDATE_NAME:
+    cl = CHRLINE(authToken) #login
+    cl.updateProfileAttribute(2, DISPLAY_NAME) #update display name
+
+    # update email step:
+    # openAuthSession -> getAuthRSAKey and encrypt -> setIdentifier -> confirmIdentifier
+

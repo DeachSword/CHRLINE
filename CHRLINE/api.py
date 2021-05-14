@@ -10,8 +10,9 @@ from .services.ChannelService import ChannelService
 from .services.SquareService import SquareService
 from .services.BuddyService import BuddyService
 from .services.PrimaryAccountInitService import PrimaryAccountInitService
+from .services.AuthService import AuthService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -36,6 +37,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.individualRev = 0
         TalkService.__init__(self)
         PrimaryAccountInitService.__init__(self)
+        AuthService.__init__(self)
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -68,8 +70,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req.post(self.url, data=data, headers=self.server.Headers)
-        print(res.headers)
-        print(len(res.content))
         data = self.decData(res.content)
         sqr = data[39:105].decode()
         url = self.createSession(sqr)
@@ -91,8 +91,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                     self.authToken = e.decode()
                     print(f"AuthToken: {self.authToken}")
                 else:
-                    return e.decode()
-                return self.authToken
+                    yield e.decode()
+                    return
+                yield self.authToken
+                return
         return False
         
     def createSession(self, qrcode):
@@ -602,7 +604,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
     def checkLoginZPinCode(self, accessSession):
         _headers = {
             'X-Line-Access': accessSession,
-            'x-lpqs': "/Q"
+            'x-lpqs': "/Q" #LF1
         }
         a = self.encHeaders(_headers)
         sqr_rd = a

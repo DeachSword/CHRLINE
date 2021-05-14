@@ -1059,22 +1059,26 @@ class TalkService(object):
         hr = self.server.additionalHeaders(self.server.Headers, {
             "x-lst": "110000",
         })
-        res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180)
-        if res.status_code == 200:
-            data = self.decData(res.content)
-            data = self.tryReadData(data)
-            if 'fetchOps' in data:
-                for op in data['fetchOps']:
-                    if op[3] == 0:
-                        if 10 in op:
-                            a = op[10].split('\x1e')
-                            self.individualRev = a[0]
-                        if 11 in op:
-                            b = op[11].split('\x1e')
-                            self.globalRev = b[0]
-                return data['fetchOps']
-            else:
-                raise Exception(f"no data")
+        try:
+            res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180)
+            if res.status_code == 200:
+                data = self.decData(res.content)
+                data = self.tryReadData(data)
+                if 'fetchOps' in data:
+                    for op in data['fetchOps']:
+                        if op[3] == 0:
+                            if 10 in op:
+                                a = op[10].split('\x1e')
+                                self.individualRev = a[0]
+                            if 11 in op:
+                                b = op[11].split('\x1e')
+                                self.globalRev = b[0]
+                    return data['fetchOps']
+                else:
+                    raise Exception(f"no data")
+        except Exception as e:
+            print(f"[fetchOps]{e}")
+            return self.fetchOps(revision, count)
         return []
         
     def fetchOperations(self, deviceId, offsetFrom):
