@@ -254,6 +254,19 @@ class Models(object):
             res.append(value)
         return res
         
+    def getMagicStringBytes(self, val):
+        res = []
+        i = 0
+        if len(val) == 32:
+            for ii in range(16):
+                iii = ii * 2
+                i = iii + 1
+                mgc = (int(val[iii], 16) << 4) + int(val[i], 16)
+                res.append(mgc)
+        else:
+            raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
+        return res
+        
     def tryReadData(self, data, mode=1):
         _data = {}
         if mode == 0:

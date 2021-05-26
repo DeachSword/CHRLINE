@@ -30,7 +30,7 @@ class Object(object):
         r = self.server.postContent(url, headers=self.server.timelineHeaders, data={'params': json.dumps(params)}, files={'file':file})
         if r.status_code != 201:
             raise Exception(f"updateProfileImage failure. Receive statue code: {r.status_code}")
-        return objId
+        return True
     
     def updateProfileCover(self, path):
         hstr = 'DearSakura_%s' % int(time.time() * 1000)

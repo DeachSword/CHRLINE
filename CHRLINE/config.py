@@ -3,7 +3,8 @@ import re
 
 class Config(object):
     LINE_HOST_DOMAIN        = 'https://ga2.line.naver.jp'
-    LINE_OBS_DOMAIN             = 'https://obs.line-apps.com'
+    LINE_OBS_DOMAIN         = 'https://obs.line-apps.com'
+    LINE_OBS_CDN_DOMAIN     = 'https://obs.line-scdn.net'
     
     LINE_TALK_ENDPOINT        = '/enc'
     LINE_SQUARE_QUERY_PATH        = '/SQ1'
@@ -38,7 +39,7 @@ class Config(object):
             self.APP_VER = "11.2.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "ANDROID":
-            self.APP_VER = "11.4.1"
+            self.APP_VER = "11.8.1"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
             self.APP_VER = "11.5.1"

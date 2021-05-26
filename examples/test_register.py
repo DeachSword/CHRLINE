@@ -108,7 +108,7 @@ print(f"authToken: {authToken}")
 
 
 if UPDATE_NAME:
-    cl = CHRLINE(authToken) #login
+    cl = CHRLINE(authToken, device="ANDROID") #login
     cl.updateProfileAttribute(2, DISPLAY_NAME) #update display name
 
     # update email step:

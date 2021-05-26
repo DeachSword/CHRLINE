@@ -88,6 +88,35 @@ class TalkService(object):
     def sendLocationMessage(self, to, title, la=0.0, lb=0.0, subTile='CHRLINE API'):
         data = {1: title, 2: subTile, 3: la, 4: lb}
         return self.sendMessage(to, "test", location=data)
+        
+    def sendCompactMessage(self, to, text):
+        """ test func for /CA5 """
+        _headers = {
+            'X-Line-Access': self.authToken, 
+            'x-lpqs': "/CA5" # /ECA5
+        }
+        a = self.encHeaders(_headers)
+        sqrd = [2]
+        midType = to[0]
+        if midType == 'u':
+            sqrd.append(0)
+        elif midType == 'r':
+            sqrd.append(1)
+        elif midType == 'c':
+            sqrd.append(2)
+        else:
+            raise Exception(f"unknown midType: {midType}")
+        sqrd += [134, 134, 3] # seq?
+        sqrd += self.getMagicStringBytes(to[1:])
+        sqrd += self.getStringBytes(text, isCompact=True)
+        sqrd.append(2)
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        res = self.testTalkConn.post(self.url, data=data, headers=self.server.Headers)
+        data = res.content
+        data = self.decData(data)
+        return self.tryReadData(data)
     
     def getEncryptedIdentity(self):
         _headers = {
@@ -113,7 +142,6 @@ class TalkService(object):
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
-        print(self.server.Headers)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)['getProfile']
