@@ -110,6 +110,22 @@ class Timeline():
             'x-lpv': '1',
             'x-lsr':'TW'
         })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v52/post/list.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+
+    def listPost(self, mid, postId=None, updatedTime=None):
+        params = {
+            'homeId': mid
+        }
+        if postId is not None:
+            params['postId'] = postId
+        if updatedTime is not None:
+            params['updatedTime'] = updatedTime
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
         url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/post/get.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -501,7 +517,7 @@ class Timeline():
         
     """ Search """
         
-    def Search(self, q):
+    def lnexearch(self, q):
         params = {
             'q': q
         }
@@ -510,6 +526,23 @@ class Timeline():
             #x-line-channeltoken: 1557852768
         })
         url = self.server.urlEncode('https://search.line.me', '/lnexearch', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+        
+    """ Sc """
+        
+    def getPageInfo(self, url):
+        params = {
+            'url': url,
+            'caller': 'TALK',
+            'lang': self.LINE_LANGUAGE
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/sc/api/v2/pageinfo/get.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
         
