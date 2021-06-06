@@ -139,6 +139,20 @@ class SquareService(object):
         data = res.content
         return self.tryReadData(data)['fetchMyEvents']
         
+    def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=50):
+        sqrd = [128, 1, 0, 1] + self.getStringBytes("fetchSquareChatEvents") +  [0, 0, 0, 0]
+        sqrd += [12, 0, 1]
+        sqrd += [10, 0, 1] + self.getIntBytes(subscriptionId, 8)
+        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
+        sqrd += [11, 0, 3] + self.getStringBytes(syncToken)
+        sqrd += [8, 0, 4] + self.getIntBytes(limit)
+        sqrd += [0, 0]
+        sqr_rd = sqrd
+        data = bytes(sqr_rd)
+        res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
+        data = res.content
+        return self.tryReadData(data)['fetchSquareChatEvents']
+        
     def sendSquareMessage(self, squareChatMid, text):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("sendMessage") +  [0, 0, 0, 0]
         sqrd += [12, 0, 1]

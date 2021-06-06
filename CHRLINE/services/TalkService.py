@@ -96,7 +96,7 @@ class TalkService(object):
             'x-lpqs': "/CA5" # /ECA5
         }
         a = self.encHeaders(_headers)
-        sqrd = [2]
+        sqrd = [2] # 5 if E2EE, 6 if E2EE location
         midType = to[0]
         if midType == 'u':
             sqrd.append(0)
