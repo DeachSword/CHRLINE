@@ -188,6 +188,14 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getBillSplitSurvey
         - putBillSplitBills (test)
         - snedBillSplitBills
+    - AuthService
+        - openAuthSession
+        - getAuthRSAKey
+        - setIdentifier
+        - updateIdentifier
+        - resendIdentifierConfirmation
+        - confirmIdentifier
+        - removeIdentifier
     - Others
         - returnTicket (test)
         - getModulesV2

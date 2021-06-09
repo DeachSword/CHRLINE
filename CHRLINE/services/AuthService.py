@@ -108,8 +108,8 @@ class AuthService(object):
         sqrd += [11, 0, 2] + self.getStringBytes(authSessionId)
         sqrd += [12, 0, 3]
         sqrd += [12, 0, 5]
-        sqrd += [2, 0, 2] + self.getIntBytes(1) #forceRegistration : 1?
-        sqrd += [1, 0, 3] + self.getStringBytes(verificationCode) #verificationCode
+        # sqrd += [2, 0, 2] + self.getIntBytes(1) #forceRegistration : 1?
+        sqrd += [11, 0, 3] + self.getStringBytes(verificationCode) #verificationCode
         sqrd += [0, 0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
