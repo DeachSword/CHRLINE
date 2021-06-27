@@ -10,7 +10,9 @@ from CHRLINE import *
 
 import rsa, binascii
 
-cl = CHRLINE(token, device="ANDROID", os_version="8.0.1")
+cl = CHRLINE(token, device="ANDROID", os_version="8.0.1") # use primary token :)
+
+updateType = int(input("Update/Delete Email(1/2): "))
 
 settings = cl.getSettings() # 41 is mail
 currEmail = settings.get(41)
@@ -26,7 +28,16 @@ nvalue = rsaInfo[2]
 evalue = rsaInfo[3]
 sessionKey = rsaInfo[4]
 
-email = input('Email: ')
+if updateType == 1:
+    email = input('Email: ')
+elif updateType == 2:
+    email = currEmail
+    if currEmail is None:
+        print('current mail is None')
+        exit()
+else:
+    print(f'Not support updateType: {updateType}')
+    exit()
 pw = ''
 message = (chr(len(sessionKey)) + sessionKey +
            chr(len(email)) + email + 
@@ -34,16 +45,19 @@ message = (chr(len(sessionKey)) + sessionKey +
 pub_key = rsa.PublicKey(int(nvalue, 16), int(evalue, 16))
 crypto = binascii.hexlify(rsa.encrypt(message, pub_key)).decode()
 
-if currEmail is None:
-    res = cl.setIdentifier(session, keynm, crypto)
+if updateType == 2:
+    res = cl.removeIdentifier(session, keynm, crypto)
 else:
-    res = cl.updateIdentifier(session, keynm, crypto)
-print(res)
-responseType = res[2]
-confirmationVerifier = res[3]
+    if currEmail is None:
+        res = cl.setIdentifier(session, keynm, crypto)
+    else:
+        res = cl.updateIdentifier(session, keynm, crypto)
+    print(res)
+    responseType = res[2]
+    confirmationVerifier = res[3]
 
-pincode = input('Pincode: ')
-res = cl.confirmIdentifier(session, pincode)
+    pincode = input('Pincode: ')
+    res = cl.confirmIdentifier(session, pincode)
 responseType = res.get(2)
 
 if responseType == 1:

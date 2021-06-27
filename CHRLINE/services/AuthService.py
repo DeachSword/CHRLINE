@@ -118,7 +118,7 @@ class AuthService(object):
         data = self.decData(res.content)
         return self.tryReadData(data)['confirmIdentifier']
         
-    def removeIdentifier(self, authSessionId: str, verificationCode: str):
+    def removeIdentifier(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         _headers = {
             'X-Line-Access': self.authToken, 
             'x-lpqs': "/RS3"
@@ -127,6 +127,9 @@ class AuthService(object):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('removeIdentifier') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(authSessionId)
         sqrd += [12, 0, 3]
+        sqrd += [8, 0, 2] + self.getIntBytes(1) #identityProvider
+        sqrd += [11, 0, 3] + self.getStringBytes(cipherKeyId) #cipherKeyId
+        sqrd += [11, 0, 4] + self.getStringBytes(cipherText) #cipherText
         sqrd += [0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
