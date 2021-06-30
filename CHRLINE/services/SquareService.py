@@ -21,7 +21,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['inviteIntoSquareChat']
+        return self.tryReadData(data, mode=0)['inviteIntoSquareChat']
         
     def inviteToSquare(self, squareMid, invitees, squareChatMid):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("inviteToSquare") +  [0, 0, 0, 0]
@@ -38,7 +38,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['inviteToSquare']
+        return self.tryReadData(data, mode=0)['inviteToSquare']
 
     def getJoinedSquares(self, continuationToken=None, limit=50):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 74, 111, 105, 110, 101, 100, 83, 113, 117, 97, 114, 101, 115, 0, 0, 0, 0]
@@ -67,10 +67,7 @@ class SquareService(object):
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.req_h2.post("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        print(res.headers)
-        print(len(res.content))
         data = self.decData(res.content)
-        print(len(data))
         return self.tryReadData(data, mode=0)['getJoinedSquares']
         
     def markAsRead(self, squareChatMid, messageId):
@@ -87,7 +84,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['markAsRead']
+        return self.tryReadData(data, mode=0)['markAsRead']
         
     def reactToMessage(self, squareChatMid, messageId, reactionType=2):
         """
@@ -112,7 +109,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['reactToMessage']
+        return self.tryReadData(data, mode=0)['reactToMessage']
         
     def findSquareByInvitationTicket(self, invitationTicket):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("findSquareByInvitationTicket") +  [0, 0, 0, 0]
@@ -123,7 +120,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['findSquareByInvitationTicket']
+        return self.tryReadData(data, mode=0)['findSquareByInvitationTicket']
         
     def fetchMyEvents(self, subscriptionId=0, syncToken='', continuationToken=None, limit=50):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("fetchMyEvents") +  [0, 0, 0, 0]
@@ -137,7 +134,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['fetchMyEvents']
+        return self.tryReadData(data, mode=0)['fetchMyEvents']
         
     def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=50):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("fetchSquareChatEvents") +  [0, 0, 0, 0]
@@ -151,7 +148,7 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['fetchSquareChatEvents']
+        return self.tryReadData(data, mode=0)['fetchSquareChatEvents']
         
     def sendSquareMessage(self, squareChatMid, text):
         sqrd = [128, 1, 0, 1] + self.getStringBytes("sendMessage") +  [0, 0, 0, 0]
@@ -171,4 +168,4 @@ class SquareService(object):
         data = bytes(sqr_rd)
         res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         data = res.content
-        return self.tryReadData(data)['sendMessage']
+        return self.tryReadData(data, mode=0)['sendMessage']

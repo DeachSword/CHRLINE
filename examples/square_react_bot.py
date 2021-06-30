@@ -1,4 +1,5 @@
-from CHRLINE.CHRLINE import *
+import random
+from CHRLINE import *
 
 cl = CHRLINE(device="IOSIPAD")
 print(cl.authToken)

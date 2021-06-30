@@ -508,14 +508,17 @@ class Models(object):
         (fname, ftype, fid, offset) = _dec.readFieldBegin(data)
         nextPos = 0
         fid += id
-        if ftype == 8:
-            (_data[fid], nextPos) = _dec.readBinary(data[offset:])
+        if ftype == 1:
+            _data[fid] = _dec.readBool()
+            nextPos = 1
         elif ftype == 2:
             _data[fid] = _dec.readBool()
             nextPos = 1
         elif ftype == 5:
             (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
             nextPos += 1
+        elif ftype == 8:
+            (_data[fid], nextPos) = _dec.readBinary(data[offset:])
         elif ftype == 9 or ftype == 10:
             ### todo:
             #       ftype == 10 == SET
