@@ -2,11 +2,40 @@
 
 import json, time, base64
 
+def loggedIn(func):
+    def checkLogin(*args, **kwargs):
+        if args[0].can_use_timeline:
+            return func(*args, **kwargs)
+        else:
+            raise Exception("can't use Timeline func")
+    return checkLogin
+
 class Timeline():
 
+    def __init__(self):
+        TIMELINE_CHANNEL_ID = "1341209950"
+        self.can_use_timeline = False
+        try:
+            if self.APP_TYPE == "CHROMEOS":
+                TIMELINE_CHANNEL_ID = "1341209850"
+            self.server.timelineHeaders = {
+                'x-line-application': self.server.Headers['x-line-application'],
+                'User-Agent': self.server.Headers['User-Agent'],
+                'X-Line-Mid': self.profile[1],
+                'X-Line-Access': self.authToken,
+                'X-Line-ChannelToken': self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID)[5],
+                'x-lal': self.LINE_LANGUAGE,
+                "X-LAP": "5",
+                "X-LPV": "1",
+                "X-LSR": self.LINE_SERVICE_REGION,
+            }
+            self.can_use_timeline = True
+        except:
+            self.log("can't use Timeline")
 
     """ TIMELINE """
-    
+
+    @loggedIn
     def getProfileDetail(self, mid, styleMediaVersion='v2', storyVersion='v6'):
         params = {
             'homeId': mid,
@@ -20,7 +49,8 @@ class Timeline():
         url = self.server.urlEncode('https://ga2.line.naver.jp/hm', '/api/v1/home/profile.json', params)
         r = self.server.postContent(url, headers=hr, data='')
         return r.json()
-    
+
+    @loggedIn
     def getProfileCoverDetail(self, mid):
         params = {
             'homeId': mid
@@ -33,6 +63,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, data='')
         return r.json()
 
+    @loggedIn
     def updateProfileCoverById(self, objid, vObjid=None):
         data = {
             "homeId": self.profile[1],
@@ -49,6 +80,7 @@ class Timeline():
         r = self.server.postContent('https://ga2.line.naver.jp/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
         return r.json()
 
+    @loggedIn
     def sendContactV2(self, homeId, targetMids):
         url = 'https://ga2.line.naver.jp/hm/api/v1/home/profile/share'
         data = {"homeId":homeId,"shareType":"FLEX_OA_HOME_PROFILE_SHARING","targetMids":targetMids}
@@ -58,7 +90,8 @@ class Timeline():
             return  result['result']
         else:
             return False
-            
+
+    @loggedIn
     def getTimelintTab(self, postLimit=20, likeLimit=6, commentLimit=10, requestTime=0):
         url = 'https://ga2.line.naver.jp/tl/api/v57/timeline/tab.json'
         data = {
@@ -99,6 +132,7 @@ class Timeline():
 
     """ POST """
 
+    @loggedIn
     def getPost(self, mid, postId):
         params = {
             'homeId': mid,
@@ -114,6 +148,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def listPost(self, mid, postId=None, updatedTime=None):
         params = {
             'homeId': mid
@@ -130,6 +165,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def createComment(self, mid, contentId, text):
         params = {
             'homeId': mid
@@ -162,6 +198,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
+    @loggedIn
     def deleteComment(self, mid, contentId, commentId):
         params = {
             'homeId': mid,
@@ -176,7 +213,8 @@ class Timeline():
         url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/comment/delete.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
+    @loggedIn
     def listComment(self, mid, contentId):
         params = {
             'homeId': mid,
@@ -194,6 +232,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def createLike(self, mid, contentId, likeType=1003):
         params = {
             'homeId': mid
@@ -216,6 +255,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
+    @loggedIn
     def cancelLike(self, contentId):
         params = {
             'contentId': contentId,
@@ -230,6 +270,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def listLike(self, mid, contentId):
         params = {
             'homeId': mid,
@@ -245,6 +286,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def searchNote(self, mid, text):
         data = {
            "query" : text,
@@ -264,6 +306,7 @@ class Timeline():
         res = r.json()
         return res["result"]["feeds"]
 
+    @loggedIn
     def sendPostToTalk(self, postId, receiveMids):
         data = {
             "postId": postId,
@@ -281,6 +324,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, data=json.dumps(data))
         return r.json()
 
+    @loggedIn
     def getHashtagPosts(self, query, homeId=None, scrollId=None, range=["GROUP"]):
         # range: GROUP or unset
         data = {
@@ -302,6 +346,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, data=json.dumps(data))
         return r.json()
 
+    @loggedIn
     def getHashtagSuggest(self, query):
         data = {
            "query" : query
@@ -319,6 +364,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, data=json.dumps(data))
         return r.json()
 
+    @loggedIn
     def getHashtagPopular(self, homeId, limit=20):
         data = {
            "homeId" : homeId,
@@ -337,6 +383,7 @@ class Timeline():
         r = self.server.postContent(url, headers=hr, data=json.dumps(data))
         return r.json()
 
+    @loggedIn
     def getTimelineUrl(self, homeId):
         data = {
            "homeId" : homeId
@@ -352,6 +399,7 @@ class Timeline():
         r = self.server.getContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def getPostShareLink(self, postId):
         data = {
            "postId" : postId
@@ -367,6 +415,7 @@ class Timeline():
         r = self.server.getContent(url, headers=hr)
         return r.json()
 
+    @loggedIn
     def getDiscoverRecommendFeeds(self, sourcePostId, contents=["CP", "PI", "PV", "PL", "AD"]):
         data = {
             "sourcePostId": sourcePostId, 
@@ -385,6 +434,7 @@ class Timeline():
 
     """ ALBUM """
 
+    @loggedIn
     def changeGroupAlbumName(self, mid, albumId, name):
         data = json.dumps({'title': name})
         params = {'homeId': mid}
@@ -400,7 +450,7 @@ class Timeline():
         #r.json()['code'] == 0: success
         return r.json()
 
-
+    @loggedIn
     def deleteGroupAlbum(self, mid, albumId):
         params = {'homeId': mid}
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
@@ -413,8 +463,8 @@ class Timeline():
         url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v4/album/%s' % albumId, params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
 
+    @loggedIn
     def addImageToAlbum(self, mid, albumId, oid):
         #oid like 6cbff2e4100006b58db80f87ad8666bc.20121408
         params = {'homeId': mid}
@@ -431,8 +481,8 @@ class Timeline():
         
         #{"code":0,"message":"success","result":true}
         return r.json()    
-        
 
+    @loggedIn
     def getAlbumImages(self, mid, albumId):
         params = {'homeId': mid}
         
@@ -445,7 +495,8 @@ class Timeline():
         r = self.server.postContent(url, headers=hr)
         
         return r.json()    
-        
+
+    @loggedIn
     def deleteAlbumImages(self, mid, albumId, id):
         #id 4620693219800810323, not oid
         params = {'homeId': mid}
@@ -468,6 +519,7 @@ class Timeline():
 
     """ STORY """
 
+    @loggedIn
     def uploadStoryObject(self, mid, albumId, name):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-obs-params': 'eyJuYW1lIjoidGltZWxpbmVfMjAyMTAyMjZfMDQzODExLmpwZyIsIm9pZCI6IjgzNTY2YWVmM2ZhNWRhMjllMGNkNGJkMzFiM2QzM2IxdGZmZmZmZmZmIiwicmFuZ2UiOiJieXRlcyAwLTIxNzEwXC8yMTcxMSIsInF1YWxpdHkiOiI3MCIsInR5cGUiOiJpbWFnZSIsInZlciI6IjEuMCJ9'
@@ -476,6 +528,7 @@ class Timeline():
         r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
 
+    @loggedIn
     def createStoryContent(self, mid, albumId, name):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
@@ -484,9 +537,9 @@ class Timeline():
         data = {"content":{"sourceType":"USER","contentType":"USER","media":[{"oid":"83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3","service":"story","sid":"st","hash":"0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ","mediaType":"IMAGE"}]},"shareInfo":{"shareType":"FRIEND"}}
         url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/content/create')
         r = self.server.postContent(url, data=data, headers=hr)
-        #{"code":0,"message":"success","result":{"contentId":"0000xJ6PYy3Rl1PWLBJvdwFL0GUqNtOP6qZlJH2uJu7YMWobd4wA993IHAIGEqH0UVfmg489jEiy0HzA8PTCKX7bhmSKWXFmK3OGNNj05SNwrUPEaDoHuB1dIlzw9V9buRs-EfiRAOfSr8eunreL46774ow"}}
         return r.json()
 
+    @loggedIn
     def getRecentstoryStory(self, lastRequestTime=None):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
@@ -494,9 +547,9 @@ class Timeline():
         })
         url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/recentstory/list')
         r = self.server.postContent(url, data=data, headers=hr)
-        #{"code":0,"message":"success","result":{"hasNewMyStory":false,"hasNewFriendsStory":false,"hasMore":false,"recentStories":[{"mid":"u040c247a87dc1a3292280cd5b5fe42ce","recentCreatedTime":1614286397673,"readTime":0}],"lastActivityTime":1614286397673}}
         return r.json()
 
+    @loggedIn
     def sendMessageForStoryAuthor(self, userMid, contentId, message):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
@@ -513,10 +566,10 @@ class Timeline():
         url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/message/send')
         r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
-        
-        
+
     """ Search """
-        
+
+    @loggedIn
     def lnexearch(self, q):
         params = {
             'q': q
@@ -528,10 +581,10 @@ class Timeline():
         url = self.server.urlEncode('https://search.line.me', '/lnexearch', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
-        
+
     """ Sc """
-        
+
+    @loggedIn
     def getPageInfo(self, url):
         params = {
             'url': url,
@@ -545,4 +598,18 @@ class Timeline():
         url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/sc/api/v2/pageinfo/get.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
+    """ One to one """
+
+    @loggedIn
+    def syncOtoAccount(self, userMid):
+        params = {
+            'userMid': userMid
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v24/otoaccount/sync.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()

@@ -30,7 +30,6 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
             self.initAll()
 
     def initAll(self):
-        NOT_SUPPORT_WEBVIEW_DEVICES = ['CHROMEOS']
         self.checkNextToken()
         self.profile = self.getProfile()
         if 'error' in self.profile:
@@ -47,41 +46,23 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
         system(f"title CHRLINE - {self.profile[20]}")
         self.revision = self.getLastOpRevision()
         self.groups = self.getAllChatMids()[1]
-        TIMELINE_CHANNEL_ID = "1341209950"
-        if self.APP_TYPE in NOT_SUPPORT_WEBVIEW_DEVICES: TIMELINE_CHANNEL_ID = "1341209850"
-        self.server.timelineHeaders = {
-            'x-line-application': self.server.Headers['x-line-application'],
-            'User-Agent': self.server.Headers['User-Agent'],
-            'X-Line-Mid': self.profile[1],
-            'X-Line-Access': self.authToken,
-            'X-Line-ChannelToken': self.issueChannelToken(TIMELINE_CHANNEL_ID)[5] # or 1
-        }
+
+        Timeline.__init__(self)
         Poll.__init__(self)
         Object.__init__(self)
-        Timeline.__init__(self)
+        LineCube.__init__(self)
         Helpers.__init__(self)
-        if self.APP_TYPE not in NOT_SUPPORT_WEBVIEW_DEVICES:
-            LineCube.__init__(self)
-        
+
         self.is_login = True
+
         self.can_use_square = False
         self.squares = None
-        self.square_headers = {
-            'x-line-application': self.server.Headers['x-line-application'],
-            'x-la': self.server.Headers['User-Agent'],
-            'X-Line-Access': self.authToken,
-            "content-type": "application/x-thrift; protocol=TBINARY",
-            "x-lal": self.LINE_LANGUAGE,
-            "x-lhm": "POST",
-            "X-LAP": "5",
-            "X-LPV": "1",
-        }
         _squares = self.getJoinedSquares()
         if 'error' not in _squares:
             self.can_use_square = True
             self.squares = _squares
         else:
             self.log('Not support Square')
-        
+
         self.custom_data = {}
         self.getCustomData()

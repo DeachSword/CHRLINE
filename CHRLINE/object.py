@@ -194,6 +194,7 @@ class Object(object):
             'name': f'CHRLINE-{int(time.time())}', 'tomid': to,'oid': 'reqseq','reqseq': self.revision,'type': contentType,'copyFrom': '/talk/m/%s' % msgId
         }
         r = self.server.postContent(self.LINE_OBS_DOMAIN + '/talk/m/copy.nhn', data=data, headers=self.server.timelineHeaders)
+        # self.LINE_HOST_DOMAIN + '/oa/r/talk/m/reqseq/copy.nhn'
         if r.status_code != 200:
             raise Exception(f'Forward object failure: {r.status_code}')
         return True

@@ -10,12 +10,7 @@ class TalkService(object):
         self.testTalkConn = requests.session()
         self.testPollConn = requests.session()
 
-    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, location=None, raw=False):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
+    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, location=None):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 115, 101, 110, 100, 77, 101, 115, 115, 97, 103, 101, 0, 0, 0, 0, 8, 0, 1]
         sqrd += self.getIntBytes(self._msgSeq)
         sqrd += [12, 0, 2, 11, 0, 1, 0, 0, 0, len(self.profile[1])]
@@ -68,15 +63,7 @@ class TalkService(object):
             sqrd += [8, 0, 24] + self.getIntBytes(1)
         # [8, 0, 25] appExtensionType
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        if raw:
-            return data
-        res = self.testTalkConn.post(self.url, data=data, headers=self.server.Headers)
-        data = res.content
-        data = self.decData(data)
-        return self.tryReadData(data)['sendMessage']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['sendMessage']
         
     def sendContact(self, to, mid):
         return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
@@ -90,12 +77,6 @@ class TalkService(object):
         return self.sendMessage(to, "test", location=data)
         
     def sendCompactMessage(self, to, text):
-        """ test func for /CA5 """
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/CA5" # /ECA5
-        }
-        a = self.encHeaders(_headers)
         sqrd = [2] # 5 if E2EE, 6 if E2EE location
         midType = to[0]
         if midType == 'u':
@@ -110,62 +91,21 @@ class TalkService(object):
         sqrd += self.getMagicStringBytes(to[1:])
         sqrd += self.getStringBytes(text, isCompact=True)
         sqrd.append(2)
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.testTalkConn.post(self.url, data=data, headers=self.server.Headers)
-        data = res.content
-        data = self.decData(data)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT ,sqrd)
     
     def getEncryptedIdentity(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 103, 101, 116, 69, 110, 99, 114, 121, 112, 116, 101, 100, 73, 100, 101, 110, 116, 105, 116, 121, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getEncryptedIdentity']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getEncryptedIdentity']
         
     def getProfile(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116, 80, 114, 111, 102, 105, 108, 101, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getProfile']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getProfile']
         
     def getSettings(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 103, 101, 116, 83, 101, 116, 116, 105, 110, 103, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getSettings']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getSettings']
     
     def sendChatChecked(self, chatMid, lastMessageId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 15, 115, 101, 110, 100, 67, 104, 97, 116, 67, 104, 101, 99, 107, 101, 100, 0, 0, 0, 0]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [11, 0, 2, 0, 0, 0, 33]
@@ -176,75 +116,34 @@ class TalkService(object):
             sqrd.append(ord(value))
         # [3, 0, 4] # sessionId
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['sendChatChecked']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['sendChatChecked']
         
     def unsendMessage(self, messageId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 117, 110, 115, 101, 110, 100, 77, 101, 115, 115, 97, 103, 101, 0, 0, 0, 0]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [11, 0, 2, 0, 0, 0, len(messageId)]
         for value in messageId:
             sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['unsendMessage']
         
     def getContact(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116, 67, 111, 110, 116, 97, 99, 116, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, 33]
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getContact']
         
     def getContacts(self, mids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 103, 101, 116, 67, 111, 110, 116, 97, 99, 116, 115, 0, 0, 0, 0, 15, 0, 2, 11, 0, 0, 0, len(mids)]
         for mid in mids:
             sqrd += [0, 0, 0, 33]
             for value in mid:
                 sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getContacts']
         
     def getContactsV2(self, mids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
-        
         sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 103, 101, 116, 67, 111, 110, 116, 97, 99, 116, 115, 86, 50, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [15, 0, 1, 11, 0, 0, 0, len(mids)]
@@ -253,20 +152,9 @@ class TalkService(object):
             for value in mid:
                 sqrd.append(ord(value))
         sqrd += [0, 0]
-        
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getContactsV2']
         
     def findAndAddContactsByMid(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         
         sqrd = [128, 1, 0, 1, 0, 0, 0, 23, 102, 105, 110, 100, 65, 110, 100, 65, 100, 100, 67, 111, 110, 116, 97, 99, 116, 115, 66, 121, 77, 105, 100, 0, 0, 0, 0]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
@@ -277,75 +165,35 @@ class TalkService(object):
         #sqrd += [11, 0, 4, 0, 0, 0, 0] # reference
         sqrd += [0]
         
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['findAndAddContactsByMid']
         
     def getGroup(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 103, 101, 116, 71, 114, 111, 117, 112, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, 33]
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getGroup']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroup']
         
     def getGroups(self, mids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 9, 103, 101, 116, 71, 114, 111, 117, 112, 115, 0, 0, 0, 0, 15, 0, 2, 11, 0, 0, 0, len(mids)]
         for mid in mids:
             sqrd += [0, 0, 0, 33]
             for value in mid:
                 sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getGroups']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroups']
         
     def getGroupsV2(self, mids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 103, 101, 116, 71, 114, 111, 117, 112, 115, 86, 50, 0, 0, 0, 0, 15, 0, 2, 11, 0, 0, 0, len(mids)]
         for mid in mids:
             sqrd += [0, 0, 0, 33]
             for value in mid:
                 sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getGroupsV2']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroupsV2']
         
     def getChats(self, mids, withMembers=True, withInvitees=True):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
-        if type(mids) is not list:
+        if type(mids) != 'list':
             raise Exception("[getChats] mids must be a list")
         sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 103, 101, 116, 67, 104, 97, 116, 115, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
@@ -357,19 +205,9 @@ class TalkService(object):
         sqrd += [2, 0, 2, int(withMembers)]
         sqrd += [2, 0, 3, int(withMembers)]
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getChats']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getChats']
         
     def getAllChatMids(self, withMembers=True, withInvitees=True):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getAllChatMids') + [0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [2, 0, 1, int(withMembers)]
@@ -377,42 +215,22 @@ class TalkService(object):
         sqrd += [0]
         sqrd += [8, 0, 2] + self.getIntBytes(7)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getAllChatMids']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getAllChatMids']
         
     def getCompactGroup(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 15, 103, 101, 116, 67, 111, 109, 112, 97, 99, 116, 71, 114, 111, 117, 112, 0, 0, 0, 0, 11, 0, 2, 0, 0, 0, 33]
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         
     def deleteOtherFromChat(self, to, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        if type(mid) is 'list':
+        if type(mid) == 'list':
             _lastReq = None
             for _mid in mid:
                 print(f'[deleteOtherFromChat] The parameter \'mid\' should be str')
                 _lastReq = self.deleteOtherFromChat(to, _mid)
             return _lastReq
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 19, 100, 101, 108, 101, 116, 101, 79, 116, 104, 101, 114, 70, 114, 111, 109, 67, 104, 97, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0] # seq?
@@ -423,19 +241,9 @@ class TalkService(object):
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         
     def inviteIntoChat(self, to, mids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 14, 105, 110, 118, 105, 116, 101, 73, 110, 116, 111, 67, 104, 97, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
@@ -448,19 +256,9 @@ class TalkService(object):
             for value in mid:
                 sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         
     def cancelChatInvitation(self, to, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 99, 97, 110, 99, 101, 108, 67, 104, 97, 116, 73, 110, 118, 105, 116, 97, 116, 105, 111, 110, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0] # seq?
@@ -471,19 +269,9 @@ class TalkService(object):
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['cancelChatInvitation']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['cancelChatInvitation']
         
     def deleteSelfFromChat(self, to):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 18, 100, 101, 108, 101, 116, 101, 83, 101, 108, 102, 70, 114, 111, 109, 67, 104, 97, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
@@ -495,19 +283,9 @@ class TalkService(object):
         # sqrd += [10, 0, 5] # lastMessageDeliveredTime
         # sqrd += [11, 0, 6] # lastMessageId
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['deleteSelfFromChat']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['deleteSelfFromChat']
         
     def acceptChatInvitation(self, to):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 97, 99, 99, 101, 112, 116, 67, 104, 97, 116, 73, 110, 118, 105, 116, 97, 116, 105, 111, 110, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0] # seq?
@@ -515,55 +293,26 @@ class TalkService(object):
         for value in to:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
+        _d = self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         self.sendMessage(to, 'Powered by CHRLINE API')
-        return self.tryReadData(data)['acceptChatInvitation']
+        return _d['acceptChatInvitation']
         
     def reissueChatTicket(self, groupMid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes("reissueChatTicket") + [0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(groupMid)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['reissueChatTicket']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['reissueChatTicket']
         
     def findChatByTicket(self, ticketId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 102, 105, 110, 100, 67, 104, 97, 116, 66, 121, 84, 105, 99, 107, 101, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [11, 0, 1] + self.getStringBytes(ticketId)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['findChatByTicket']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['findChatByTicket']
         
     def acceptChatInvitationByTicket(self, to, ticket):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 28, 97, 99, 99, 101, 112, 116, 67, 104, 97, 116, 73, 110, 118, 105, 116, 97, 116, 105, 111, 110, 66, 121, 84, 105, 99, 107, 101, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
@@ -574,13 +323,9 @@ class TalkService(object):
         for value in ticket:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
+        _d = self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         self.sendMessage(to, 'Powered by CHRLINE API')
-        return self.tryReadData(data)['acceptChatInvitationByTicket']
+        return _d['acceptChatInvitationByTicket']
         
     def updateChat(self, chatMid, chatSet, updatedAttribute=1):
         """
@@ -595,11 +340,6 @@ class TalkService(object):
         TODO:
             using dict to update?
         """
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 117, 112, 100, 97, 116, 101, 67, 104, 97, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
@@ -616,12 +356,7 @@ class TalkService(object):
         sqrd += [0]
         sqrd += [8, 0, 3] + self.getIntBytes(updatedAttribute)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['updateChat']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['updateChat']
         
     def updateChatName(self, chatMid, name):
         return self.updateChat(chatMid, {6: name}, 1)
@@ -630,99 +365,33 @@ class TalkService(object):
         return self.updateChat(chatMid, {4: bool}, 4)
     
     def getGroupIdsJoined(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 103, 101, 116, 71, 114, 111, 117, 112, 73, 100, 115, 74, 111, 105, 110, 101, 100, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getGroupIdsJoined']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroupIdsJoined']
         
     def getGroupIdsInvited(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 18, 103, 101, 116, 71, 114, 111, 117, 112, 73, 100, 115, 73, 110, 118, 105, 116, 101, 100, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getGroupIdsInvited']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroupIdsInvited']
         
     def getAllContactIds(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 65, 108, 108, 67, 111, 110, 116, 97, 99, 116, 73, 100, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getAllContactIds']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getAllContactIds']
         
     def getBlockedContactIds(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 103, 101, 116, 66, 108, 111, 99, 107, 101, 100, 67, 111, 110, 116, 97, 99, 116, 73, 100, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getBlockedContactIds']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getBlockedContactIds']
         
     def getBlockedRecommendationIds(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 27, 103, 101, 116, 66, 108, 111, 99, 107, 101, 100, 82, 101, 99, 111, 109, 109, 101, 110, 100, 97, 116, 105, 111, 110, 73, 100, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getBlockedRecommendationIds']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getBlockedRecommendationIds']
         
     def getAllReadMessageOps(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 103, 101, 116, 76, 97, 115, 116, 79, 112, 82, 101, 118, 105, 115, 105, 111, 110, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        print('Korone is my wife :p')
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getAllReadMessageOps']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getAllReadMessageOps']
         
     def sendPostback(self, messageId, url, chatMID, originMID):
         """
         :url: linepostback://postback?_data=
         """
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 12, 115, 101, 110, 100, 80, 111, 115, 116, 98, 97, 99, 107, 0, 0, 0, 0]
         sqrd += [12, 0, 2]
         messageId = str(messageId).encode()
@@ -742,19 +411,9 @@ class TalkService(object):
         for value2 in originMID:
             sqrd.append(value2)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['sendPostback']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['sendPostback']
         
     def getPreviousMessagesV2WithRequest(self, messageBoxId, endMessageId=0, messagesCount=200, withReadCount=0, receivedOnly=False):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 32, 103, 101, 116, 80, 114, 101, 118, 105, 111, 117, 115, 77, 101, 115, 115, 97, 103, 101, 115, 86, 50, 87, 105, 116, 104, 82, 101, 113, 117, 101, 115, 116, 0, 0, 0, 0]
         sqrd += [12, 0, 2]
         sqrd += [11, 0, 1, 0, 0, 0, len(messageBoxId)]
@@ -769,19 +428,9 @@ class TalkService(object):
         sqrd += [0]
         sqrd += [8, 0, 3, 0, 0, 0, 0]
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getPreviousMessagesV2WithRequest']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getPreviousMessagesV2WithRequest']
         
     def getMessageBoxes(self, minChatId=0, maxChatId=0, activeOnly=0, messageBoxCountLimit=0, withUnreadCount=False, lastMessagesPerMessageBoxCount=False, unreadOnly=False):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 15, 103, 101, 116, 77, 101, 115, 115, 97, 103, 101, 66, 111, 120, 101, 115, 0, 0, 0, 0]
         sqrd += [12, 0, 2]
         sqrd += [11, 0, 1, 0, 0, 0, len(minChatId)]
@@ -798,19 +447,9 @@ class TalkService(object):
         sqrd += [0, 0]
         sqrd += [8, 0, 3, 0, 0, 0, 7]
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getMessageBoxes']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getMessageBoxes']
         
     def getMessageReadRange(self, chatIds):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 19, 103, 101, 116, 77, 101, 115, 115, 97, 103, 101, 82, 101, 97, 100, 82, 97, 110, 103, 101, 0, 0, 0, 0]
         sqrd += [15, 0, 2, 11, 0, 0, 0, len(chatIds)]
         for mid in chatIds:
@@ -819,19 +458,9 @@ class TalkService(object):
                 sqrd.append(ord(value))
         sqrd += [8, 0, 3, 0, 0, 0, 7]
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getMessageReadRange']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getMessageReadRange']
         
     def getChatRoomAnnouncementsBulk(self, chatRoomMids):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 28, 103, 101, 116, 67, 104, 97, 116, 82, 111, 111, 109, 65, 110, 110, 111, 117, 110, 99, 101, 109, 101, 110, 116, 115, 66, 117, 108, 107, 0, 0, 0, 0]
         sqrd += [15, 0, 2, 11, 0, 0, 0, len(chatRoomMids)]
         for mid in chatRoomMids:
@@ -840,35 +469,15 @@ class TalkService(object):
                 sqrd.append(ord(value))
         sqrd += [8, 0, 3, 0, 0, 0, 7]
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getChatRoomAnnouncementsBulk']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getChatRoomAnnouncementsBulk']
         
     def getChatRoomAnnouncements(self, chatRoomMid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getChatRoomAnnouncements') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(chatRoomMid)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getChatRoomAnnouncements']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getChatRoomAnnouncements']
         
     def removeChatRoomAnnouncement(self, chatRoomMid, announcementSeq):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 26, 114, 101, 109, 111, 118, 101, 67, 104, 97, 116, 82, 111, 111, 109, 65, 110, 110, 111, 117, 110, 99, 101, 109, 101, 110, 116, 0, 0, 0, 0]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [11, 0, 2, 0, len(chatRoomMid)]
@@ -876,19 +485,9 @@ class TalkService(object):
             sqrd.append(ord(value))
         sqrd += [10, 0, 3] + self.getIntBytes(int(announcementSeq), 8)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['removeChatRoomAnnouncement']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['removeChatRoomAnnouncement']
         
     def createChatRoomAnnouncement(self, chatRoomMid, text, link='', thumbnail='', type=0, displayFields=5, contentMetadata=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('createChatRoomAnnouncement') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(chatRoomMid)
@@ -900,174 +499,69 @@ class TalkService(object):
         sqrd += [11, 0, 4] + self.getStringBytes(thumbnail)
         #sqrd += [12, 0, 5] #contentMetadata
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['createChatRoomAnnouncement']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['createChatRoomAnnouncement']
 
     def leaveRoom(self, roomIds):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('leaveRoom') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(roomIds)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['leaveRoom']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['leaveRoom']
 
     def getRoomsV2(self, roomIds):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getRoomsV2') + [0, 0, 0, 0]
         sqrd += [15, 0, 2, 11, 0, 0, 0, len(roomIds)]
         for mid in roomIds:
             sqrd += self.getStringBytes(mid)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getRoomsV2']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getRoomsV2']
 
     def createRoomV2(self, contactIds):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('createRoomV2') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [15, 0, 2, 11, 0, 0, 0, len(contactIds)]
         for mid in contactIds:
             sqrd += self.getStringBytes(mid)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['createRoomV2']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['createRoomV2']
 
     def getCountries(self, countryGroup=1):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getCountries') + [0, 0, 0, 0]
         sqrd += [8, 0, 2] + self.getIntBytes(countryGroup)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getCountries']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getCountries']
 
     def acquireEncryptedAccessToken(self, featureType=2):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('acquireEncryptedAccessToken') + [0, 0, 0, 0]
         sqrd += [8, 0, 2] + self.getIntBytes(featureType)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['acquireEncryptedAccessToken']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['acquireEncryptedAccessToken']
 
     def blockContact(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('blockContact') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(mid)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['blockContact']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['blockContact']
 
     def unblockContact(self, mid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('unblockContact') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(mid)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['unblockContact']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['unblockContact']
 
     def getLastOpRevision(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 103, 101, 116, 76, 97, 115, 116, 79, 112, 82, 101, 118, 105, 115, 105, 111, 110, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getLastOpRevision']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getLastOpRevision']
         
     def getServerTime(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 103, 101, 116, 83, 101, 114, 118, 101, 114, 84, 105, 109, 101, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getServerTime']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getServerTime']
         
     def getConfigurations(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 103, 101, 116, 67, 111, 110, 102, 105, 103, 117, 114, 97, 116, 105, 111, 110, 115, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getConfigurations']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getConfigurations']
         
     def fetchOps(self, revision, count=100):
         _headers = {
@@ -1136,45 +630,20 @@ class TalkService(object):
     def sendEchoPush(self, text):
         # for long poll? check conn is alive
         # text: 1614384862517 = time
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('sendEchoPush') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(text)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['sendEchoPush']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['sendEchoPush']
         
     def getRepairElements(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getRepairElements') + [0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [2, 0, 1, 1] # profile
         sqrd += [2, 0, 2, 1] # settings
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getRepairElements']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getRepairElements']
         
     def getSettingsAttributes2(self, attributesToRetrieve):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         if type(attributesToRetrieve) != 'list':
             attributesToRetrieve = [attributesToRetrieve]
             print('[attributesToRetrieve] plz using LIST')
@@ -1183,30 +652,15 @@ class TalkService(object):
         for value in attributesToRetrieve:
             sqrd += self.getStringBytes(value)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['getSettingsAttributes2']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getSettingsAttributes2']
         
     def rejectChatInvitation(self, chatMid):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('rejectChatInvitation') + [0, 0, 0, 0]
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [11, 0, 2] + self.getStringBytes(chatMid)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['rejectChatInvitation']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['rejectChatInvitation']
         
     def updateProfileAttribute(self, attr: int, value: str):
         """
@@ -1223,20 +677,10 @@ class TalkService(object):
             MUSIC_PROFILE(256),
             AVATAR_PROFILE(512);
         """
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/S3"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('updateProfileAttribute') + [0, 0, 0, 0]
         sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
         sqrd += [8, 0, 2] + self.getIntBytes(attr)
         sqrd += [11, 0, 3] + self.getStringBytes(value)
         sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)['updateProfileAttribute']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['updateProfileAttribute']
         

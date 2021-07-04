@@ -223,6 +223,38 @@ class Models(object):
             t = 0 - (t - 1 ^ 255)
         return t
         
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3):
+        if self.encType == 0:
+            _decMode = 0
+            headers = self.server.Headers.copy()
+            data = bytes(bdata)
+            if "x-le" in headers:
+                del headers['x-le']
+                del headers['x-lcs']
+            headers['X-Line-Access'] = self.authToken
+            res = self.server.postContent(self.LINE_LEGY_HOST_DOMAIN + path, data=data, headers=headers)
+            data = bytes(4) + res.content + bytes(4)
+        elif self.encType == 1:
+            _headers = {
+                'X-Line-Access': self.authToken, 
+                'x-lpqs': path
+            }
+            a = self.encHeaders(_headers)
+            b = bdata
+            c = a + b
+            _data = bytes(c)
+            data = self.encData(_data)
+            res = self.server.postContent(self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=self.server.Headers)
+            data = self.decData(res.content)
+        else:
+            raise Exception(f"Unknown encType: {self.encType}")
+        if ttype == 3:
+            return self.tryReadData(data)
+        elif ttype == 4:
+            return self.tryReadTCompactData(data)
+        else:
+            raise Exception(f"Unknown ThriftType: {ttype}")
+        
     def getIntBytes(self, i, l=4, isCompact=False):
         if isCompact:
             _compact = self.TCompactProtocol()

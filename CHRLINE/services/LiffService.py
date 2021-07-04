@@ -8,11 +8,6 @@ class LiffService(object):
         pass
         
     def issueLiffView(self, chatMid, liffId="1562242036-RW04okm", lang='zh_TW', deviceSetting=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/LIFF1"
-        }
-        a = self.encHeaders(_headers)
         b = self.TCompactProtocol()
         sqrd = [130, 33, 00] + self.getStringBytes('issueLiffView', isCompact=True)
         sqrd += b.getFieldHeader(12, 1)
@@ -29,19 +24,9 @@ class LiffService(object):
         sqrd += e.getFieldHeader(8, 1)
         sqrd += self.getStringBytes(chatMid, isCompact=True)
         sqrd += [0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadTCompactData(data)['issueLiffView']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['issueLiffView']
         
     def getLiffViewWithoutUserContext(self, liffId="1562242036-RW04okm"):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/LIFF1"
-        }
-        a = self.encHeaders(_headers)
         b = self.TCompactProtocol()
         sqrd = [130, 33, 00] + self.getStringBytes('getLiffViewWithoutUserContext', isCompact=True)
         sqrd += b.getFieldHeader(12, 1)
@@ -49,19 +34,9 @@ class LiffService(object):
         sqrd += c.getFieldHeader(8, 1)
         sqrd += self.getStringBytes(liffId, isCompact=True)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadTCompactData(data)['getLiffViewWithoutUserContext']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['getLiffViewWithoutUserContext']
         
     def issueSubLiffView(self, chatMid, msit, liffId="1562242036-RW04okm", lang='zh_TW', deviceSetting=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/LIFF1"
-        }
-        a = self.encHeaders(_headers)
         b = self.TCompactProtocol()
         sqrd = [130, 33, 00] + self.getStringBytes('issueSubLiffView', isCompact=True)
         sqrd += b.getFieldHeader(12, 1)
@@ -80,9 +55,4 @@ class LiffService(object):
         sqrd += e.getFieldHeader(8, 1)
         sqrd += self.getStringBytes(chatMid, isCompact=True)
         sqrd += [0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent("https://gf.line.naver.jp/enc", data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadTCompactData(data)['issueSubLiffView']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['issueSubLiffView']

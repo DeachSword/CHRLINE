@@ -5,9 +5,9 @@ class Thrift(object):
     
     def __init__(self):
         pass
-    
+
     class TCompactProtocol(object):
-    
+
         class CompactType(object):
             STOP = 0x00
             TRUE = 0x01
