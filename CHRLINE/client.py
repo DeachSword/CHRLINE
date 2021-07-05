@@ -5,11 +5,12 @@ from .thrift import Thrift
 from .poll import Poll
 from .object import Object
 from .timeline import Timeline
+from .timelineBiz import TimelineBiz
 from .helpers import Helpers
 from .cube import LineCube
 from os import system
 
-class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, LineCube):
+class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube):
 
     def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1):
         self.encType = encType
@@ -48,6 +49,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, Helpers, Line
         self.groups = self.getAllChatMids()[1]
 
         Timeline.__init__(self)
+        TimelineBiz.__init__(self)
         Poll.__init__(self)
         Object.__init__(self)
         LineCube.__init__(self)

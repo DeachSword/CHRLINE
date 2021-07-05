@@ -16,13 +16,16 @@ class LiffService(object):
         sqrd += self.getStringBytes(liffId, isCompact=True)
         sqrd += c.getFieldHeader(12, 2)
         d = self.TCompactProtocol()
-        if chatMid[0] not in ['u', 'c', 'r']:
-            sqrd += d.getFieldHeader(12, 3)
+        if chatMid is None:
+            sqrd += d.getFieldHeader(12, 1)
         else:
-            sqrd += d.getFieldHeader(12, 2)
-        e = self.TCompactProtocol()
-        sqrd += e.getFieldHeader(8, 1)
-        sqrd += self.getStringBytes(chatMid, isCompact=True)
+            if chatMid[0] not in ['u', 'c', 'r']:
+                sqrd += d.getFieldHeader(12, 3)
+            else:
+                sqrd += d.getFieldHeader(12, 2)
+            e = self.TCompactProtocol()
+            sqrd += e.getFieldHeader(8, 1)
+            sqrd += self.getStringBytes(chatMid, isCompact=True)
         sqrd += [0, 0, 0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['issueLiffView']
         
