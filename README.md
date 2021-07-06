@@ -99,8 +99,10 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - sendEchoPush
         - getRepairElements
         - getSettingsAttributes2
+        - updateSettingsAttributes2
         - rejectChatInvitation
         - updateProfileAttribute
+        - negotiateE2EEPublicKey
     - ShopService
         - getProduct
         - getProductsByAuthor

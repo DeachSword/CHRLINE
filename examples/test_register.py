@@ -31,6 +31,7 @@ def create_token(auth_key: str) -> str:
 
 
 UPDATE_NAME = True
+TURN_OFF_E2EE = False
 DISPLAY_NAME = "yinmo"
 
 
@@ -106,11 +107,12 @@ authToken = create_token(authKey) #authToken for login
 print(f"authKey: {authKey}")
 print(f"authToken: {authToken}")
 
+cl = CHRLINE(authToken, device="ANDROID") #login
 
 if UPDATE_NAME:
-    cl = CHRLINE(authToken, device="ANDROID") #login
     cl.updateProfileAttribute(2, DISPLAY_NAME) #update display name
 
-    # update email step:
-    # openAuthSession -> getAuthRSAKey and encrypt -> setIdentifier -> confirmIdentifier
-
+if TURN_OFF_E2EE:
+    sett = cl.getSettingsAttributes2([33])
+    sett[61] = False
+    cl.updateSettingsAttributes2(sett, [33])

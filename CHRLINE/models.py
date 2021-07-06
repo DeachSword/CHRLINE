@@ -360,6 +360,7 @@ class Models(object):
         nextPos = 0
         dataType = data[0]
         id = data[2]
+        #print(f"{id} -> {dataType}")
         if data[0] == 2:
             a = data[3]
             if a == 1:
@@ -377,11 +378,11 @@ class Models(object):
             _data[id] = a
             nextPos = 11
         elif data[0] == 8:
-            a = int.from_bytes(data[3:7], "big")
+            a, = struct.unpack('!i', data[3:7])
             _data[id] = a
             nextPos = 7
         elif data[0] == 10:
-            a = int.from_bytes(data[4:11], "big")
+            a, = struct.unpack('!q', data[3:11])
             _data[id] = a
             nextPos = 11
         elif data[0] == 11:
@@ -407,22 +408,31 @@ class Models(object):
         elif data[0] == 13:
             # dict
             # 0D 00 24 0B 0B 00 00 00 02 00 00 00 07
-            # what is 24?
-            a = data[4] # value type? todo it?
-            b = data[8] # count
-            c = 12
+            kt = data[3] # key type
+            a = data[4] # value type
+            b, = struct.unpack('!i', data[5:9]) # count
+            c = 9
             _d = {}
             if b != 0:
+                #print(f"ktype: {kt}")
+                #print(f"kvalue: {a}")
                 for d in range(b):
-                    e = data[c] # key len
-                    f = c + e
-                    if data[3] == 8:
-                        f = c + 1
-                        g = data[c + 4]
+                    if True:
+                        __key = self.readContainerStruct(bytes([kt, 0, 0]) + data[c:], get_data_len=True, stopWithFirst=True)
+                        _key = __key[0][0]
+                        vp = c + __key[1] - 3 # value pos
+                        __value = self.readContainerStruct(bytes([a, 0, 0]) + data[vp:], get_data_len=True, stopWithFirst=True)
+                        _value = __value[0][0]
+                        c = vp + __value[1] - 3
+                    # old code...
+                    elif kt == 8:
+                        # f = c + 1
+                        # g = data[c + 4]
                         _key = data[c]
-                        h = f + 4 + g
-                        _value = data[f + 4:h].decode()
-                        c = h # ??
+                        _value = self.readContainerStruct(bytes([a, 0, 0]) + data[f + 1:])[0]
+                        # h = f + 4 + g
+                        # _value = data[f + 4:h].decode()
+                        c += 5
                     else:
                         g = int.from_bytes(data[f + 1:f + 5], "big") # value len
                         _key = data[c + 1:f + 1].decode()
@@ -448,8 +458,9 @@ class Models(object):
                     _d[_key] = _value
                 _data[id] = _d
                 nextPos = c
-                if a in [10, 11]:
-                    nextPos -= 3
+                # old code...
+                # if a in [10, 11]:
+                #     nextPos -= 3
             else:
                 nextPos = 9
                 _data[id] = {}
@@ -460,8 +471,12 @@ class Models(object):
             nextPos = 8
             if count != 0:
                 for i in range(count):
-                    a = int.from_bytes(data[nextPos:nextPos + 4], "big")
-                    b = data[nextPos + 4:nextPos + 4 + a].decode()
+                    if type == 8:
+                        a = 0
+                        b = self.readContainerStruct(bytes([type, 0, 0]) + data[nextPos:])[0]
+                    else:
+                        a = int.from_bytes(data[nextPos:nextPos + 4], "big")
+                        b = data[nextPos + 4:nextPos + 4 + a].decode()
                     _data[id].append(b)
                     nextPos += 4 + a
         elif data[0] == 15:
@@ -494,7 +509,7 @@ class Models(object):
                     nextPos = 8
         elif data[0] != 0:
             print(f"[readContainerStruct]不支援Type: {data[0]} => ID: {id}")
-        if nextPos > 0:
+        if nextPos > 0 and not stopWithFirst:
             data = data[nextPos:]
             c = self.readContainerStruct(data, True)
             if c[0]:

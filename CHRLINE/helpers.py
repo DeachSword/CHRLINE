@@ -33,7 +33,7 @@ class Helpers(object):
             'X-Requested-With': 'jp.naver.line.android'
         }
         liff_headers["authorization"] = 'Bearer %s'%(token)
-        if type(messages) == "list":
+        if type(messages) == list:
             messages = {"messages":messages}
         else:
             messages = {"messages":[messages]}

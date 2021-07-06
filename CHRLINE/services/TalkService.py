@@ -154,17 +154,15 @@ class TalkService(object):
         sqrd += [0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getContactsV2']
         
-    def findAndAddContactsByMid(self, mid):
-        
+    def findAndAddContactsByMid(self, mid, reference='{"screen":"groupMemberList","spec":"native"}'):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 23, 102, 105, 110, 100, 65, 110, 100, 65, 100, 100, 67, 111, 110, 116, 97, 99, 116, 115, 66, 121, 77, 105, 100, 0, 0, 0, 0]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [11, 0, 2, 0, 0, 0, 33]
         for value in mid:
             sqrd.append(ord(value))
         sqrd += [8, 0, 3, 0, 0, 0, 0]
-        #sqrd += [11, 0, 4, 0, 0, 0, 0] # reference
+        sqrd += [11, 0, 4] + self.getStringBytes(reference)
         sqrd += [0]
-        
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['findAndAddContactsByMid']
         
     def getGroup(self, mid):
@@ -193,7 +191,7 @@ class TalkService(object):
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getGroupsV2']
         
     def getChats(self, mids, withMembers=True, withInvitees=True):
-        if type(mids) != 'list':
+        if type(mids) != list:
             raise Exception("[getChats] mids must be a list")
         sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 103, 101, 116, 67, 104, 97, 116, 115, 0, 0, 0, 0]
         sqrd += [12, 0, 1]
@@ -225,7 +223,7 @@ class TalkService(object):
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         
     def deleteOtherFromChat(self, to, mid):
-        if type(mid) == 'list':
+        if type(mid) == list:
             _lastReq = None
             for _mid in mid:
                 print(f'[deleteOtherFromChat] The parameter \'mid\' should be str')
@@ -643,16 +641,190 @@ class TalkService(object):
         sqrd += [0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getRepairElements']
         
-    def getSettingsAttributes2(self, attributesToRetrieve):
-        if type(attributesToRetrieve) != 'list':
+    def getSettingsAttributes2(self, attributesToRetrieve: list):
+        """
+            NOTIFICATION_ENABLE(0),
+            NOTIFICATION_MUTE_EXPIRATION(1),
+            NOTIFICATION_NEW_MESSAGE(2),
+            NOTIFICATION_GROUP_INVITATION(3),
+            NOTIFICATION_SHOW_MESSAGE(4),
+            NOTIFICATION_INCOMING_CALL(5),
+            NOTIFICATION_SOUND_MESSAGE(8),
+            NOTIFICATION_SOUND_GROUP(9),
+            NOTIFICATION_DISABLED_WITH_SUB(16),
+            NOTIFICATION_PAYMENT(17),
+            NOTIFICATION_MENTION(40),
+            NOTIFICATION_THUMBNAIL(45),
+            NOTIFICATION_BADGE_TALK_ONLY(65),
+            NOTIFICATION_REACTION(67),
+            PRIVACY_SYNC_CONTACTS(6),
+            PRIVACY_SEARCH_BY_PHONE_NUMBER(7),
+            PRIVACY_SEARCH_BY_USERID(13),
+            PRIVACY_SEARCH_BY_EMAIL(14),
+            PRIVACY_SHARE_PERSONAL_INFO_TO_FRIENDS(51),
+            PRIVACY_ALLOW_SECONDARY_DEVICE_LOGIN(21),
+            PRIVACY_PROFILE_IMAGE_POST_TO_MYHOME(23),
+            PRIVACY_PROFILE_MUSIC_POST_TO_MYHOME(35),
+            PRIVACY_PROFILE_HISTORY(57),
+            PRIVACY_STATUS_MESSAGE_HISTORY(54),
+            PRIVACY_ALLOW_FRIEND_REQUEST(30),
+            PRIVACY_RECV_MESSAGES_FROM_NOT_FRIEND(25),
+            PRIVACY_AGREE_USE_LINECOIN_TO_PAIDCALL(26),
+            PRIVACY_AGREE_USE_PAIDCALL(27),
+            PRIVACY_AGE_RESULT(60),
+            PRIVACY_AGE_RESULT_RECEIVED(61),
+            PRIVACY_ALLOW_FOLLOW(63),
+            PRIVACY_SHOW_FOLLOW_LIST(64),
+            CONTACT_MY_TICKET(10),
+            IDENTITY_PROVIDER(11),
+            IDENTITY_IDENTIFIER(12),
+            SNS_ACCOUNT(19),
+            PHONE_REGISTRATION(20),
+            PWLESS_PRIMARY_CREDENTIAL_REGISTRATION(31),
+            ALLOWED_TO_CONNECT_EAP_ACCOUNT(32),
+            PREFERENCE_LOCALE(15),
+            CUSTOM_MODE(22),
+            EMAIL_CONFIRMATION_STATUS(24),
+            ACCOUNT_MIGRATION_PINCODE(28),
+            ENFORCED_INPUT_ACCOUNT_MIGRATION_PINCODE(29),
+            SECURITY_CENTER_SETTINGS(18),
+            E2EE_ENABLE(33),
+            HITOKOTO_BACKUP_REQUESTED(34),
+            CONTACT_ALLOW_FOLLOWING(36),
+            PRIVACY_ALLOW_NEARBY(37),
+            AGREEMENT_NEARBY(38),
+            AGREEMENT_SQUARE(39),
+            ALLOW_UNREGISTRATION_SECONDARY_DEVICE(41),
+            AGREEMENT_BOT_USE(42),
+            AGREEMENT_SHAKE_FUNCTION(43),
+            AGREEMENT_MOBILE_CONTACT_NAME(44),
+            AGREEMENT_SOUND_TO_TEXT(46),
+            AGREEMENT_PRIVACY_POLICY_VERSION(47),
+            AGREEMENT_AD_BY_WEB_ACCESS(48),
+            AGREEMENT_PHONE_NUMBER_MATCHING(49),
+            AGREEMENT_COMMUNICATION_INFO(50),
+            AGREEMENT_THINGS_WIRELESS_COMMUNICATION(52),
+            AGREEMENT_GDPR(53),
+            AGREEMENT_PROVIDE_LOCATION(55),
+            AGREEMENT_BEACON(56),
+            AGREEMENT_CONTENTS_SUGGEST(58),
+            AGREEMENT_CONTENTS_SUGGEST_DATA_COLLECTION(59),
+            AGREEMENT_OCR_IMAGE_COLLECTION(62),
+            AGREEMENT_ICNA(66),
+            AGREEMENT_MID(68),
+            HOME_NOTIFICATION_NEW_FRIEND(69),
+            HOME_NOTIFICATION_FAVORITE_FRIEND_UPDATE(70),
+            HOME_NOTIFICATION_GROUP_MEMBER_UPDATE(71),
+            HOME_NOTIFICATION_BIRTHDAY(72),
+            AGREEMENT_LINE_OUT_USE(73),
+            AGREEMENT_LINE_OUT_PROVIDE_INFO(74);
+            NOTIFICATION_ENABLE(0),
+            NOTIFICATION_MUTE_EXPIRATION(1),
+            NOTIFICATION_NEW_MESSAGE(2),
+            NOTIFICATION_GROUP_INVITATION(3),
+            NOTIFICATION_SHOW_MESSAGE(4),
+            NOTIFICATION_INCOMING_CALL(5),
+            NOTIFICATION_SOUND_MESSAGE(8),
+            NOTIFICATION_SOUND_GROUP(9),
+            NOTIFICATION_DISABLED_WITH_SUB(16),
+            NOTIFICATION_PAYMENT(17),
+            NOTIFICATION_MENTION(40),
+            NOTIFICATION_THUMBNAIL(45),
+            NOTIFICATION_BADGE_TALK_ONLY(65),
+            NOTIFICATION_REACTION(67),
+            PRIVACY_SYNC_CONTACTS(6),
+            PRIVACY_SEARCH_BY_PHONE_NUMBER(7),
+            PRIVACY_SEARCH_BY_USERID(13),
+            PRIVACY_SEARCH_BY_EMAIL(14),
+            PRIVACY_SHARE_PERSONAL_INFO_TO_FRIENDS(51),
+            PRIVACY_ALLOW_SECONDARY_DEVICE_LOGIN(21),
+            PRIVACY_PROFILE_IMAGE_POST_TO_MYHOME(23),
+            PRIVACY_PROFILE_MUSIC_POST_TO_MYHOME(35),
+            PRIVACY_PROFILE_HISTORY(57),
+            PRIVACY_STATUS_MESSAGE_HISTORY(54),
+            PRIVACY_ALLOW_FRIEND_REQUEST(30),
+            PRIVACY_RECV_MESSAGES_FROM_NOT_FRIEND(25),
+            PRIVACY_AGREE_USE_LINECOIN_TO_PAIDCALL(26),
+            PRIVACY_AGREE_USE_PAIDCALL(27),
+            PRIVACY_AGE_RESULT(60),
+            PRIVACY_AGE_RESULT_RECEIVED(61),
+            PRIVACY_ALLOW_FOLLOW(63),
+            PRIVACY_SHOW_FOLLOW_LIST(64),
+            CONTACT_MY_TICKET(10),
+            IDENTITY_PROVIDER(11),
+            IDENTITY_IDENTIFIER(12),
+            SNS_ACCOUNT(19),
+            PHONE_REGISTRATION(20),
+            PWLESS_PRIMARY_CREDENTIAL_REGISTRATION(31),
+            ALLOWED_TO_CONNECT_EAP_ACCOUNT(32),
+            PREFERENCE_LOCALE(15),
+            CUSTOM_MODE(22),
+            EMAIL_CONFIRMATION_STATUS(24),
+            ACCOUNT_MIGRATION_PINCODE(28),
+            ENFORCED_INPUT_ACCOUNT_MIGRATION_PINCODE(29),
+            SECURITY_CENTER_SETTINGS(18),
+            E2EE_ENABLE(33),
+            HITOKOTO_BACKUP_REQUESTED(34),
+            CONTACT_ALLOW_FOLLOWING(36),
+            PRIVACY_ALLOW_NEARBY(37),
+            AGREEMENT_NEARBY(38),
+            AGREEMENT_SQUARE(39),
+            ALLOW_UNREGISTRATION_SECONDARY_DEVICE(41),
+            AGREEMENT_BOT_USE(42),
+            AGREEMENT_SHAKE_FUNCTION(43),
+            AGREEMENT_MOBILE_CONTACT_NAME(44),
+            AGREEMENT_SOUND_TO_TEXT(46),
+            AGREEMENT_PRIVACY_POLICY_VERSION(47),
+            AGREEMENT_AD_BY_WEB_ACCESS(48),
+            AGREEMENT_PHONE_NUMBER_MATCHING(49),
+            AGREEMENT_COMMUNICATION_INFO(50),
+            AGREEMENT_THINGS_WIRELESS_COMMUNICATION(52),
+            AGREEMENT_GDPR(53),
+            AGREEMENT_PROVIDE_LOCATION(55),
+            AGREEMENT_BEACON(56),
+            AGREEMENT_CONTENTS_SUGGEST(58),
+            AGREEMENT_CONTENTS_SUGGEST_DATA_COLLECTION(59),
+            AGREEMENT_OCR_IMAGE_COLLECTION(62),
+            AGREEMENT_ICNA(66),
+            AGREEMENT_MID(68),
+            HOME_NOTIFICATION_NEW_FRIEND(69),
+            HOME_NOTIFICATION_FAVORITE_FRIEND_UPDATE(70),
+            HOME_NOTIFICATION_GROUP_MEMBER_UPDATE(71),
+            HOME_NOTIFICATION_BIRTHDAY(72),
+            AGREEMENT_LINE_OUT_USE(73),
+            AGREEMENT_LINE_OUT_PROVIDE_INFO(74);
+        """
+        if type(attributesToRetrieve) != list:
             attributesToRetrieve = [attributesToRetrieve]
             print('[attributesToRetrieve] plz using LIST')
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getSettingsAttributes2') + [0, 0, 0, 0]
-        sqrd += [14, 0, 2, 11, 0, 0, 0, len(attributesToRetrieve)]
+        sqrd += [14, 0, 2, 8, 0, 0, 0, len(attributesToRetrieve)]
         for value in attributesToRetrieve:
-            sqrd += self.getStringBytes(value)
+            sqrd += self.getIntBytes(value)
         sqrd += [0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['getSettingsAttributes2']
+        
+    def updateSettingsAttributes2(self, settings: dict, attributesToUpdate: list):
+        if type(attributesToUpdate) != list:
+            attributesToRetrieve = [attributesToUpdate]
+            print('[attributesToRetrieve] plz using LIST')
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('updateSettingsAttributes2') + [0, 0, 0, 0]
+        sqrd += [8, 0, 1] + self.getIntBytes(0) #reqSeq
+        sqrd += [12, 0, 3]
+        for sk, sv in settings.items():
+            svt = type(sv)
+            if svt == bool:
+                sqrd += [2, 0, sk, int(sv)]
+            elif svt == int:
+                sqrd += [10, 0, sk] + self.getIntBytes(sv, 8)
+            else:
+                print(f"[updateSettingsAttributes2] not support type {svt} (id: {sk})")
+        sqrd += [0]
+        sqrd += [14, 0, 4, 8, 0, 0, 0, len(attributesToUpdate)]
+        for value in attributesToUpdate:
+            sqrd += self.getIntBytes(value)
+        sqrd += [0, 0]
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['updateSettingsAttributes2']
         
     def rejectChatInvitation(self, chatMid):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('rejectChatInvitation') + [0, 0, 0, 0]
@@ -683,4 +855,10 @@ class TalkService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(value)
         sqrd += [0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['updateProfileAttribute']
+
+    def negotiateE2EEPublicKey(self, mid: str):
+        sqrd = [128, 1, 0, 1] + self.getStringBytes('negotiateE2EEPublicKey') + [0, 0, 0, 0]
+        sqrd += [11, 0, 2] + self.getStringBytes(mid)
+        sqrd += [0]
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['negotiateE2EEPublicKey']
         
