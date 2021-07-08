@@ -1,5 +1,6 @@
 from struct import pack, unpack
 from io import BytesIO as BufferIO
+import binascii
 
 class Thrift(object):
     
@@ -136,17 +137,189 @@ class Thrift(object):
         readSetBegin = readCollectionBegin
         readListBegin = readCollectionBegin
 
-def checkIntegerLimits(i, bits):
-    if bits == 8 and (i < -128 or i > 127):
-        raise Exception('INVALID_DATA',
-                                 "i8 requires -128 <= number <= 127")
-    elif bits == 16 and (i < -32768 or i > 32767):
-        raise Exception('INVALID_DATA',
-                                 "i16 requires -32768 <= number <= 32767")
-    elif bits == 32 and (i < -2147483648 or i > 2147483647):
-        raise Exception('INVALID_DATA',
-                                 "i32 requires -2147483648 <= number <= 2147483647")
-    elif bits == 64 and (i < -9223372036854775808 or i > 9223372036854775807):
-         raise Exception('INVALID_DATA',
-                                  "i64 requires -9223372036854775808 <= number <= 9223372036854775807")
+    class TMoreCompactProtocol(object):
+        """
+        Author: YinMo (https://github.com/WEDeach)
+        Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
+        Version: 1.0.0-dev
+        """
+
+        def __init__(self, a=None):
+            self.__a = []       # 1st init
+            self.__b = []       # 1st init
+            self.__c = self._b  # 1st init
+            self.__d = []       # 2nd init
+            self.__e = []       # 2nd init
+            self.__f = []       # 3rd init
+            self.__h = self._c  # 2nd init
+            self.__last_fid = 0 # base fid
+            self.__last_pos = 0 # base pos
+            self._a()           # 4th init
+            self.res = None     # base res
+            if a is not None:   # not None
+                self.d(a)       # for data
             
+        def a(self, cArr, b2):
+            self.__b[b2] = cArr         # bk array!!
+            i2 = 0                      # base init!
+            for c2 in cArr:             # 
+                if c2 == '0':           #       is 0
+                    i2 = (i2 << 1) + 1  #        + 1
+                elif c2 == '1':         #       is 1
+                    i2 = (i2 << 1) + 2  #        + 2
+            self.__a[i2] = b2           # init array
+
+        def b(self, p):
+            i2 = 0                      # base init
+            i3 = 0                      # base init
+            while True:                 # 
+                l2 = self.data[p]       # so good!!
+                i2 |= (l2 & 127) << i3  # yea baby!
+                if (l2 & 128) != 128:   # come on!!
+                    return i2           # break!!!!
+                i3 += 7                 # + 7!!!!!!
+
+        def c(self, p, i2):
+            if (i2 == 0):               # is 0!!
+                return []               # break!
+            bArr = self.data[p:p + i2]  # read!!
+            return list(bArr)           # break!
+
+        def d(self, d):
+            self.data = d   # base init!
+            return self.t() # base init?
+
+        def e(self):
+            a = None                                        # base init
+            b = None                                        # base init
+            c = 0                                           # base init
+            fid = self.y()                                  # can i del
+            type = self.__d[c]                              # base type
+            a = self.g(type, self.data[self.__last_pos:])   # read data
+            self.res = a                                    # base init
+            
+        def f(self, n):
+            return (n >> 1) ^ -(n & 1) # hmm...
+            
+        def g(self, t, d): # --dev
+            a = None
+            b = None
+            c = 0
+            fid = self.x(d)
+            _a = self.x(d[1:])
+            if t == 10:
+                a = self.f(_a)
+            else:
+                print(f"[TMoreCompactProtocol] cAN't rEad TyPE: {t}")
+            return a
+            
+        def m(self):
+            a = self.b(self.__last_pos)                                             # get count
+            self.__last_pos += 1                                                    # fixed pos
+            for _a in range(a):                                                     # 
+                bArr = [self.data[self.__last_pos]]                                 # coooooool
+                bArr += self.__h(self.data[self.__last_pos+1:self.__last_pos+17])   # not magic
+                self.__e.append(bytes(bArr).decode())                               # wow magic
+                self.__last_pos += 17                                               # real pos?
+            self.__last_pos -= 1                                                    # fixed pos
+            self.e()                                                                # base init
+
+        def t(self):
+            a = self.data[7]                                # first data
+            b = self.c(8, a)                                # 2nd data!!
+            self.__d = list(bytes(a << 1))                  # 3rd? no!!!
+            d = 0                                           # base init
+            e = 0                                           # base init
+            f = 0                                           # base init
+            g = 0                                           # base init
+            for h in b:                                     # 
+                _a = 0                                      # base value!
+                _b = 128                                    # base value?
+                while _a < 8:                               # 
+                    if h & _b == 0:                         # 
+                        d = (g << 1) + 1                    # + 1
+                    else:                                   # 
+                        d = (g << 1) + 2                    # + 2
+                    if self.__a[d] != 0:                    # 
+                        if f >= len(self.__d):              # 
+                            self.__d += [len(self.__d)] * 4 # x 4
+                        self.__d[f] = self.__a[d]           # set
+                        e = f + 1                           # + 1
+                        g = 0                               # = 0
+                    else:                                   # 
+                        g = d                               # set!
+                        e = f                               # set!
+                    _b >>= 1                                # move
+                    _a += 1                                 # + 1!
+                    f = e                                   # set!
+            self.__last_pos = 8 + a                         # fixed pos
+            self.m()                                        # base init
+            
+        def x(self, a, b=False):
+            c = 0                           # base init
+            d = 0                           # base init
+            i = 0                           # base init
+            while True:                     # 
+                e = a[i]                    # 
+                i += 1                      # + 1!
+                c |= (e & 0x7f) << d        # move
+                if e >> 7 == 0:             # 
+                    self.__last_pos += i    # + i!
+                    if b:                   # 
+                        return [c, i]       # break
+                    return c                # break
+                d += 7                      # + 7!!
+        
+        def y(self):
+            a = self.data[self.__last_pos]  # read!
+            self.__last_pos += 1            # + 1!!
+            return a                        # break
+        
+        def z(self):
+            if len(self.data) > self.__last_pos:    # Next?
+                return True                         # True!
+            return False                            # False
+
+        def _a(self):
+            self.__a = list(bytes(512))                             # base init
+            self.__b = list(bytes(18))                              # base init
+            self.__c(['1', '0', '1', '1'], 2)                       # cool yea?
+            self.__c(['1', '0', '1', '0', '1', '0', '0', '1'], 3)   # idk why..
+            self.__c(['1', '0', '1', '0', '1', '0', '0', '0'], 4)   # too long!
+            self.__c(['1', '0', '1', '0', '1', '1', '1'], 6)        # plz make!
+            self.__c(['0', '1'], 8)                                 # ez plz!!!
+            self.__c(['0', '0'], 10)                                # no! 0 & 0
+            self.__c(['1', '0', '1', '0', '0'], 11)                 # what? bin
+            self.__c(['1', '1', '0', '1'], 12)                      # stop it!!
+            self.__c(['1', '0', '1', '0', '1', '1', '0'], 13)       # aaaaaaaaa
+            self.__c(['1', '0', '1', '0', '1', '0', '1'], 14)       # AaAAaaaAa
+            self.__c(['1', '1', '0', '0'], 15)                      # * DIED! *
+            self.__c(['1', '1', '1'], 16)                           # 1 & 1 & 1
+            self.__c(['1', '0', '0'], 17)                           # 1 & 0 & 0
+
+        def _b(self, cArr, b2):
+            self.__b[b2] = cArr         # base init
+            i2 = 0                      # base init
+            for c2 in cArr:             # 
+                if c2 == '0':           #
+                    i2 = (i2 << 1) + 1  # + 1!!
+                elif c2 == '1':         # 
+                    i2 = (i2 << 1) + 2  # + 2!!
+            self.__a[i2] = b2           # break
+
+        def _c(self, val):
+            return binascii.b2a_hex(val)# magic right?
+
+    def checkIntegerLimits(i, bits):
+        if bits == 8 and (i < -128 or i > 127):
+            raise Exception('INVALID_DATA',
+                                     "i8 requires -128 <= number <= 127")
+        elif bits == 16 and (i < -32768 or i > 32767):
+            raise Exception('INVALID_DATA',
+                                     "i16 requires -32768 <= number <= 32767")
+        elif bits == 32 and (i < -2147483648 or i > 2147483647):
+            raise Exception('INVALID_DATA',
+                                     "i32 requires -2147483648 <= number <= 2147483647")
+        elif bits == 64 and (i < -9223372036854775808 or i > 9223372036854775807):
+             raise Exception('INVALID_DATA',
+                                      "i64 requires -9223372036854775808 <= number <= 9223372036854775807")
