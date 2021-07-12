@@ -27,7 +27,7 @@ class Poll(object):
             if 'error' in ops:
                 raise Exception(ops['error'])
             for op in ops:
-                if op[3] != 0:
+                if op[3] != 0 and op[3] != -1:
                     self.setRevision(op[1])
                     if isThreading:
                         _td = threading.Thread(target=self.__execute, args=(op, func))

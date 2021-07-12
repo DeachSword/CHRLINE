@@ -72,14 +72,16 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.req.post(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        sqr = data[39:105].decode()
+        data = self.tryReadData(data)['createSession']
+        if 'error' in data:
+            raise Exception(data['error'])
+        sqr = data[1]
         url = self.createSession(sqr)
         yield f"URL: {url}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
-            print(b)
             isCheck = False
-            if 'error' in b:
+            if b is not None and 'error' in b:
                 c = self.createPinCode(sqr)
                 yield f"請輸入pincode: {c}"
                 if self.checkPinCodeVerified(sqr):
@@ -89,7 +91,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             if isCheck:
                 e = self.qrCodeLogin(sqr)
                 if isSelf:
-                    self.authToken = e.decode()
+                    self.authToken = e
                     print(f"AuthToken: {self.authToken}")
                 else:
                     yield e.decode()
@@ -203,11 +205,12 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        pem = data[37:101]
-        self.saveSqrCert(pem.decode())
-        print("證書: ", pem.decode())
-        _token = data[108:]
-        return bytes(_token[:88]) # 88dig?
+        data = self.tryReadData(data)['qrCodeLogin']
+        pem = data[1]
+        self.saveSqrCert(pem)
+        print("證書: ", pem)
+        _token = data[2]
+        return _token
         token = []
         for t in _token:
             token.append(t)
@@ -684,16 +687,16 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
     def testTMoreCompact(self):
         _headers = {
             'X-Line-Access': self.authToken, 
-            'x-lpqs': "/P5"
+            'x-lpqs': "/S5"
         }
         a = self.encHeaders(_headers)
-        sqrd = [130, 33, 1, 10]
-        for value in "getProfile":
-            sqrd.append(ord(value))
+        sqrd = [130, 33, 1] + self.getStringBytes('getProfile', True)
         sqrd += [0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
+        tmore = self.TMoreCompactProtocol(data)
+        data = tmore.res
         return data
