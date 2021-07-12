@@ -564,6 +564,45 @@ class TalkService(object):
     def fetchOps(self, revision, count=100):
         _headers = {
             'X-Line-Access': self.authToken, 
+            'x-lpqs': "/P5"
+        }
+        a = self.encHeaders(_headers)
+        params = [
+            [10, 2, revision],
+            [8, 3, count],
+            [10, 4, self.globalRev],
+            [10, 5, self.individualRev]
+        ]
+        sqrd = self.generateDummyProtocol('fetchOps', params, 4)
+        sqr_rd = a + sqrd
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            "x-lst": "110000",
+        })
+        res = self.testPollConn.post("https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180)
+        if res.status_code == 200:
+            data = self.decData(res.content)
+            TMoreCompact = self.TMoreCompactProtocol(data)
+            data = TMoreCompact.res
+            if 'error' not in data:
+                for op in data:
+                    if op[3] == 0:
+                        if 10 in op:
+                            a = op[10].split('\x1e')
+                            self.individualRev = a[0]
+                        if 11 in op:
+                            b = op[11].split('\x1e')
+                            self.globalRev = b[0]
+                return data
+            else:
+                raise Exception(data['error'])
+        # return self.fetchOps(revision, count)
+        return []
+        
+    def fetchOpsOld(self, revision, count=100):
+        _headers = {
+            'X-Line-Access': self.authToken, 
             'x-lpqs': "/P3"
         }
         a = self.encHeaders(_headers)
