@@ -16,6 +16,15 @@ If you have a certain degree of understanding of Line thrift, then you must have
 But for most people, it is difficult to decompile TMoreCompact, even if it has lower confusion in some version \
 But if you can use this project to understand the differences in LINE thrift
 \
+
+## TMoreCompactProtocol
+We added the simple function of TMoreCompact for the first time on 26 May (https://github.com/DeachSword/CHRLINE/commit/3192377714730ddf83208836661182d641d21cb0) \
+And added TMoreCompact to the development version at Jul 8 (https://github.com/DeachSword/CHRLINE/commit/d7d8430e74417a06c9ad159a5675b7787ec75c54) \ 
+It's based on the thrift of the LINE Android version \ 
+Its purpose is to effectively compress mid (32 bytes) to 16 bytes
+
+
+
 ####  Example
 ```
 from CHRLINE import *

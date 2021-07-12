@@ -11,6 +11,7 @@ import time
 import json
 import os
 import rsa
+import binascii
         
 class Models(object):
 
@@ -154,7 +155,8 @@ class Models(object):
         
     def decData(self, data):
         data = pad(data, AES.block_size)
-        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).decrypt(data)
+        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).decrypt(data)[:-16]
+        _data = unpad(_data, AES.block_size)
         i = 1
         data = self.yVdzCLDwMN(_data, i)
         i = 3
@@ -222,6 +224,37 @@ class Models(object):
         if t > 127:
             t = 0 - (t - 1 ^ 255)
         return t
+    
+    def generateDummyProtocol(self, name, params, type):
+        if type == 3:
+            data = [128, 1, 0, 1] + self.getStringBytes(name) + [0, 0, 0, 0]
+        elif type == 4:
+            data = [130, 33, 00] + self.getStringBytes(name, isCompact=True)
+        data += self.generateDummyProtocolData(params, type) + [0]
+        return data
+    
+    def generateDummyProtocolData(self, params, type):
+        isCompact = False
+        data = []
+        tcp = self.TCompactProtocol()
+        for param in params:
+            # [10, 2, revision]
+            _type = param[0]
+            _id = param[1]
+            _data = param[2]
+            if type == 3:
+                data += [_type, 0, _id]
+                isCompact = False
+            elif type == 4:
+                data += tcp.getFieldHeader(tcp.CTYPES[_type], _id)
+                isCompact = True
+            if _type == 8:
+                data += self.getIntBytes(_data, isCompact=isCompact)
+            elif _type == 10:
+                data += self.getIntBytes(_data, 8, isCompact)
+            else:
+                raise Exception(f"[generateDummyProtocolData] not support type: {_type}")
+        return data
         
     def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3):
         if self.encType == 0:
@@ -256,9 +289,10 @@ class Models(object):
             raise Exception(f"Unknown ThriftType: {ttype}")
         
     def getIntBytes(self, i, l=4, isCompact=False):
+        i = int(i)
         if isCompact:
             _compact = self.TCompactProtocol()
-            a = _compact.makeZigZag(i, 16)
+            a = _compact.makeZigZag(i, l**2)
             b = _compact.writeVarint(a)
             return b
         _seq = int(i).to_bytes(l, byteorder="big")
@@ -286,17 +320,20 @@ class Models(object):
             res.append(value)
         return res
         
-    def getMagicStringBytes(self, val):
+    def getMagicStringBytes(self, val, rev=False):
         res = []
         i = 0
-        if len(val) == 32:
-            for ii in range(16):
-                iii = ii * 2
-                i = iii + 1
-                mgc = (int(val[iii], 16) << 4) + int(val[i], 16)
-                res.append(mgc)
+        if rev:
+            res = binascii.b2a_hex(val)
         else:
-            raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
+            if len(val) == 32:
+                for ii in range(16):
+                    iii = ii * 2
+                    i = iii + 1
+                    mgc = (int(val[iii], 16) << 4) + int(val[i], 16)
+                    res.append(mgc)
+            else:
+                raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
         return res
         
     def tryReadData(self, data, mode=1):
@@ -358,6 +395,8 @@ class Models(object):
     def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
         _data = {}
         nextPos = 0
+        if len(data) < 3:
+            return None
         dataType = data[0]
         id = data[2]
         #print(f"{id} -> {dataType}")
@@ -511,12 +550,13 @@ class Models(object):
             print(f"[readContainerStruct]不支援Type: {data[0]} => ID: {id}")
         if nextPos > 0 and not stopWithFirst:
             data = data[nextPos:]
-            c = self.readContainerStruct(data, True)
-            if c[0]:
-                _data.update(c[0])
-                nextPos += c[1] # lol, why i forget it
-                if c[2] != 0:
-                    dataType = c[2]
+            if len(data) > 2:
+                c = self.readContainerStruct(data, True)
+                if c[0]:
+                    _data.update(c[0])
+                    nextPos += c[1] # lol, why i forget it
+                    if c[2] != 0:
+                        dataType = c[2]
         if get_data_len:
             return [_data, nextPos, dataType]
         return _data
@@ -569,8 +609,8 @@ class Models(object):
         elif ftype == 9 or ftype == 10:
             ### todo:
             #       ftype == 10 == SET
-            (vtype, vsize) = _dec.readCollectionBegin(data[offset:])
-            offset += 1
+            (vtype, vsize, vlen) = _dec.readCollectionBegin(data[offset:])
+            offset += vlen
             _data[fid] = []
             _nextPos = 0
             for i in range(vsize):
