@@ -1,5 +1,4 @@
 from struct import pack, unpack
-from io import BytesIO as BufferIO
 import binascii
 
 class Thrift(object):
@@ -147,6 +146,12 @@ class Thrift(object):
             (size, len) = self.__readSize(data)
             res = data[len:size + len].decode()
             return [res, len + size + 1]
+            
+        def __writeUByte(self, byte):
+            return list(pack('!B', byte))
+
+        def __writeSize(self, i32):
+            return self.writeVarint(i32)
                 
         def readFieldBegin(self, data):
             type = data[0]
@@ -176,6 +181,25 @@ class Thrift(object):
             if size == 15:
                 size, len = self.__readSize(data[1:])
             return type, size, len + 1
+
+        def writeCollectionBegin(self, etype, size):
+            a = []
+            if size <= 14:
+                a += self.__writeUByte(size << 4 | self.CTYPES[etype])
+            else:
+                a += self.__writeUByte(0xf0 | self.CTYPES[etype])
+                a += self.__writeSize(size)
+            return a
+
+        def writeMapBegin(self, ktype, vtype, size):
+            a = []
+            if size == 0:
+                a += self.__writeByte(0)
+            else:
+                a += self.__writeSize(size)
+                a += self.__writeUByte(self.CTYPES[ktype] << 4 | self.CTYPES[vtype])
+            return a
+
         readByte = __readByte
         __readI16 = __readZigZag
         readI16 = __readZigZag
@@ -188,7 +212,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.0
+        Version: 1.0.1
         """
 
         def __init__(self, a=None):
@@ -243,17 +267,24 @@ class Thrift(object):
             b = None                                        # base init
             c = 0                                           # base init
             fid = self.y()                                  # can i del
-            a = self.g(self.w())                            # read data
-            if fid == 2:                                    # 
+            if fid == 0:                                    # 
+                pass                                        # no data!!
+            elif  fid == 1:                                 # 
+                a = self.g(self.w())                        # read data
+            elif fid == 2:                                  # 
+                a = self.g(self.w())                        # read data
                 a = {                                       # 
                     'error': {                              # 
                         'code': a.get(1),                   # error code
                         'message': a.get(2),                # error msg.
-                        'metadata': a.get(3)                # error data
+                        'metadata': a.get(3),               # error data
+                        '_data': a                          # for debug.
                     }                                       # 
                 }                                           # 
             elif fid == 6:                                  # 
                 raise Exception(a)                          # exception!
+            else:
+                raise EOFError(f"fid {fid} not implemented")
             self.res = a                                    # write data
             
         def f(self, n):
@@ -294,14 +325,11 @@ class Thrift(object):
                         k = self.g(t1)                                                      # key!
                         v = self.g(t2)                                                      # val!
                         a[k] = v                                                            # dict
-            elif t == 15:                                                                   # 
+            elif t == 14 or t == 15:                                                        # 
                 a = []                                                                      # base
                 dec = Thrift.TCompactProtocol()                                             # init
                 ftype, count, offset = dec.readCollectionBegin(self.data[self.__last_pos:]) # read
                 self.__last_pos += offset                                                   # fix!
-                if count == 15:                                                             # 
-                    c2 = self.x(self.data[self.__last_pos:])                                # read
-                    count = c2                                                              # fix!
                 for i in range(count):                                                      # 
                     b = self.g(self._d(ftype))                                              # read
                     a.append(b)                                                             # list
@@ -313,9 +341,12 @@ class Thrift(object):
                 a = str(d)                                                                  # str!
             elif t == 17:                                                                   # 
                 b = self.b()                                                                # read
-                a = self.__e[b]                                                             # str?
+                if len(self.__e) > b:                                                       # 
+                    a = self.__e[b]                                                         # str?
+                else:                                                                       # 
+                    print(f"未知mid: {b}")                                                  # ????
             else:                                                                           # 
-                print(f"[TMoreCompactProtocol] cAN't rEad TyPE: {t}")                       # err!
+                raise Exception(f"cAN't rEad TyPE: {t}")                                    # err!
             return a                                                                        # nice
 
         def m(self):
@@ -344,41 +375,45 @@ class Thrift(object):
 
         def s(self):
             a = self.b()                                                # read value
-            b = self.data[self.__last_pos:self.__last_pos + a].decode() # any ideas?
+            b = self.data[self.__last_pos:self.__last_pos + a]          # init first
+            try:                                                        # 
+                b = b.decode()                                          # any ideas?
+            except:                                                     # 
+                pass                                                    # lamo idea.
             self.__last_pos += a                                        # fixed pos!
             return b                                                    # - break! -
 
         def t(self):
-            self.__last_pos = 7
-            a = self.b()                                    # first data
-            b = self.c(self.__last_pos, a)                  # 2nd data!!
-            self.__d = list(bytes(a << 1))                  # 3rd? no!!!
-            d = 0                                           # base init
-            e = 0                                           # base init
-            f = 0                                           # base init
-            g = 0                                           # base init
-            for h in b:                                     # 
-                _a = 0                                      # base value!
-                _b = 128                                    # base value?
-                while _a < 8:                               # 
-                    if h & _b == 0:                         # 
-                        d = (g << 1) + 1                    # + 1
-                    else:                                   # 
-                        d = (g << 1) + 2                    # + 2
-                    if self.__a[d] != 0:                    # 
-                        if f >= len(self.__d):              # 
-                            self.__d += [len(self.__d)] * 4 # x 4
-                        self.__d[f] = self.__a[d]           # set
-                        e = f + 1                           # + 1
-                        g = 0                               # = 0
-                    else:                                   # 
-                        g = d                               # set!
-                        e = f                               # set!
-                    _b >>= 1                                # move
-                    _a += 1                                 # + 1!
-                    f = e                                   # set!
-            self.__last_pos += a                            # fixed pos
-            self.m()                                        # base init
+            self.__last_pos = 7                                     # fixed pos
+            if len(self.data) == 4:                                 # 
+                raise Exception(f"無效Data: {self.data} (code: 20)")# 
+            a = self.b()                                            # first data
+            b = self.c(self.__last_pos, a)                          # 2nd data!!
+            self.__d = list(bytes(a << 1))                          # 3rd? no!!!
+            d = 0                                                   # base init
+            e = 0                                                   # base init
+            f = 0                                                   # base init
+            g = 0                                                   # base init
+            for h in b:                                             # 
+                _a = 0                                              # base value!
+                _b = 128                                            # base value?
+                while _a < 8:                                       # 
+                    if h & _b == 0:                                 # 
+                        d = (g << 1) + 1                            # + 1
+                    else:                                           # 
+                        d = (g << 1) + 2                            # + 2
+                    if self.__a[d] != 0:                            # 
+                        if f >= len(self.__d):                      # 
+                            self.__d += [len(self.__d)] * 4         # x 4
+                        self.__d[f] = self.__a[d]                   # set
+                        f += 1                                      # + 1
+                        g = 0                                       # = 0
+                    else:                                           # 
+                        g = d                                       # set!
+                    _b >>= 1                                        # move
+                    _a += 1                                         # + 1!
+            self.__last_pos += a                                    # fixed pos
+            self.m()                                                # base init
 
         def w(self):
             a = self.__d[self.__last_fid]   # read!
