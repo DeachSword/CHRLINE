@@ -121,7 +121,7 @@ class Thrift(object):
             return self.writeVarint(self.makeZigZag(i16, 16))
             
         def makeZigZag(self, n, bits):
-            checkIntegerLimits(n, bits)
+            # checkIntegerLimits(n, bits)
             return (n << 1) ^ (n >> (bits - 1))
 
         def fromZigZag(self, n):
