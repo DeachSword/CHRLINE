@@ -112,6 +112,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - rejectChatInvitation
         - updateProfileAttribute
         - negotiateE2EEPublicKey
+        - react
     - ShopService
         - getProduct
         - getProductsByAuthor

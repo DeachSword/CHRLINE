@@ -900,4 +900,17 @@ class TalkService(object):
         sqrd += [11, 0, 2] + self.getStringBytes(mid)
         sqrd += [0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)['negotiateE2EEPublicKey']
+
+    def react(self, messageId, reactionType=5):
+        params = [
+            [12, 1, [
+                [8, 1, 0],
+                [10, 2, messageId],
+                [12, 3, [
+                    [8, 1, reactionType]
+                ]]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('react', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
         
