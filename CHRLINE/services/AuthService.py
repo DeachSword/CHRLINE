@@ -12,14 +12,14 @@ class AuthService(object):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('openAuthSession') + [0, 0, 0, 0]
         sqrd += [12, 0, 2]
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['openAuthSession']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
         
     def getAuthRSAKey(self, authSessionId: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getAuthRSAKey') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(authSessionId)
         sqrd += [8, 0, 3] + self.getIntBytes(1) #identityProvider
         sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['getAuthRSAKey']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
 
     def setIdentifier(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('setIdentifier') + [0, 0, 0, 0]
@@ -29,7 +29,7 @@ class AuthService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(cipherKeyId) #cipherKeyId, eg.10031
         sqrd += [11, 0, 4] + self.getStringBytes(cipherText) #cipherText, rsa enc maybe
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['setIdentifier']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
 
     def updateIdentifier(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('updateIdentifier') + [0, 0, 0, 0]
@@ -39,14 +39,14 @@ class AuthService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(cipherKeyId) #cipherKeyId, eg.10031
         sqrd += [11, 0, 4] + self.getStringBytes(cipherText) #cipherText, rsa enc maybe
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['updateIdentifier']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
         
     def resendIdentifierConfirmation(self, authSessionId: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('resendIdentifierConfirmation') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(authSessionId)
         sqrd += [12, 0, 3]
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['resendIdentifierConfirmation']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
         
     def confirmIdentifier(self, authSessionId: str, verificationCode: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('confirmIdentifier') + [0, 0, 0, 0]
@@ -56,7 +56,7 @@ class AuthService(object):
         # sqrd += [2, 0, 2] + self.getIntBytes(1) #forceRegistration : 1?
         sqrd += [11, 0, 3] + self.getStringBytes(verificationCode) #verificationCode
         sqrd += [0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['confirmIdentifier']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
         
     def removeIdentifier(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('removeIdentifier') + [0, 0, 0, 0]
@@ -66,5 +66,64 @@ class AuthService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(cipherKeyId) #cipherKeyId
         sqrd += [11, 0, 4] + self.getStringBytes(cipherText) #cipherText
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)['removeIdentifier']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT ,sqrd)
         
+    def getClovaAppToken(self, authSessionId, cipherText, metaData={}):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, 2],
+                [13, 2, [11, 11, metaData]],
+                [11, 3, cipherText]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('getClovaAppToken', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        
+    def loginFromClova(self, authSessionId, cipherText, metaData={}):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, 2],
+                [13, 2, [11, 11, metaData]],
+                [11, 3, cipherText]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('loginFromClova', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        
+    def validateClovaRequest(self, authSessionId, cipherText, metaData={}):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, 2],
+                [13, 2, [11, 11, metaData]],
+                [11, 3, cipherText]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('validateClovaRequest', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        
+    def setClovaCredential(self, authSessionId, cipherText, metaData={}):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, 2], #authLoginVersion
+                [13, 2, [11, 11, metaData]],
+                [11, 3, cipherText]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('setClovaCredential', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        
+    def validateClovaAppToken(self, authSessionId, cipherText, metaData={}):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, 2], #authLoginVersion
+                [13, 2, [11, 11, metaData]],
+                [11, 3, cipherText]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('validateClovaAppToken', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)

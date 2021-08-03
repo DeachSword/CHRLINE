@@ -50,6 +50,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - pycryptodemo
     - xxhash
     - httpx[http2]
+    - gevent
 
 ## Function overview
 - SQR Login
@@ -113,33 +114,77 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - updateProfileAttribute
         - negotiateE2EEPublicKey
         - react
-    - ShopService
-        - getProduct
-        - getProductsByAuthor
-        - getStudentInformation
-        - canReceivePresent
-        - getOwnedProductSummaries
-    - LiffService
-        - issueLiffView
-        - getLiffViewWithoutUserContext
-        - issueSubLiffView
+        - getE2EEPublicKeys
+        - createChat
+        - updateRegion
+        - getChatExistence
+        - getChatMembership
+        - setChatHiddenStatus
+        - getReadMessageOps
+        - getReadMessageOpsInBulk
+        - getE2EEMessageInfo
+        - getMessageBoxCompactWrapUpList
+        - getRecentMessages
+        - getRecentMessagesV2
+        - getPreviousMessageIds
+        - getMessagesByIds
+        - getMessageBoxesByIds
+        - getMessageBoxCompactWrapUpListV2
+        - getPreviousMessagesV2
+        - getPreviousMessagesV2WithReadCount
+        - getNextMessagesV2
+        - getAllRoomIds
+        - getCompactRooms
+        - acquireCallTicket
+        - isAbusive
+        - removeBuddySubscriptionAndNotifyBuddyUnregistered
+        - makeUserAddMyselfAsContact
+        - getFollowers
+        - getFollowings
+        - removeFollower
+        - follow
+        - unfollow
+        - bulkFollow
+        - decryptFollowEMid
+        - getChatRoomBGMs
+        - updateChatRoomBGM
+        - addSnsId
+        - removeSnsId
+        - getContactRegistration
+        - getHiddenContactMids
+        - blockRecommendation
+        - unblockRecommendation
+        - getRecommendationIds
+        - sync (DIED)
+        - reissueTrackingTicket
+    - AccessTokenRefreshService
+        - refreshAccessToken
+    - AuthService
+        - openAuthSession
+        - getAuthRSAKey
+        - setIdentifier
+        - updateIdentifier
+        - resendIdentifierConfirmation
+        - confirmIdentifier
+        - removeIdentifier
+        - getClovaAppToken
+        - loginFromClova
+        - validateClovaRequest
+        - setClovaCredential
+        - validateClovaAppToken
+    - BuddyService
+        - getPromotedBuddyContacts
     - ChannelService
         - issueChannelToken
         - approveChannelAndIssueChannelToken
         - getChannelInfo
         - getCommonDomains
         - issueRequestTokenWithAuthScheme
-    - SquareService
-        - inviteIntoSquareChat
-        - inviteToSquare
-        - getJoinedSquares
-        - markAsRead
-        - reactToMessage
-        - findSquareByInvitationTicket
-        - fetchMyEvents
-        - sendSquareMessage (text only)
-    - BuddyService
-        - getPromotedBuddyContacts
+        - getReturnUrlWithRequestTokenForAutoLogin
+    - LiffService
+        - issueLiffView
+        - getLiffViewWithoutUserContext
+        - issueSubLiffView
     - PrimaryAccountInitService
         - openPrimarySession
         - getCountryInfo
@@ -150,6 +195,46 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - exchangeEncryptionKey
         - setPassword
         - registerPrimaryUsingPhone
+    - SearchService (WIP)
+        - searchAll
+        - searchCollection
+        - searchLineat
+        - searchByPopularCategory
+        - searchByCategory
+        - getPopularCategory
+        - getNotice
+        - getSearchSection
+        - getAutocomplete
+    - SettingsService
+        - getSetting
+        - contextAgnosticGetSetting
+        - setSetting
+        - setSettingWithScope
+        - resetSetting
+        - searchSettings
+        - contextAgnosticSearchSettings
+    - ShopAuthService
+        - establishE2EESession
+    - ShopService
+        - getProduct
+        - getProductsByAuthor
+        - getStudentInformation
+        - canReceivePresent
+        - getOwnedProductSummaries
+    - SquareService
+        - inviteIntoSquareChat
+        - inviteToSquare
+        - getJoinedSquares
+        - markAsRead
+        - reactToMessage
+        - findSquareByInvitationTicket
+        - fetchMyEvents
+        - sendSquareMessage (text only)
+        - fetchSquareChatEvents
+        - getSquare
+        - getJoinableSquareChats
+    - SquareBotService
+        - getSquareBot
     - ObsService
         - forwardObjectMsg
         - trainingImage
@@ -181,6 +266,18 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - getTimelineUrl
             - getPostShareLink
             - getDiscoverRecommendFeeds
+            - updateProfileCoverById2
+            - getOACarousel
+            - getPartlyBlockContacts
+            - getClosedContacts
+            - getHideContacts
+            - getAutoOpenOption
+            - getHideGrouphomeList
+            - getNewpostStatus
+            - getGroupProfileimageList
+            - getUserProfile
+            - getUserPopupDetail
+            - syncBuddygroup
         - Album
             - changeGroupAlbumName
             - deleteGroupAlbum
@@ -194,24 +291,17 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - sendMessageForStoryAuthor
         - Search
             - Search
+        - Keep
+            - syncKeep
     - CubeService (beta)
         - issueBillSplitId
         - getBillSplitShareLink
         - getBillSplitSurvey
         - putBillSplitBills (test)
         - snedBillSplitBills
-    - AuthService
-        - openAuthSession
-        - getAuthRSAKey
-        - setIdentifier
-        - updateIdentifier
-        - resendIdentifierConfirmation
-        - confirmIdentifier
-        - removeIdentifier
     - Others
         - returnTicket (test)
         - getModulesV2
-        - setClovaCredential (test)
         - acquireCallRoute
         - acquireGroupCallRoute
         - acquireOACallRoute

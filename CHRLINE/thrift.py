@@ -120,6 +120,9 @@ class Thrift(object):
         def __writeI16(self, i16):
             return self.writeVarint(self.makeZigZag(i16, 16))
             
+        def __writeI32(self, i32):
+            return self.writeVarint(self.makeZigZag(i32, 32))
+            
         def makeZigZag(self, n, bits):
             # checkIntegerLimits(n, bits)
             return (n << 1) ^ (n >> (bits - 1))
@@ -199,6 +202,11 @@ class Thrift(object):
                 a += self.__writeSize(size)
                 a += self.__writeUByte(self.CTYPES[ktype] << 4 | self.CTYPES[vtype])
             return a
+        
+        def readDouble(self, data):
+            buff = data[:8]
+            val, = unpack('<d', buff)
+            return val
 
         readByte = __readByte
         __readI16 = __readZigZag
@@ -212,7 +220,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.1
+        Version: 1.0.2
         """
 
         def __init__(self, a=None):
@@ -282,6 +290,7 @@ class Thrift(object):
                     }                                       # 
                 }                                           # 
             elif fid == 6:                                  # 
+                a = self.g(self.w())                        # read data
                 raise Exception(a)                          # exception!
             else:
                 raise EOFError(f"fid {fid} not implemented")
@@ -301,6 +310,10 @@ class Thrift(object):
                 dec = Thrift.TCompactProtocol()                                             # init
                 a = dec.readByte(self.data[self.__last_pos:])                               # byte
                 self.__last_pos += 1                                                        # fix!
+            elif t == 4:
+                dec = Thrift.TCompactProtocol()                                             # init
+                a = dec.readDouble(self.data[self.__last_pos:])                             # read
+                self.__last_pos += 8                                                        # fix!
             elif t == 8:                                                                    # 
                 _a = self.x(self.data[self.__last_pos:])                                    # read
                 a = self.f(_a)                                                              # int!

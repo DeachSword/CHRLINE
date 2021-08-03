@@ -12,8 +12,9 @@ from os import system
 
 class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube):
 
-    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1):
+    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1, debug=False):
         self.encType = encType
+        self.isDebug = debug
         Models.__init__(self)
         Config.__init__(self, device)
         self.initAppConfig(device, version, os_name, os_version)

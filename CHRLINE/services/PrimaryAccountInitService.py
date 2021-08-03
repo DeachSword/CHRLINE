@@ -33,7 +33,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['openSession']
+        return self.tryReadData(data)
         
     def getCountryInfo(self, authSessionId, simCard=None):
         _headers = {
@@ -48,7 +48,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['getCountryInfo']
+        return self.tryReadData(data)
         
     def getPhoneVerifMethod(self, authSessionId, phoneNumber, countryCode, deviceModel="SM-N950F"):
         _headers = {
@@ -70,7 +70,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['getPhoneVerifMethod']
+        return self.tryReadData(data)
         
     def sendPinCodeForPhone(self, authSessionId, phoneNumber, countryCode, deviceModel="SM-N950F"):
         _headers = {
@@ -95,7 +95,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['sendPinCodeForPhone']
+        return self.tryReadData(data)
         
     def verifyPhone(self, authSessionId, phoneNumber, countryCode, pinCode, deviceModel="SM-N950F"):
         _headers = {
@@ -119,7 +119,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['verifyPhone']
+        return self.tryReadData(data)
         
     def validateProfile(self, authSessionId, displayName):
         _headers = {
@@ -135,7 +135,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['validateProfile']
+        return self.tryReadData(data)
         
     def exchangeEncryptionKey(self, authSessionId, publicKey, nonce, authKeyVersion=1):
         _headers = {
@@ -154,7 +154,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['exchangeEncryptionKey']
+        return self.tryReadData(data)
         
     def setPassword(self, authSessionId, cipherText, encryptionKeyVersion=1):
         _headers = {
@@ -172,7 +172,7 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['setPassword']
+        return self.tryReadData(data)
         
     def registerPrimaryUsingPhone(self, authSessionId):
         _headers = {
@@ -187,4 +187,4 @@ class PrimaryAccountInitService(object):
         data = self.encData(_data)
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['registerPrimaryUsingPhone']
+        return self.tryReadData(data)

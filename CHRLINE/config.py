@@ -4,6 +4,7 @@ import re
 class Config(object):
     LINE_HOST_DOMAIN                     = 'https://ga2.line.naver.jp'
     LINE_LEGY_HOST_DOMAIN                = 'https://legy-jp.line.naver.jp'
+    LINE_GW_HOST_DOMAIN                  = 'https://gwz.line.naver.jp'
     LINE_GF_HOST_DOMAIN                  = 'https://gf.line.naver.jp'
     LINE_GD2_HOST_DOMAIN                 = 'https://gd2.line.naver.jp'
     LINE_GD2K_HOST_DOMAIN                = 'https://gd2k.line.naver.jp'
@@ -57,12 +58,14 @@ class Config(object):
     LINE_ENCRYPTION_ENDPOINT             = '/enc'
     LINE_AGE_CHECK_ENDPOINT              = '/ACS4'
     LINE_AUTH_ENDPOINT                   = '/RS3'
+    LINE_AUTH_ENDPOINT_V4                = '/RS4'
     LINE_AUTH_EAP_ENDPOINT               = '/ACCT/authfactor/eap/v1'
     LINE_BEACON_ENDPOINT                 = '/BEACON4'
     LINE_BUDDY_ENDPOINT                  = '/BUDDY3'
     LINE_CALL_ENDPOINT                   = '/V3'
     LINE_CANCEL_LONGPOLLING_ENDPOINT     = '/CP4'
     LINE_CHANNEL_ENDPOINT                = '/CH3'
+    LINE_CHANNEL_ENDPOINT_V4             = '/CH4'
     LINE_CHAT_APP_ENDPOINT               = '/CAPP1'
     LINE_COIN_ENDPOINT                   = '/COIN4'
     LINE_COMPACT_E2EE_MESSAGE_ENDPOINT   = '/ECA5'
@@ -120,7 +123,7 @@ class Config(object):
             self.APP_VER = "11.2.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "ANDROID":
-            self.APP_VER = "11.8.1"
+            self.APP_VER = "11.13.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
             self.APP_VER = "11.5.1"

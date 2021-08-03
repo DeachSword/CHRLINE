@@ -16,7 +16,7 @@ class Timeline():
         TIMELINE_CHANNEL_ID = "1341209950"
         self.can_use_timeline = False
         try:
-            if self.APP_TYPE == "CHROMEOS":
+            if self.APP_TYPE in ["CHROMEOS"]:
                 TIMELINE_CHANNEL_ID = "1341209850"
             self.server.timelineHeaders = {
                 'x-line-application': self.server.Headers['x-line-application'],
@@ -79,6 +79,179 @@ class Timeline():
         })
         r = self.server.postContent('https://ga2.line.naver.jp/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
         return r.json()
+
+    @loggedIn
+    def updateProfileCoverById2(self, objId: str):
+        params = {
+            "coverImageId": objId,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v41/home/updateCover.json', params)
+        r = self.server.getContent(url, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def getOACarousel(self):
+        params = {
+            "homeId": "ud9b11771afc46b1d9b6faa646ab3c475"
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v42/feed/carousel/oa.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getPartlyBlockContacts(self):
+        params = {
+            "id": self.mid,
+            "limit": 30
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/mapi/v53/contacts/block/partly.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getClosedContacts(self):
+        params = {
+            "id": self.mid
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/block', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getHideContacts(self, MID):
+        params = {
+            "id": self.mid
+        }
+        data = {
+            "mid": "u67c43239c865dfce6addb41c6b3c0edd"
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/hide', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getAutoOpenOption(self):
+        params = {
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contact/autoopen', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getHideGrouphomeList(self):
+        params = {
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v24/grouphome/hide/list.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getNewpostStatus(self):
+        params = {
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/mapi/v41/status/newpost', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getGroupProfileimageList(self):
+        params = {
+        }
+        data = {
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v24/group/profileimage/list.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getUserProfile(self, mid: str):
+        params = {
+            "userMid": mid
+        }
+        data = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v1/profile/get.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.text
+
+    @loggedIn
+    def getUserPopupDetail(self, mid: str):
+        params = {
+            "userMid": mid
+        }
+        data = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v1/userpopup/getDetail.json', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.text
+
+    @loggedIn
+    def syncBuddygroup(self, mid: str):
+        params = {
+            "userMid": mid,
+            "lastUpdated": 0
+        }
+        data = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/home/buddygroup/sync', params)
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.text
 
     @loggedIn
     def sendContactV2(self, homeId, targetMids):
@@ -611,5 +784,21 @@ class Timeline():
             'content-type': "application/json"
         })
         url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v24/otoaccount/sync.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+
+    """ Keep """
+
+    @loggedIn
+    def syncKeep(self, revision=0, limit=30):
+        params = {
+            'revision': revision,
+            'limit': limit
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/sync.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()

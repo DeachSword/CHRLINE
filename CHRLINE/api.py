@@ -11,8 +11,10 @@ from .services.SquareService import SquareService
 from .services.BuddyService import BuddyService
 from .services.PrimaryAccountInitService import PrimaryAccountInitService
 from .services.AuthService import AuthService
+from .services.SettingsService import SettingsService
+from .services.AccessTokenRefreshService import AccessTokenRefreshService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -23,7 +25,11 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.server.Headers = {
             "x-line-application": self.APP_NAME,
             "x-le": self.le,
-            "x-lap": "4",
+            "x-lap": "5",
+            # "x-lc": "3",
+            # "X-LST": "",
+            # "X-LCR": "",
+            # "X-LOR": "",
             "x-lpv": "1",
             "x-lcs": self._encryptKey,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
@@ -35,9 +41,12 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.revision = 0
         self.globalRev = 0
         self.individualRev = 0
+        self._msgSeq = 0
         TalkService.__init__(self)
         PrimaryAccountInitService.__init__(self)
         AuthService.__init__(self)
+        SettingsService.__init__(self)
+        AccessTokenRefreshService.__init__(self)
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -72,7 +81,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.req.post(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        data = self.tryReadData(data)['createSession']
+        data = self.tryReadData(data)
         if 'error' in data:
             raise Exception(data['error'])
         sqr = data[1]
@@ -94,11 +103,12 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                     self.authToken = e
                     print(f"AuthToken: {self.authToken}")
                 else:
-                    yield e.decode()
+                    yield e
                     return
                 yield self.authToken
                 return
-        return False
+            raise Exception('can not check pin code, try again?')
+        raise Exception('can not check qr code, try again?')
         
     def createSession(self, qrcode):
         _headers = {
@@ -152,7 +162,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['verifyCertificate']
+        return self.tryReadData(data)
 
     def createPinCode(self, qrcode):
         _headers = {
@@ -205,7 +215,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        data = self.tryReadData(data)['qrCodeLogin']
+        data = self.tryReadData(data)
         pem = data[1]
         self.saveSqrCert(pem)
         print("證書: ", pem)
@@ -290,30 +300,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.decData(res.content)
         return self.tryReadData(data)
         
-    def setClovaCredential(self, authSessionId, authLoginVersion, metaData, cipherText):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/api/v4p/rs"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 18, 115, 101, 116, 67, 108, 111, 118, 97, 67, 114, 101, 100, 101, 110, 116, 105, 97, 108, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(authSessionId)]
-        for value in authSessionId:
-            sqrd.append(ord(value))
-        sqrd += [12, 0, 3]
-        sqrd += [8, 0, 1, 0, 0, 0, 7]
-        sqrd += [13, 0, 2, 0, 0, 0, 0] #metaData
-        sqrd += [11, 0, 3, 0, 0, 0, len(cipherText)]
-        for value in cipherText:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
     def acquireCallRoute(self, to, callType, fromEnvInfo=None):
         _headers = {
             'X-Line-Access': self.authToken, 
@@ -332,7 +318,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['acquireCallRoute']
+        return self.tryReadData(data)
         
     def acquireGroupCallRoute(self, chatMid, mediaType=0, isInitialHost=None, capabilities=None):
         _headers = {
@@ -353,7 +339,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['acquireGroupCallRoute']
+        return self.tryReadData(data)
         
     def acquireOACallRoute(self, searchId, fromEnvInfo=None, otp=None):
         _headers = {
@@ -390,7 +376,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['acquireTestCallRoute']
+        return self.tryReadData(data)
         
     def inviteIntoGroupCall(self, chatMid, memberMids, mediaType=0):
         _headers = {
@@ -528,7 +514,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['getCountrySettingV4']
+        return self.tryReadData(data)
         
     def getRSAKeyInfo(self, provider=1):
         """
@@ -550,7 +536,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['getRSAKeyInfo']
+        return self.tryReadData(data)
         
     def loginV2(self, provider, keynm, encData, deviceName='Chrome'):
         """ same loginZ , but i using it for E2EE :D and not work now :P"""
@@ -573,7 +559,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['loginV2']
+        return self.tryReadData(data)
         
     def loginZ(self, keynm, encData, systemName='DeachSword-2021', certificate=None, verifier=None):
         _headers = {
@@ -603,7 +589,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.encData(_data)
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.tryReadData(data)['loginZ']
+        return self.tryReadData(data)
         
     def checkLoginZPinCode(self, accessSession):
         _headers = {

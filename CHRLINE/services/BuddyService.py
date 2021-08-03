@@ -12,5 +12,5 @@ class BuddyService(object):
         sqrd += [11, 0, 2] + self.getStringBytes(language)
         sqrd += [11, 0, 3] + self.getStringBytes(country)
         sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_BUDDY_ENDPOINT ,sqrd)['getPromotedBuddyContacts']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_BUDDY_ENDPOINT ,sqrd)
         

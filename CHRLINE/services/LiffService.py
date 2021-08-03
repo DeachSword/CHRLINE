@@ -27,7 +27,7 @@ class LiffService(object):
             sqrd += e.getFieldHeader(8, 1)
             sqrd += self.getStringBytes(chatMid, isCompact=True)
         sqrd += [0, 0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['issueLiffView']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)
         
     def getLiffViewWithoutUserContext(self, liffId="1562242036-RW04okm"):
         b = self.TCompactProtocol()
@@ -37,7 +37,7 @@ class LiffService(object):
         sqrd += c.getFieldHeader(8, 1)
         sqrd += self.getStringBytes(liffId, isCompact=True)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['getLiffViewWithoutUserContext']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)
         
     def issueSubLiffView(self, chatMid, msit, liffId="1562242036-RW04okm", lang='zh_TW', deviceSetting=None):
         b = self.TCompactProtocol()
@@ -58,4 +58,4 @@ class LiffService(object):
         sqrd += e.getFieldHeader(8, 1)
         sqrd += self.getStringBytes(chatMid, isCompact=True)
         sqrd += [0, 0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)['issueSubLiffView']
+        return self.postPackDataAndGetUnpackRespData(self.LINE_LIFF_ENDPOINT ,sqrd, ttype=4)
