@@ -12,7 +12,11 @@ import json
 import os
 import rsa
 import binascii
-        
+
+import gevent.monkey
+gevent.monkey.patch_all()
+import requests # patch after
+
 class Models(object):
 
     def __init__(self):
@@ -25,6 +29,8 @@ class Models(object):
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
+        #self.initWithBiz()
+        #self.initWithAndroid()
         
     def log(self, text):
         print("[{}] {}".format(str(datetime.now()), text))
@@ -119,13 +125,26 @@ class Models(object):
         open(savePath + f"/{fn}", "w").write(cert)
         return True
     
-    def initWithAndroid(self):
-        self.lcsStart = "0008"
-        self.le = "7"
-        self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
+    def initWithAndroid(self, ver=7):
+        if ver == 1:
+            self.lcsStart = "0001"
+            self.le = "1"
+            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZAAoZNRwIlLUXaUgrgYi8bAYq\nQeFVtXvCNIEm+F4/jAyTU3YoDwmoLaKQ6itGOonykGtwy2k/3BeWefL/q5eUGjVG\nBEa1vBeUNEb4IFU8n9WK3N/GIIPuD6ZiusB+U1FPg/NaEiVX8ldmEQJgmuG1hykk\n2dU3oy7O1M+Kwl1lJQIDAQAB\n-----END PUBLIC KEY-----'
+        elif ver == 4:
+            self.lcsStart = "0004"
+            self.le = "3" # LegyEncHelper.cpp::decryptStream -> legy xle value
+            self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwpAwTVluR1Z++tVzxtOD\nr7XxSv6oqrwvj/8c8SkfFsS8zM7CvIT8j+x+6Qs1JjNRDtYjAwPKO3tO+qOAdA+8\n7FHpx0THDJIi4VYxSZ2uDh0U8Luxh02whwM8gPbPQNN3sEd5++kJ3cCh5eeAIiUd\nDrwPhHzxO8swpBRdxJB/pzibEqpG2U2764JlPscN9D896qmBN6CBRKpXk/MmUDAI\n4xg+uQk/ykn3SNXJSgQwI1UD9KuiR+X9tbJlKRMN5JpUrSuEwRPQQDMaWpSIdCJM\noFqJLNwt9b1RR/JEB01Eup+3QCub20/CObCmHZY6G26KTDHLoTRZ1xzymdYhdJ43\nCwIDAQAB\n-----END PUBLIC KEY-----"
+        elif ver == 6:
+            self.lcsStart = "0007"
+            self.le = "7"
+            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5ABzJbexh+HH1+RzVTH4\nDFj8b/42vRqUp0NWLIBAgi5+bAgeJYzyVBI7Pk6YkQnd44HPvUvFMF3V3TocRXLP\nZV/NSawgcAh+VrXe3VIlruCOe14qrd/ZMpTRTxtBJ5aRpVhTsnGpZtGggPYnPh4c\n6V/R7Wxymj4SBZ1Ipsa7ZI83z/XIPFXT38qTJN3UAW5YhjQon1eNbwaxALVajuvI\npUE52aIBi05gE/V0HEoOUjfOg1V6RHFbcchTgmcze6Vbye+7kmdsIboDXnNpm/fJ\nuItub+iwLKSWf9OPc/bYpU4YVBxZXzmSCXFMLeCe2i5wJeMg4iG8NpVpwVv2W+Hb\nQQIDAQAB\n-----END PUBLIC KEY-----'
+        elif ver == 7:
+            self.lcsStart = "0008"
+            self.le = "7"
+            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
         self.key = RSA.importKey(self.PUBLIC_KEY)
-        self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
+        self.encryptKey = b"DearSakura+2021/"
         self.encEncKey()
         print(self._encryptKey)
 
@@ -230,10 +249,10 @@ class Models(object):
             data = [128, 1, 0, 1] + self.getStringBytes(name) + [0, 0, 0, 0]
         elif type == 4:
             data = [130, 33, 00] + self.getStringBytes(name, isCompact=True)
-        data += self.generateDummyProtocolData(params, type) + [0]
+        data += self.generateDummyProtocolField(params, type) + [0]
         return data
     
-    def generateDummyProtocolData(self, params, type):
+    def generateDummyProtocolField(self, params, type):
         isCompact = False
         data = []
         tcp = self.TCompactProtocol()
@@ -248,26 +267,69 @@ class Models(object):
             elif type == 4:
                 data += tcp.getFieldHeader(tcp.CTYPES[_type], _id)
                 isCompact = True
-            if _type == 8:
-                data += self.getIntBytes(_data, isCompact=isCompact)
-            elif _type == 10:
-                data += self.getIntBytes(_data, 8, isCompact)
+            data += self.generateDummyProtocolData(_data, _type, isCompact)
+        return data
+    
+    def generateDummyProtocolData(self, _data, type, isCompact=False):
+        data = []
+        tcp = self.TCompactProtocol()
+        ttype = 4 if isCompact else 3
+        if type == 2:
+            if isCompact:
+                _compact = self.TCompactProtocol()
+                a = _compact.getFieldHeader(1 if _data == True else 2, 0)
             else:
-                raise Exception(f"[generateDummyProtocolData] not support type: {_type}")
+                data += [1] if _data == True else [0]
+        elif type == 8:
+            data += self.getIntBytes(_data, isCompact=isCompact)
+        elif type == 10:
+            data += self.getIntBytes(_data, 8, isCompact=isCompact)
+        elif type == 11:
+            data += self.getStringBytes(_data, isCompact=isCompact)
+        elif type == 12:
+            data += self.generateDummyProtocolField(_data, ttype) + [0]
+        elif type == 13:
+            _ktype = _data[0]
+            _vtype = _data[1]
+            _vdata = _data[2]
+            if isCompact:
+                data += tcp.writeMapBegin(_ktype, _vtype, len(_vdata))
+            else:
+                data += [_ktype, _vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
+            for vd in _vdata:
+                data += self.generateDummyProtocolField(vd, _ktype)
+                data += self.generateDummyProtocolField(_vdata[vd], _vdata)
+        elif type == 14 or type == 15:
+            # [11, targetUserMids]
+            _vtype = _data[0]
+            _vdata = _data[1]
+            if isCompact:
+                data += tcp.writeCollectionBegin(_vtype, len(_vdata))
+            else:
+                data += [_vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
+            for vd in _vdata:
+                data += self.generateDummyProtocolData(vd, _vtype, isCompact)
+        else:
+            raise Exception(f"[generateDummyProtocolData] not support type: {type}")
         return data
         
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3):
-        if self.encType == 0:
-            _decMode = 0
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None):
+        if self.isDebug: print(f"POST {path}")
+        if headers is None:
             headers = self.server.Headers.copy()
+        ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
+        headers["content-type"] = "application/x-thrift; protocol=" + ptype
+        if encType is None:
+            encType = self.encType
+        if encType == 0:
             data = bytes(bdata)
             if "x-le" in headers:
                 del headers['x-le']
                 del headers['x-lcs']
             headers['X-Line-Access'] = self.authToken
-            res = self.server.postContent(self.LINE_LEGY_HOST_DOMAIN + path, data=data, headers=headers)
+            res = self.req_h2.post(self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
             data = bytes(4) + res.content + bytes(4)
-        elif self.encType == 1:
+        elif encType == 1:
             _headers = {
                 'X-Line-Access': self.authToken, 
                 'x-lpqs': path
@@ -277,22 +339,53 @@ class Models(object):
             c = a + b
             _data = bytes(c)
             data = self.encData(_data)
-            res = self.server.postContent(self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=self.server.Headers)
+            headers['x-cl'] = str(len(data))
+            res = self.req.post(self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=headers)
             data = self.decData(res.content)
         else:
-            raise Exception(f"Unknown encType: {self.encType}")
-        if ttype == 3:
-            return self.tryReadData(data)
-        elif ttype == 4:
-            return self.tryReadTCompactData(data)
+            raise Exception(f"Unknown encType: {encType}")
+        if self.isDebug: print(f"<-- {res.status_code}")
+        if self.isDebug: print(data)
+        if res.status_code == 200:
+            if 'x-line-next-access' in res.headers:
+                self.handleNextToken(res.headers['x-line-next-access'])
+            if res.headers['x-lc'] not in ['200', '410']:
+                raise Exception(f'Invalid response code: {res.headers["x-lc"]}')
+            res = None
+            if ttype == 3:
+                res = self.tryReadData(data)
+            elif ttype == 4:
+                res = self.tryReadTCompactData(data)
+            elif ttype == 5:
+                res = self.TMoreCompactProtocol(data).res
+            else:
+                raise Exception(f"Unknown ThriftType: {ttype}")
+            if type(res) == dict and 'error' in res:
+                print(res['error'])
+                if res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"]:
+                    self.is_login = False
+                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                else:
+                    print(res['error']['message'])
+            return res
         else:
-            raise Exception(f"Unknown ThriftType: {ttype}")
+            print(data)
+            return None
+        
+    def getCurrReqId(self):
+        self._msgSeq = 0
+        if "_reqseq" in self.custom_data:
+            self._msgSeq = self.custom_data["_reqseq"]
+        self._msgSeq += 1
+        self.custom_data["_reqseq"] = self._msgSeq
+        self.saveCustomData()
+        return self._msgSeq
         
     def getIntBytes(self, i, l=4, isCompact=False):
         i = int(i)
         if isCompact:
             _compact = self.TCompactProtocol()
-            a = _compact.makeZigZag(i, l**2)
+            a = _compact.makeZigZag(i, 32 if l**2 == 16 else 64)
             b = _compact.writeVarint(a)
             return b
         _seq = int(i).to_bytes(l, byteorder="big")
@@ -369,20 +462,17 @@ class Models(object):
                         t_l = data[a + 10]
                         error = data[a + 11:a + 11 + t_l].decode()
                     else:
-                        code = data[a + 10:a + 14]
-                        t_l = data[a + 20]
+                        ed = self.readContainerStruct(data[a + 4:])[1]
                         error = {
-                            'code': int.from_bytes(code, "big"),
-                            'message': data[a + 21:a + 21 + t_l].decode(),
-                            'metadata': self.readContainerStruct(data[a + 21 + t_l:])
+                            'code': ed.get(1),
+                            'message': ed.get(2),
+                            'metadata': ed.get(3),
+                            '_data': ed
                         }
-                        if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
-                            self.is_login = False
-                            raise Exception(f"LOGIN OUT: {error['message']}")
                     _data[b] = {
                         "error": error
                     }
-                    print(_data)
+            return _data[b]
         else:
             if data[6:24] == b"x-line-next-access":
                 a = data[25]
@@ -530,7 +620,12 @@ class Models(object):
                     e += 4
                 elif type == 11:
                     f = data[e+3]
-                    _data[id].append(data[e+4:e+4+f].decode())
+                    dd = data[e+4:e+4+f]
+                    try:
+                        dd = dd.decode()
+                    except:
+                        pass
+                    _data[id].append(dd)
                     e += f + 4
                 elif type == 12:
                     f = self.readContainerStruct(data[e:], True)
@@ -577,17 +672,14 @@ class Models(object):
                 else:
                     error = {
                         'code': _data[b][1][1],
-                        'message': _data[b][1][2],
+                        'message': _data[b][1].get(2, None),
                         'metadata': _data[b][1].get(3, None)
                     }
-                    if error['message'] in ["AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "REVOKE", "LOG_OUT"]:
-                        self.is_login = False
-                        raise Exception(f"LOGIN OUT: {error['message']}")
                     _data[b] = {
                         "error": error
                     }
-                    print(_data)
-        return _data
+            return _data[b]
+        return None
         
     def tryReadTCompactContainerStruct(self, data, id=0, get_data_len=False):
         _data = {}
