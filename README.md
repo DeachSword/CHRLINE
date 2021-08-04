@@ -174,6 +174,32 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - validateClovaAppToken
     - BuddyService
         - getPromotedBuddyContacts
+    - CallService
+        - acquireCallRoute
+        - acquireOACallRoute
+        - searchPaidCallUserRate
+        - acquirePaidCallCurrencyExchangeRate
+        - lookupPaidCall
+        - acquirePaidCallRoute
+        - getPaidCallBalanceList
+        - getPaidCallHistory
+        - getCallCreditProducts
+        - reserveCallCreditPurchase
+        - getCallCreditPurchaseHistory
+        - redeemPaidCallVoucher
+        - getPaidCallMetadata
+        - acquireGroupCallRoute
+        - getGroupCall
+        - inviteIntoGroupCall
+        - markPaidCallAd
+        - getPaidCallAdStatus
+        - acquireTestCallRoute
+        - getGroupCallUrls
+        - createGroupCallUrl
+        - deleteGroupCallUrl
+        - updateGroupCallUrl
+        - getGroupCallUrlInfo
+        - joinChatByCallUrl
     - ChannelService
         - issueChannelToken
         - approveChannelAndIssueChannelToken
@@ -302,11 +328,6 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - Others
         - returnTicket (test)
         - getModulesV2
-        - acquireCallRoute
-        - acquireGroupCallRoute
-        - acquireOACallRoute
-        - acquireTestCallRoute
-        - inviteIntoGroupCall
         - openSession
         - connectEapAccount
         - verifyEapLogin

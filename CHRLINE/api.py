@@ -13,8 +13,9 @@ from .services.PrimaryAccountInitService import PrimaryAccountInitService
 from .services.AuthService import AuthService
 from .services.SettingsService import SettingsService
 from .services.AccessTokenRefreshService import AccessTokenRefreshService
+from .services.CallService import CallService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -47,6 +48,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         AuthService.__init__(self)
         SettingsService.__init__(self)
         AccessTokenRefreshService.__init__(self)
+        CallService.__init__(self)
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -293,107 +295,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         for value in etag:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def acquireCallRoute(self, to, callType, fromEnvInfo=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/V3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 97, 99, 113, 117, 105, 114, 101, 67, 97, 108, 108, 82, 111, 117, 116, 101, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(to)]
-        for value in to:
-            sqrd.append(ord(value))
-        sqrd += [8, 0, 3] + self.getIntBytes(callType)
-        # sqrd += [13, 0, 4]
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def acquireGroupCallRoute(self, chatMid, mediaType=0, isInitialHost=None, capabilities=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/V3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 21, 97, 99, 113, 117, 105, 114, 101, 71, 114, 111, 117, 112, 67, 97, 108, 108, 82, 111, 117, 116, 101, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(chatMid)]
-        for value in chatMid:
-            sqrd.append(ord(value))
-        sqrd += [8, 0, 3] + self.getIntBytes(mediaType)
-        sqrd += [2, 0, 4, 1]
-        # sqrd += [15, 0, 5] # capabilities
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def acquireOACallRoute(self, searchId, fromEnvInfo=None, otp=None):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/V3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 18, 97, 99, 113, 117, 105, 114, 101, 79, 65, 67, 97, 108, 108, 82, 111, 117, 116, 101, 0, 0, 0, 0]
-        sqrd += [12, 0, 2]
-        sqrd += [11, 0, 2, 0, 0, 0, len(searchId)]
-        for value in searchId:
-            sqrd.append(ord(value))
-        # sqrd += [13, 0, 2] # fromEnvInfo
-        sqrd += [11, 0, 3, 0, 0, 0, len(otp)]
-        for value in otp:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def acquireTestCallRoute(self):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/V3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 97, 99, 113, 117, 105, 114, 101, 84, 101, 115, 116, 67, 97, 108, 108, 82, 111, 117, 116, 101, 0, 0, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def inviteIntoGroupCall(self, chatMid, memberMids, mediaType=0):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/V3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 19, 105, 110, 118, 105, 116, 101, 73, 110, 116, 111, 71, 114, 111, 117, 112, 67, 97, 108, 108, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(chatMid)]
-        for value in chatMid:
-            sqrd.append(ord(value))
-        sqrd += [15, 0, 3, 11, 0, 0, 0, len(memberMids)]
-        for mid in memberMids:
-            sqrd += [0, 0, 0, 33]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
