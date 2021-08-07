@@ -224,7 +224,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.2
+        Version: 1.0.3
         """
 
         def __init__(self, a=None):
@@ -296,8 +296,8 @@ class Thrift(object):
             elif fid == 6:                                  # 
                 a = self.g(self.w())                        # read data
                 raise Exception(a)                          # exception!
-            else:
-                raise EOFError(f"fid {fid} not implemented")
+            else:                                           #
+                raise EOFError(f"fid {fid} not implemented")# exception!
             self.res = a                                    # write data
             
         def f(self, n):
@@ -493,31 +493,31 @@ class Thrift(object):
             return binascii.b2a_hex(val)# magic right?
             
         def _d(self, val):
-            if val == 0:            # 
-                return 0            # break
-            if val == 1 or val == 2:# 
-                return 2            # break
-            if val == 3:            # 
-                return 3            # break
-            if val == 4:            # 
-                return 6            # break
-            if val == 5:            # 
-                return 8            # break
-            if val == 6:            # 
-                return 10           # break
-            if val == 7:            # 
-                return 4            # break
-            if val == 8:            # 
-                return 11           # break
-            if val == 9:            # 
-                return 15           # break
-            if val == 10:           # 
-                return 14           # break
-            if val == 11:           # 
-                return 13           # break
-            if val == 12:           # 
-                return 12           # break
-            print(f'未知type: {val}')
+            if val == 0:                        # 
+                return 0                        # break
+            if val == 1 or val == 2:            # 
+                return 2                        # break
+            if val == 3:                        # 
+                return 3                        # break
+            if val == 4:                        # 
+                return 6                        # break
+            if val == 5:                        # 
+                return 8                        # break
+            if val == 6:                        # 
+                return 10                       # break
+            if val == 7:                        # 
+                return 4                        # break
+            if val == 8:                        # 
+                return 11                       # break
+            if val == 9:                        # 
+                return 15                       # break
+            if val == 10:                       # 
+                return 14                       # break
+            if val == 11:                       # 
+                return 13                       # break
+            if val == 12:                       # 
+                return 12                       # break
+            raise Exception(f'未知type: {val}') # erroe
 
         def _e(self, val, n):
             if val >= 0:                                # 
