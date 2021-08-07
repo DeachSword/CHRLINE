@@ -187,13 +187,13 @@ class Object(object):
             objHash = r.headers['x-obs-hash']  #for view on cdn
         return objId
     
-    def forwardObjectMsg(self, to, msgId, contentType='image'):
+    def forwardObjectMsg(self, to, msgId, contentType='image', objFrom='c'):
         if contentType not in ['image','video','audio','file']:
             raise Exception('Type not valid.')
         data = {
-            'name': f'CHRLINE-{int(time.time())}', 'tomid': to,'oid': 'reqseq','reqseq': self.revision,'type': contentType,'copyFrom': '/talk/m/%s' % msgId
+            'name': f'CHRLINE-{int(time.time())}', 'tomid': to,'oid': 'reqseq','reqseq': self.revision,'type': contentType,'copyFrom': f'/{"g2" if self.getToType(to) == 4 else "talk"}'
         }
-        r = self.server.postContent(self.LINE_OBS_DOMAIN + '/talk/m/copy.nhn', data=data, headers=self.server.timelineHeaders)
+        r = self.server.postContent(self.LINE_OBS_DOMAIN + '/g2/m/copy.nhn' if self.getToType(to) == 4 else '/talk/m/copy.nhn', data=data, headers=self.server.timelineHeaders)
         # self.LINE_HOST_DOMAIN + '/oa/r/talk/m/reqseq/copy.nhn'
         if r.status_code != 200:
             raise Exception(f'Forward object failure: {r.status_code}')
@@ -242,4 +242,11 @@ class Object(object):
         if r.status_code != 200:
             raise Exception(f'Training image failure: {r.status_code}')
         return r.json()
+        
+    def downloadObjectMsg(self, objId, path, objFrom='c'):
+        obs_path = f'/r/{"g2" if self.getToType(objFrom) == 4 else "talk"}/m/{objId}'
+        r = self.server.getContent(self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders)
+        with open(path, 'wb') as f:
+            f.write(r.content)
+        return r.content
 

@@ -53,7 +53,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - gevent
 
 ## Function overview
-- SQR Login
+- E2EE SQR Login
 - Email Login
 - Services
     - TalkService

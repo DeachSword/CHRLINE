@@ -52,8 +52,8 @@ print(f"nonce: {b64_nonce}")
 
 print(f"[SESSION] {session}")
 info = cl.getCountryInfo(session)
-phone = input('input your phone number: ')
-region = input('input phone number region: ')
+phone = input('input your phone number(0936....): ')
+region = input('input phone number region(TW or JP or...): ')
 phone2 = cl.getPhoneVerifMethod(session, phone, region)[3] # 1 is availableMethods
 
 sendPin = cl.sendPinCodeForPhone(session, phone, region)

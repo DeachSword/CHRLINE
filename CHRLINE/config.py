@@ -132,6 +132,9 @@ class Config(object):
         elif type == "WATCHOS":
             self.APP_VER = "10.16.2"
             self.SYSTEM_NAME = "Watch OS"
+        elif type == "OPENCHAT":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
         else:
             raise Exception(f"未知的Device , 請至 config.py 新增")
         self.USER_AGENT = 'Line/%s' % self.APP_VER

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .server import Server
-import requests, time, json, rsa, binascii
+import requests, time, json, rsa, binascii, base64
 import httpx
 
 from .services.TalkService import TalkService
@@ -73,22 +73,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return True
 
     def requestSQR(self, isSelf=True):
-        _headers = {
-            "x-lpqs": "/acct/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 99, 114, 101, 97, 116, 101, 83, 101, 115, 115, 105, 111, 110, 0, 0, 0, 0, 12, 0, 1, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.req.post(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        data = self.tryReadData(data)
-        if 'error' in data:
-            raise Exception(data['error'])
-        sqr = data[1]
-        url = self.createSession(sqr)
-        yield f"URL: {url}"
+        sqr = self.createSession()[1]
+        url = self.createQrCode(sqr)[1]
+        secret, secretUrl = self.createSqrSecret()
+        yield f"URL: {url}{secretUrl}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
             isCheck = False
@@ -100,7 +88,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             else:
                 isCheck = True
             if isCheck:
-                e = self.qrCodeLogin(sqr)
+                e = self.qrCodeLogin(sqr, secret)
+                print(e)
                 if isSelf:
                     self.authToken = e
                     print(f"AuthToken: {self.authToken}")
@@ -112,23 +101,19 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             raise Exception('can not check pin code, try again?')
         raise Exception('can not check qr code, try again?')
         
-    def createSession(self, qrcode):
-        _headers = {
-            "x-lpqs": "/acct/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 12, 99, 114, 101, 97, 116, 101, 81, 114, 67, 111, 100, 101, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        #[127, 95, 38, 16]
-        data = self.decData(res.content)
-        url = data[38:128].decode()
-        return url
+    def createSession(self):
+        params = []
+        sqrd = self.generateDummyProtocol('createSession', params, 3)
+        return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1' ,sqrd, 3)
+    
+    def createQrCode(self, qrcode):
+        params = [
+            [12, 1, [
+                [11, 1, qrcode]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('createQrCode', params, 3)
+        return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1' ,sqrd, 3)
         
     def checkQrCodeVerified(self, qrcode):
         _headers = {
@@ -200,7 +185,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             return True
         return False
         
-    def qrCodeLogin(self, qrcode):
+    def qrCodeLogin(self, qrcode, secret):
         _headers = {
             "x-lpqs": "/acct/lgn/sq/v1"
         }
@@ -208,6 +193,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 113, 114, 67, 111, 100, 101, 76, 111, 103, 105, 110, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
         for qr in qrcode:
             sqrd.append(ord(qr))
+        self.APP_TYPE = 'CHANNELGW'
         sqrd += [11, 0, 2, 0, 0, 0, len(self.APP_TYPE)]
         for device in self.APP_TYPE:
             sqrd.append(ord(device))
@@ -221,14 +207,31 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pem = data[1]
         self.saveSqrCert(pem)
         print("證書: ", pem)
+        _mid = data[5]
+        if data.get(4) is not None:
+            encryptedKeyChain = base64.b64decode(data[4]['encryptedKeyChain'])
+            hashKeyChain = data[4]['hashKeyChain']
+            keyId = data[4]['keyId']
+            publicKey = base64.b64decode(data[4]['publicKey'])
+            e2eeVersion = data[4]['e2eeVersion']
+            e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
+            print(f"E2EE Priv Key: {e2eeKey[0]}")
+            print(f"E2EE Pub Key: {e2eeKey[1]}")
+            #self.saveE2EEPublicKey(keyId, publicKey)
         _token = data[2]
         return _token
-        token = []
-        for t in _token:
-            token.append(t)
-            if t == b"=":
-                break
-        return bytes(token)
+    
+    def qrCodeLoginV2(self, authSessionId, systemName="彥彥好睡",modelName="鴻鴻好暈", autoLoginIsRequired=True):
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [11, 2, self.APP_TYPE],
+                [11, 3, self.APP_TYPE],
+                [2, 4, autoLoginIsRequired]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('qrCodeLoginV2', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/lgn/sq/v1" ,sqrd, 3)
         
     def CPF(self):
         _headers = {

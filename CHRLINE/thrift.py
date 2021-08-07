@@ -147,7 +147,11 @@ class Thrift(object):
         
         def readBinary(self, data):
             (size, len) = self.__readSize(data)
-            res = data[len:size + len].decode()
+            res = data[len:size + len]
+            try:
+                res = res.decode()
+            except:
+                pass
             return [res, len + size + 1]
             
         def __writeUByte(self, byte):
@@ -497,6 +501,8 @@ class Thrift(object):
                 return 3            # break
             if val == 4:            # 
                 return 6            # break
+            if val == 5:            # 
+                return 8            # break
             if val == 6:            # 
                 return 10           # break
             if val == 7:            # 
@@ -511,6 +517,7 @@ class Thrift(object):
                 return 13           # break
             if val == 12:           # 
                 return 12           # break
+            print(f'未知type: {val}')
 
         def _e(self, val, n):
             if val >= 0:                                # 

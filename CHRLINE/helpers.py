@@ -59,3 +59,29 @@ class Helpers(object):
             'Accept-Language': 'zh-TW,en-US;q=0.8'
         }
         r = self.server.postContent("https://access.line.me/dialog/api/permissions", data=data, headers=hr)
+    
+    def getToType(self, mid):
+        """
+        USER(0),
+        ROOM(1),
+        GROUP(2),
+        SQUARE(3),
+        SQUARE_CHAT(4),
+        SQUARE_MEMBER(5),
+        BOT(6);
+        """
+        _u = mid[0]
+        if _u == "u":
+            return 0
+        if _u == "r":
+            return 1
+        if _u == "c":
+            return 2
+        if _u == "s":
+            return 3
+        if _u == "m":
+            return 4
+        if _u == "p":
+            return 5
+        if _u == "v":
+            return 6

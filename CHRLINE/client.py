@@ -9,12 +9,14 @@ from .timelineBiz import TimelineBiz
 from .helpers import Helpers
 from .cube import LineCube
 from os import system
+from .e2ee import E2EE
 
-class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube):
+class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube, E2EE):
 
-    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1, debug=False):
+    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1, debug=False, customDataId=None):
         self.encType = encType
         self.isDebug = debug
+        self.customDataId = customDataId
         Models.__init__(self)
         Config.__init__(self, device)
         self.initAppConfig(device, version, os_name, os_version)
@@ -45,10 +47,13 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             return self.initAll()
         self.log(f"[{self.profile[20]}] 登入成功 ({self.profile[1]})")
         self.mid = self.profile[1]
+        if self.customDataId is None:
+            self.customDataId = self.mid
         system(f"title CHRLINE - {self.profile[20]}")
         self.revision = self.getLastOpRevision()
         self.groups = self.getAllChatMids()[1]
 
+        E2EE.__init__(self)
         Timeline.__init__(self)
         TimelineBiz.__init__(self)
         Poll.__init__(self)

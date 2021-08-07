@@ -11,7 +11,11 @@ import time
 import json
 import os
 import rsa
+import os
 import binascii
+import urllib
+import base64
+import axolotl_curve25519 as curve
 
 import gevent.monkey
 gevent.monkey.patch_all()
@@ -78,16 +82,17 @@ class Models(object):
         savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
-        fn = md5(self.profile[1].encode()).hexdigest()
+        fn = md5(self.customDataId.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.custom_data = json.loads(open(savePath + f"/{fn}", "r").read())
+        self.log(f'Loading Custom Data: {fn}')
         return True
         
     def saveCustomData(self):
         savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
-        fn = md5(self.profile[1].encode()).hexdigest()
+        fn = md5(self.customDataId.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(json.dumps(self.custom_data))
         return True
         
@@ -297,8 +302,8 @@ class Models(object):
             else:
                 data += [_ktype, _vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
-                data += self.generateDummyProtocolField(vd, _ktype)
-                data += self.generateDummyProtocolField(_vdata[vd], _vdata)
+                data += self.generateDummyProtocolData(vd, _ktype, isCompact)
+                data += self.generateDummyProtocolData(_vdata[vd], _vtype, isCompact)
         elif type == 14 or type == 15:
             # [11, targetUserMids]
             _vtype = _data[0]
@@ -330,10 +335,15 @@ class Models(object):
             res = self.req_h2.post(self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
             data = bytes(4) + res.content + bytes(4)
         elif encType == 1:
-            _headers = {
-                'X-Line-Access': self.authToken, 
-                'x-lpqs': path
-            }
+            if self.authToken is not None:
+                _headers = {
+                    'X-Line-Access': self.authToken, 
+                    'x-lpqs': path
+                }
+            else:
+                _headers = {
+                    'x-lpqs': path
+                }
             a = self.encHeaders(_headers)
             b = bdata
             c = a + b
@@ -397,7 +407,10 @@ class Models(object):
     def getStringBytes(self, text, isCompact=False):
         if text is None:
             text = ""
-        text = str(text).encode()
+        if type(text) == bytes:
+            pass
+        else:
+            text = str(text).encode()
         if isCompact:
             _compact = self.TCompactProtocol()
             sqrd = _compact.writeVarint(len(text))
@@ -428,6 +441,13 @@ class Models(object):
             else:
                 raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
         return res
+
+    def createSqrSecret(self):
+        private_key = curve.generatePrivateKey(os.urandom(32))
+        public_key = curve.generatePublicKey(private_key)
+        secret = urllib.parse.quote(base64.b64encode(public_key).decode())
+        version = 1
+        return [private_key, f"?secret={secret}&e2eeVersion={version}"]
         
     def tryReadData(self, data, mode=1):
         _data = {}
@@ -687,7 +707,9 @@ class Models(object):
         (fname, ftype, fid, offset) = _dec.readFieldBegin(data)
         nextPos = 0
         fid += id
-        if ftype == 1:
+        if ftype == 0:
+            pass
+        elif ftype == 1:
             _data[fid] = _dec.readBool()
             nextPos = 1
         elif ftype == 2:
@@ -696,6 +718,9 @@ class Models(object):
         elif ftype == 5:
             (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
             nextPos += 1
+        elif ftype == 6:
+            (_data[fid], nextPos) = _dec.readI64(data[offset:], True)
+            #nextPos += -2
         elif ftype == 8:
             (_data[fid], nextPos) = _dec.readBinary(data[offset:])
         elif ftype == 9 or ftype == 10:
@@ -723,6 +748,45 @@ class Models(object):
             if c[0]:
                 _data.update(c[0])
                 nextPos += c[1]
+        if get_data_len:
+            return [_data, nextPos]
+        return _data
+        
+    def tryReadThriftContainerStruct(self, data, id=0, get_data_len=False):
+        _data = {}
+        _dec = self.TCompactProtocol()
+        ftype = data[0] & 15
+        fid = (data[0] >> 4) + id
+        offset = 1
+        nextPos = 0
+        if ftype == 0:
+            _data = None
+        elif ftype == 5:
+            (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
+            nextPos += 1
+        elif ftype == 6:
+            (_data[fid], nextPos) = _dec.readI64(data[offset:], True)
+            nextPos += 1
+        elif ftype == 8:
+            (_data[fid], nextPos) = _dec.readBinary(data[offset:])
+        elif ftype == 9:
+            (vtype, vsize, vlen) = _dec.readCollectionBegin(data[offset:])
+            offset += vlen
+            _data[fid] = []
+            _nextPos = 0
+            for i in range(vsize):
+                if vtype == 12:
+                    _aaa, _bbb = self.tryReadThriftContainerStruct(data[offset:], get_data_len=True)
+                    _data[fid].append(_aaa)
+                    offset += _bbb + 1
+        else:
+            print(f"[tryReadThriftContainerStruct]不支援Type: {ftype} => ID: {fid}")
+        if nextPos > 0:
+            data = data[nextPos:]
+            c = self.tryReadThriftContainerStruct(data, id=fid, get_data_len=True)
+            if c[0] is not None:
+                _data.update(c[0])
+            nextPos += c[1]
         if get_data_len:
             return [_data, nextPos]
         return _data
