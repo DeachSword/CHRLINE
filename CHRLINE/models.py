@@ -445,9 +445,32 @@ class Models(object):
     def createSqrSecret(self):
         private_key = curve.generatePrivateKey(os.urandom(32))
         public_key = curve.generatePublicKey(private_key)
-        secret = urllib.parse.quote(base64.b64encode(public_key).decode())
+        secret = urllib.parse.quote(b64encode(public_key).decode())
         version = 1
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
+
+    def getE2EESelfKeyData(self, mid):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{mid}.json"
+        if os.path.exists(savePath + f"/{fn}"):
+            return json.loads(open(savePath + f"/{fn}", "r").read())
+        return None
+
+    def saveE2EESelfKeyData(self, mid, pubK, privK, kI, e2eeVersion):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{mid}.json"
+        data = json.dumps({
+            "keyId": kI,
+            "privKey": b64encode(privK).decode(),
+            "pubKey": b64encode(pubK).decode(),
+            "e2eeVersion": e2eeVersion,
+        })
+        open(savePath + f"/{fn}", "w").write(data)
+        return True
         
     def tryReadData(self, data, mode=1):
         _data = {}

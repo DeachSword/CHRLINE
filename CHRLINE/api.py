@@ -217,7 +217,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
             print(f"E2EE Priv Key: {e2eeKey[0]}")
             print(f"E2EE Pub Key: {e2eeKey[1]}")
-            #self.saveE2EEPublicKey(keyId, publicKey)
+            print(f"keyId: {keyId}")
+            print(f"e2eeVersion: {e2eeVersion}")
+            self.saveE2EESelfKeyData(_mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
         _token = data[2]
         return _token
     
