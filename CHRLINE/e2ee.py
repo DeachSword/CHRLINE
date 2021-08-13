@@ -28,6 +28,10 @@ class E2EE():
             instance.update(arg)
         return instance.digest()
     
+    def _encryptAESECB(self, aes_key, plain_data):
+        aes = AES.new(aes_key, AES.MODE_ECB)
+        return aes.encrypt(plain_data)
+    
     def decryptKeyChain(self, publicKey, privateKey, encryptedKeyChain):
         print(publicKey, privateKey, encryptedKeyChain)
         shared_secret = self.generateSharedSecret(privateKey, publicKey)

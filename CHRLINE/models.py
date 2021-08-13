@@ -318,10 +318,12 @@ class Models(object):
             raise Exception(f"[generateDummyProtocolData] not support type: {type}")
         return data
         
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None, access_token=None):
         if self.isDebug: print(f"POST {path}")
         if headers is None:
             headers = self.server.Headers.copy()
+        if access_token is None:
+            access_token = self.authToken
         ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
         headers["content-type"] = "application/x-thrift; protocol=" + ptype
         if encType is None:
@@ -331,13 +333,14 @@ class Models(object):
             if "x-le" in headers:
                 del headers['x-le']
                 del headers['x-lcs']
-            headers['X-Line-Access'] = self.authToken
+            if access_token is not None:
+                headers['X-Line-Access'] = access_token
             res = self.req_h2.post(self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
             data = bytes(4) + res.content + bytes(4)
         elif encType == 1:
-            if self.authToken is not None:
+            if access_token is not None:
                 _headers = {
-                    'X-Line-Access': self.authToken, 
+                    'X-Line-Access': access_token, 
                     'x-lpqs': path
                 }
             else:
@@ -442,11 +445,13 @@ class Models(object):
                 raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
         return res
 
-    def createSqrSecret(self):
+    def createSqrSecret(self, base64Only=False):
         private_key = curve.generatePrivateKey(os.urandom(32))
         public_key = curve.generatePublicKey(private_key)
         secret = urllib.parse.quote(b64encode(public_key).decode())
         version = 1
+        if base64Only:
+            return [private_key, b64encode(public_key).decode()]
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
 
     def getE2EESelfKeyData(self, mid):
@@ -471,6 +476,42 @@ class Models(object):
         })
         open(savePath + f"/{fn}", "w").write(data)
         return True
+
+    def getCacheData(self, cT, cN, needHash=True):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{cN}"
+        if needHash:
+            fn = md5(cN.encode()).hexdigest()
+        if os.path.exists(savePath + f"/{fn}"):
+            return open(savePath + f"/{fn}", "r").read()
+        return None
+
+    def saveCacheData(self, cT, cN, cD, needHash=True):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{cN}"
+        if needHash:
+            fn = md5(cN.encode()).hexdigest()
+        data = cD
+        open(savePath + f"/{fn}", "w").write(data)
+        return True
+    
+    def decodeE2EEKeyV1(self, data, secret, mid):
+        if 'encryptedKeyChain' in data:
+            encryptedKeyChain = base64.b64decode(data['encryptedKeyChain'])
+            hashKeyChain = data['hashKeyChain']
+            keyId = data['keyId']
+            publicKey = base64.b64decode(data['publicKey'])
+            e2eeVersion = data['e2eeVersion']
+            e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
+            print(f"E2EE Priv Key: {e2eeKey[0]}")
+            print(f"E2EE Pub Key: {e2eeKey[1]}")
+            print(f"keyId: {keyId}")
+            print(f"e2eeVersion: {e2eeVersion}")
+            self.saveE2EESelfKeyData(mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
         
     def tryReadData(self, data, mode=1):
         _data = {}
@@ -481,6 +522,8 @@ class Models(object):
             b = data[12:a].decode()
             _data[b] = {}
             c = data[a + 4]
+            if c == 0:
+                return None
             id = data[a + 6]
             if id == 0:
                 if c == 10:

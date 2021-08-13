@@ -76,6 +76,21 @@ class TalkService():
         data = {1: title, 2: subTile, 3: la, 4: lb}
         return self.sendMessage(to, "test", location=data)
         
+    def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [12, 2, [
+                [11, 1, self.mid],
+                [11, 2, to],
+                [8, 3, self.getToType(to)],
+                [8, 15, contentType],
+                [13, 18, [11, 11, contentMetadata]],
+                [15, 20, [11, chunk]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('sendMessage', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
     def sendCompactMessage(self, to, text):
         sqrd = [2] # 5 if E2EE, 6 if E2EE location
         midType = to[0]
@@ -398,26 +413,16 @@ class TalkService():
         """
         :url: linepostback://postback?_data=
         """
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 12, 115, 101, 110, 100, 80, 111, 115, 116, 98, 97, 99, 107, 0, 0, 0, 0]
-        sqrd += [12, 0, 2]
-        messageId = str(messageId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(messageId))
-        for value2 in messageId:
-            sqrd.append(value2)
-        url = str(url).encode()
-        sqrd += [11, 0, 2] + self.getIntBytes(len(url))
-        for value2 in url:
-            sqrd.append(value2)
-        chatMID = str(chatMID).encode()
-        sqrd += [11, 0, 3] + self.getIntBytes(len(chatMID))
-        for value2 in chatMID:
-            sqrd.append(value2)
-        originMID = str(originMID).encode()
-        sqrd += [11, 0, 4] + self.getIntBytes(len(originMID))
-        for value2 in originMID:
-            sqrd.append(value2)
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
+        params = [
+            [12, 2, [
+                [11, 1, messageId],
+                [11, 2, url],
+                [11, 3, chatMID],
+                [11, 4, originMID]
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('sendPostback', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
         
     def getPreviousMessagesV2WithRequest(self, messageBoxId, endMessageId=0, messagesCount=200, withReadCount=0, receivedOnly=False):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 32, 103, 101, 116, 80, 114, 101, 118, 105, 111, 117, 115, 77, 101, 115, 115, 97, 103, 101, 115, 86, 50, 87, 105, 116, 104, 82, 101, 113, 117, 101, 115, 116, 0, 0, 0, 0]
@@ -621,9 +626,11 @@ class TalkService():
                             if 10 in op:
                                 a = op[10].split('\x1e')
                                 self.individualRev = a[0]
+                                self.log(f"individualRev: {self.individualRev}")
                             if 11 in op:
                                 b = op[11].split('\x1e')
                                 self.globalRev = b[0]
+                                self.log(f"globalRev: {self.globalRev}")
                     return data['fetchOps']
                 else:
                     raise Exception(f"no data")
@@ -888,18 +895,81 @@ class TalkService():
         sqrd = self.generateDummyProtocol('updateProfileAttribute', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
-    def getE2EEPublicKeys(self, mid):
+    def getE2EEPublicKey(self, mid, keyVersion, keyId):
         params = [
+            [11, 2, mid],
+            [8, 3, keyVersion],
+            [8, 4, keyId]
         ]
+        sqrd = self.generateDummyProtocol('getE2EEPublicKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def getE2EEPublicKeys(self):
+        params = []
         sqrd = self.generateDummyProtocol('getE2EEPublicKeys', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
-    def registerE2EEPublicKey(self):
+    def getE2EEPublicKeysEx(self, ignoreE2EEStatus: int):
+        params = []
+        sqrd = self.generateDummyProtocol('getE2EEPublicKeysEx', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def removeE2EEPublicKey(self):
+        params = []
+        sqrd = self.generateDummyProtocol('removeE2EEPublicKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def registerE2EEPublicKey(self, version: int, keyId: int, keyData: str, time: int):
         params = [
             [12, 2, [
+                [8, 1, version],
+                [8, 2, keyId],
+                [11, 4, keyData],
+                [10, 5, time],
             ]]
         ]
         sqrd = self.generateDummyProtocol('registerE2EEPublicKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def registerE2EEGroupKey(self, keyVersion: int, chatMid: str, members: list, keyIds: list, encryptedSharedKeys: list):
+        if type(members) != list:
+            raise Exception("[registerE2EEGroupKey] members must be a list")
+        if type(keyIds) != list:
+            raise Exception("[registerE2EEGroupKey] keyIds must be a list")
+        if type(encryptedSharedKeys) != list:
+            raise Exception("[registerE2EEGroupKey] encryptedSharedKeys must be a list")
+        params = [
+            [8, 2, keyVersion],
+            [11, 3, chatMid],
+            [15, 4, [11, members]],
+            [15, 5, [8, keyIds]],
+            [15, 6, [11, encryptedSharedKeys]],
+        ]
+        sqrd = self.generateDummyProtocol('registerE2EEGroupKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def getE2EEGroupSharedKey(self, keyVersion: int, chatMid: str, groupKeyId: int):
+        params = [
+            [8, 2, keyVersion],
+            [11, 3, chatMid],
+            [8, 4, groupKeyId],
+        ]
+        sqrd = self.generateDummyProtocol('getE2EEGroupSharedKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def getLastE2EEGroupSharedKey(self, keyVersion: int, chatMid: str):
+        params = [
+            [8, 2, keyVersion],
+            [11, 3, chatMid],
+        ]
+        sqrd = self.generateDummyProtocol('getLastE2EEGroupSharedKey', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def getLastE2EEPublicKeys(self, chatMid: str):
+        params = [
+            [11, 2, chatMid],
+        ]
+        sqrd = self.generateDummyProtocol('getLastE2EEPublicKeys', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
     def negotiateE2EEPublicKey(self, mid: str):
@@ -1116,6 +1186,7 @@ class TalkService():
     def isAbusive(self):
         """ idk """
         params = [
+            [8, 1, 0],
             [8, 2, 1], # reportSource
         ]
         sqrd = self.generateDummyProtocol('isAbusive', params, 4)
@@ -1321,7 +1392,205 @@ class TalkService():
         sqrd = self.generateDummyProtocol('sync', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
         
+    def updateChatRoomAnnouncement(self, gid, announcementId, messageLink, text):
+        params = [
+            [11, 2, gid],
+            [10, 3, announcementId],
+            [12, 4, [
+                [8, 1, 5],
+                [11, 2, text],
+                [11, 3, messageLink],
+                [11, 4, 'https://www.deachsword.com/web/img/ex/korone.png']
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('updateChatRoomAnnouncement', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
     def reissueTrackingTicket(self):
         params = []
         sqrd = self.generateDummyProtocol('reissueTrackingTicket', params, 4)
+        
+    def getExtendedProfile(self, syncReason=7):
+        params = [
+            [8, 1, syncReason]
+        ]
+        sqrd = self.generateDummyProtocol('getExtendedProfile', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def updateExtendedProfileAttribute(self, year: str, yearPrivacyLevelType: int, yearEnabled: bool, day: str, dayPrivacyLevelType: int, dayEnabled: bool):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [8, 2, 0], # attr
+            [12, 3, [
+                [12, 1, [
+                    [11, 1, year],
+                    [8, 2, yearPrivacyLevelType],
+                    [2, 3, year],
+                    [8, 6, dayPrivacyLevelType],
+                    [2, 7, dayEnabled],
+                ]]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('updateExtendedProfileAttribute', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def setNotificationsEnabled(self, type: int, target: str, enablement: bool = True):
+        """
+        - type
+            USER(0),
+            ROOM(1),
+            GROUP(2),
+            SQUARE(3),
+            SQUARE_CHAT(4),
+            SQUARE_MEMBER(5),
+            BOT(6);
+        """
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [8, 2, type], # attr
+            [11, 3, target],
+            [2, 4, enablement]
+        ]
+        sqrd = self.generateDummyProtocol('setNotificationsEnabled', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findAndAddContactsByPhone(self, phones: list, reference: str = '{"screen":"groupMemberList","spec":"native"}'):
+        if type(phones) != list:
+            raise Exception("[findAndAddContactsByPhone] phones must be a list")
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [14, 2, [11, phones]],
+            [11, 3, reference],
+        ]
+        sqrd = self.generateDummyProtocol('findAndAddContactsByPhone', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findAndAddContactsByUserid(self, searchId: str, reference: str = '{"screen":"groupMemberList","spec":"native"}'):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, searchId],
+            [11, 3, reference],
+        ]
+        sqrd = self.generateDummyProtocol('findAndAddContactsByUserid', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def syncContacts(self, phones: list = [], emails: list = [], userids: list = []):
+        """
+        - type
+            ADD(0),
+            REMOVE(1),
+            MODIFY(2);
+        """
+        if type(phones) != list:
+            raise Exception("[syncContacts] phones must be a list")
+        if type(emails) != list:
+            raise Exception("[syncContacts] emails must be a list")
+        if type(userids) != list:
+            raise Exception("[syncContacts] userids must be a list")
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [15, 2, [12, [
+                [8, 1, 0],
+                # [11, 2, luid],
+                [15, 11, [11, phones]],
+                [15, 12, [11, emails]],
+                [15, 13, [11, userids]],
+                # [11, 14, mobileContactName],
+                # [11, 15, phoneticName],
+            ]]],
+        ]
+        sqrd = self.generateDummyProtocol('syncContacts', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def getContactWithFriendRequestStatus(self, mid: str):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, mid]
+        ]
+        sqrd = self.generateDummyProtocol('getContactWithFriendRequestStatus', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findContactsByPhone(self, phones: list):
+        if type(phones) != list:
+            raise Exception("[findContactsByPhone] phones must be a list")
+        params = [
+            [14, 2, [11, phones]]
+        ]
+        sqrd = self.generateDummyProtocol('findContactsByPhone', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findContactByUserid(self, searchId: str):
+        params = [
+            [11, 2, searchId]
+        ]
+        sqrd = self.generateDummyProtocol('findContactByUserid', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findContactByMetaTag(self, searchId: str, reference: str = '{"screen":"groupMemberList","spec":"native"}'):
+        params = [
+            [11, 2, searchId],
+            [11, 3, reference]
+        ]
+        sqrd = self.generateDummyProtocol('findContactByMetaTag', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findAndAddContactByMetaTag(self, searchId: str, reference: str = '{"screen":"groupMemberList","spec":"native"}'):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, searchId],
+            [11, 3, reference]
+        ]
+        sqrd = self.generateDummyProtocol('findAndAddContactByMetaTag', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def updateContactSetting(self, mid: str, flag: int, value: str):
+        """
+        - flag
+            CONTACT_SETTING_NOTIFICATION_DISABLE(1),
+            CONTACT_SETTING_DISPLAY_NAME_OVERRIDE(2),
+            CONTACT_SETTING_CONTACT_HIDE(4),
+            CONTACT_SETTING_FAVORITE(8),
+            CONTACT_SETTING_DELETE(16);
+        """
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, mid],
+            [8, 3, flag],
+            [11, 4, value]
+        ]
+        sqrd = self.generateDummyProtocol('updateContactSetting', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def getFavoriteMids(self):
+        params = []
+        sqrd = self.generateDummyProtocol('getFavoriteMids', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def sendMessageAwaitCommit(self):
+        params = []
+        sqrd = self.generateDummyProtocol('sendMessageAwaitCommit', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def findContactByUserTicket(self, ticketIdWithTag: str):
+        params = [
+            [11, 2, ticketIdWithTag]
+        ]
+        sqrd = self.generateDummyProtocol('findContactByUserTicket', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def invalidateUserTicket(self):
+        params = []
+        sqrd = self.generateDummyProtocol('invalidateUserTicket', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def unregisterUserAndDevice(self):
+        params = []
+        sqrd = self.generateDummyProtocol('unregisterUserAndDevice', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def checkCanUnregisterEx(self, type=1):
+        params = [
+            [8, 1, type]
+        ]
+        sqrd = self.generateDummyProtocol('checkCanUnregisterEx', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)

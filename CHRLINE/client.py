@@ -13,7 +13,7 @@ from .e2ee import E2EE
 
 class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube, E2EE):
 
-    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1, debug=False, customDataId=None):
+    def __init__(self, authTokenOrEmail=None, password=None, device="CHROMEOS", version=None, os_name=None, os_version=None, noLogin=False, encType=1, debug=False, customDataId=None, phone=None, region=None):
         self.encType = encType
         self.isDebug = debug
         self.customDataId = customDataId
@@ -22,10 +22,15 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         self.initAppConfig(device, version, os_name, os_version)
         API.__init__(self)
         Thrift.__init__(self)
+        if region is not None:
+            self.LINE_SERVICE_REGION = region
+            
         if authTokenOrEmail is not None and password is not None:
             self.requestEmailLogin(authTokenOrEmail, password)
         elif authTokenOrEmail:
             self.authToken = authTokenOrEmail
+        elif phone:
+            self.requestPwlessLogin(phone, self.LINE_SERVICE_REGION)
         else:
             if not noLogin:
                 for b in self.requestSQR():

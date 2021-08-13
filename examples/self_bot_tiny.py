@@ -6,7 +6,7 @@ print(f"AuthToken: {cl.authToken}") # AuthToken, save it, and use CHRLINE(authTo
 
 cl.custom_data['admin'] = cl.custom_data.get('admin', []) # init the admin data
 
-def bot(op):
+def bot(op, cl):
     if op[3] == 25:
         # SEND MESSAGE
         msg = op[20]

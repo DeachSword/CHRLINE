@@ -14,8 +14,10 @@ from .services.AuthService import AuthService
 from .services.SettingsService import SettingsService
 from .services.AccessTokenRefreshService import AccessTokenRefreshService
 from .services.CallService import CallService
+from .services.SecondaryPwlessLoginService import SecondaryPwlessLoginService
+from .services.SecondaryPwlessLoginPermitNoticeService import SecondaryPwlessLoginPermitNoticeService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -49,6 +51,43 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         SettingsService.__init__(self)
         AccessTokenRefreshService.__init__(self)
         CallService.__init__(self)
+        SecondaryPwlessLoginService.__init__(self)
+        SecondaryPwlessLoginPermitNoticeService.__init__(self)
+    
+    def requestPwlessLogin(self, phone, pw):
+        pwless_code = self.createPwlessSession(phone)
+        pwless_code = pwless_code[1]
+        print(f'PWLESS SESSION: {pwless_code}')
+        certVerify = self.verifyLoginCertificate(pwless_code, self.getCacheData('.pwless', phone))
+        if 'error' in certVerify:
+            pwless_pincode = self.requestPinCodeVerif(pwless_code)[1]
+            print(f'PWLESS PINCODE: {pwless_pincode}')
+            certVerify = self.checkPwlessPinCodeVerified(pwless_code)
+        if certVerify is not None and 'error' not in certVerify:
+            secret, secretPK = self.createSqrSecret(True)
+            self.putExchangeKey(pwless_code, secretPK)
+            self.requestPaakAuth(pwless_code)
+            pa = self.checkPaakAuthenticated(pwless_code)
+            if pa is not None and 'error' not in pa:
+                ek = self.getE2eeKey(pwless_code)
+                loginInfo = self.pwlessLoginV2(pwless_code)
+                if 'error' not in loginInfo:
+                    cert = loginInfo[2]
+                    tokenInfo = loginInfo[3]
+                    token = tokenInfo[1]
+                    token2 = tokenInfo[2]
+                    mid = loginInfo[5]
+                else:
+                    loginInfo = self.pwlessLogin(pwless_code)
+                    token = loginInfo[1]
+                    cert = loginInfo[2]
+                    mid = loginInfo[4]
+                self.authToken = token
+                self.decodeE2EEKeyV1(ek[1], secret, mid)
+                self.saveCacheData('.pwless', phone, cert)
+                print(f'Auth Token: {self.authToken}')
+                return True
+        raise Exception('login failed.')
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -209,17 +248,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         print("證書: ", pem)
         _mid = data[5]
         if data.get(4) is not None:
-            encryptedKeyChain = base64.b64decode(data[4]['encryptedKeyChain'])
-            hashKeyChain = data[4]['hashKeyChain']
-            keyId = data[4]['keyId']
-            publicKey = base64.b64decode(data[4]['publicKey'])
-            e2eeVersion = data[4]['e2eeVersion']
-            e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
-            print(f"E2EE Priv Key: {e2eeKey[0]}")
-            print(f"E2EE Pub Key: {e2eeKey[1]}")
-            print(f"keyId: {keyId}")
-            print(f"e2eeVersion: {e2eeVersion}")
-            self.saveE2EESelfKeyData(_mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
+            self.decodeE2EEKeyV1(data[4], secret, _mid)
         _token = data[2]
         return _token
     

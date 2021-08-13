@@ -68,6 +68,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - sendMessage
             - sendContact
             - sendLocation
+            - sendCompactMessage
+            - sendMessageWithChunks
         - getGroupIdsJoined
         - getGroupIdsInvited
         - getAllContactIds
@@ -114,7 +116,14 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - updateProfileAttribute
         - negotiateE2EEPublicKey
         - react
+        - getE2EEPublicKey
         - getE2EEPublicKeys
+        - getE2EEPublicKeysEx
+        - registerE2EEPublicKey
+        - registerE2EEGroupKey
+        - getE2EEGroupSharedKey
+        - getLastE2EEGroupSharedKey
+        - getLastE2EEPublicKeys
         - createChat
         - updateRegion
         - getChatExistence
@@ -157,6 +166,25 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getRecommendationIds
         - sync (DIED)
         - reissueTrackingTicket
+        - updateChatRoomAnnouncement
+        - getExtendedProfile
+        - updateExtendedProfileAttribute
+        - setNotificationsEnabled
+        - findAndAddContactsByPhone
+        - findAndAddContactsByUserid
+        - syncContacts
+        - getContactWithFriendRequestStatus
+        - findContactsByPhone
+        - findContactByUserid
+        - findContactByMetaTag
+        - findAndAddContactByMetaTag
+        - updateContactSetting
+        - getFavoriteMids
+        - sendMessageAwaitCommit
+        - findContactByUserTicket
+        - invalidateUserTicket
+        - unregisterUserAndDevice
+        - checkCanUnregisterEx
     - AccessTokenRefreshService
         - refreshAccessToken
     - AuthService
@@ -172,6 +200,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - validateClovaRequest
         - setClovaCredential
         - validateClovaAppToken
+        - verifyQrcodeWithE2EE
     - BuddyService
         - getPromotedBuddyContacts
     - CallService
@@ -231,6 +260,18 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getNotice
         - getSearchSection
         - getAutocomplete
+    - SecondaryPwlessLoginPermitNoticeService
+        - checkPwlessPinCodeVerified
+        - checkPaakAuthenticated
+    - SecondaryPwlessLoginService
+        - createPwlessSession
+        - verifyLoginCertificate
+        - requestPinCodeVerif
+        - putExchangeKey
+        - requestPaakAuth
+        - getE2eeKey
+        - pwlessLogin
+        - pwlessLoginV2
     - SettingsService
         - getSetting
         - contextAgnosticGetSetting

@@ -5,10 +5,10 @@ class AccessTokenRefreshService(object):
     def __init__(self):
         pass
 
-    def refreshAccessToken(self, token):
+    def refreshAccessToken(self, refreshToken):
         params = [
             [12, 1, [
-                [11, 1, token]
+                [11, 1, refreshToken]
             ]]
         ]
         sqrd = self.generateDummyProtocol('refresh', params, 3)

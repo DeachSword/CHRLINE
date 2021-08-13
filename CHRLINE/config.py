@@ -59,7 +59,7 @@ class Config(object):
     LINE_AGE_CHECK_ENDPOINT              = '/ACS4'
     LINE_AUTH_ENDPOINT                   = '/RS3'
     LINE_AUTH_ENDPOINT_V4                = '/RS4'
-    LINE_AUTH_EAP_ENDPOINT               = '/ACCT/authfactor/eap/v1'
+    LINE_AUTH_EAP_ENDPOINT               = '/acct/authfactor/eap/v1'
     LINE_BEACON_ENDPOINT                 = '/BEACON4'
     LINE_BUDDY_ENDPOINT                  = '/BUDDY3'
     LINE_CALL_ENDPOINT                   = '/V3'
@@ -76,7 +76,7 @@ class Config(object):
     LINE_IOT_ENDPOINT                    = '/IOT1'
     LINE_LIFF_ENDPOINT                   = '/LIFF1'
     LINE_NORMAL_ENDPOINT                 = '/S3'
-    LINE_SECONDARY_QR_LOGIN_ENDPOINT     = '/ACCT/lgn/sq/v1'
+    LINE_SECONDARY_QR_LOGIN_ENDPOINT     = '/acct/lgn/sq/v1'
     LINE_SHOP_ENDPOINT                   = '/SHOP3'
     LINE_SHOP_AUTH_ENDPOINT              = '/SHOPA'
     LINE_SNS_ADAPTER_ENDPOINT            = '/SA4'
@@ -85,6 +85,11 @@ class Config(object):
     LINE_SQUARE_BOT_ENDPOINT             = '/BP1'
     LINE_UNIFIED_SHOP_ENDPOINT           = '/TSHOP4'
     LINE_WALLET_ENDPOINT                 = '/WALLET4'
+    LINE_SECONDARY_PWLESS_LOGIN_ENDPOINT = "/acct/lgn/secpwless/v1"
+    LINE_SECONDARY_PWLESS_LOGIN_PERMIT_ENDPOINT = "/acct/lp/lgn/secpwless/v1"
+    LINE_SECONDARY_AUTH_FACTOR_PIN_CODE_ENDPOINT = "/acct/authfactor/second/pincode/v1"
+    LINE_PWLESS_CREDENTIAL_MANAGEMENT_ENDPOINT = "/acct/authfactor/pwless/manage/v1"
+    LINE_PWLESS_PRIMARY_REGISTRATION_ENDPOINT = "/acct/authfactor/pwless/v1"
 
     LINE_LAN_ANDROID_URL                 = 'https://lan.line.me/v1/line/android/notification'
     LINE_LAN_IOS_URL                     = 'https://lan.line.me/v1/line/ios/notification'
@@ -105,7 +110,7 @@ class Config(object):
     def __init__(self, type="CHROME"):
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "6.5.2.2431"
+            self.APP_VER = "7.1.0.2585"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER  = '10.0.0-NT-x64'
         elif type == "DESKTOPMAC":
@@ -126,13 +131,67 @@ class Config(object):
             self.APP_VER = "11.13.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "11.5.1"
+            self.APP_VER = "11.12.1"
             self.SYSTEM_NAME = "iOS"
             self.SYSTEM_NAME = "12.1.2"
         elif type == "WATCHOS":
             self.APP_VER = "10.16.2"
             self.SYSTEM_NAME = "Watch OS"
         elif type == "OPENCHAT_PLUS":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "CHANNELGW":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "CHANNELCP":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "CLOVAFRIENDS":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "BOT":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "WAP":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "WEB":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "BIZWEB":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "DUMMYPRIMARY":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "SQUARE":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "FIREFOXOS":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "TIZEN":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "VIRTUAL":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "CHRONO":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "WINMETRO":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "S40":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "WINPHONE":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "BLACKBERRY":
+            self.APP_VER = "11.13.2"
+            self.SYSTEM_NAME = "Android OS"
+        elif type == "INTERNAL":
             self.APP_VER = "11.13.2"
             self.SYSTEM_NAME = "Android OS"
         else:
