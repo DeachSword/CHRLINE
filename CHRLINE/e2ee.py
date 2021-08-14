@@ -33,7 +33,6 @@ class E2EE():
         return aes.encrypt(plain_data)
     
     def decryptKeyChain(self, publicKey, privateKey, encryptedKeyChain):
-        print(publicKey, privateKey, encryptedKeyChain)
         shared_secret = self.generateSharedSecret(privateKey, publicKey)
         aes_key = self.getSHA256Sum(shared_secret, 'Key')
         aes_iv = self._xor(self.getSHA256Sum(shared_secret, 'IV'))
@@ -45,7 +44,13 @@ class E2EE():
         public_key = bytes(key[1][0][4])
         private_key = bytes(key[1][0][5])
         return [private_key, public_key]
-        
+    
+    def encryptDeviceSecret (self, publicKey, privateKey, encryptedKeyChain):
+        shared_secret = self.generateSharedSecret(privateKey, publicKey)
+        aes_key = self.getSHA256Sum(shared_secret, 'Key')
+        encryptedKeyChain = self._xor(self.getSHA256Sum(encryptedKeyChain))
+        keychain_data = self._encryptAESECB(aes_key, encryptedKeyChain)
+        return keychain_data
     
     def generateAAD(self, a, b, c, d, e=2, f=0):
         aad = b''

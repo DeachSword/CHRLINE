@@ -111,6 +111,48 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         print(f"AuthToken: {self.authToken}")
         return True
 
+    def requestEmailLoginV2(self, email, pw):
+        rsaKey = self.getRSAKeyInfo()
+        keynm = rsaKey[1]
+        nvalue = rsaKey[2]
+        evalue = rsaKey[3]
+        sessionKey = rsaKey[4]
+        certificate = self.getEmailCert(email)
+        message = (chr(len(sessionKey)) + sessionKey +
+           chr(len(email)) + email +
+           chr(len(pw)) + pw).encode('utf-8')
+        pub_key = rsa.PublicKey(int(nvalue, 16), int(evalue, 16))
+        crypto = binascii.hexlify(rsa.encrypt(message, pub_key)).decode()
+        secret, secretPK = self.createSqrSecret(True)
+        pincode = b"1314520"
+        _secret = self._encryptAESECB(self.getSHA256Sum(pincode), base64.b64decode(secretPK))
+        res = self.loginV2(keynm, crypto, _secret, deviceName=self.SYSTEM_NAME, cert=certificate)
+        if 9 not in res:
+            verifier = res[3]
+            if res[5] == 3:
+                print(f'need device confirm')
+            print(f"Enter Pincode: {pincode.decode()}")
+            e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
+            try:
+                e2eeKeyInfo = self.decodeE2EEKeyV1(e2eeInfo, secret)
+            except:
+                raise Exception(f"e2eeInfo decode failed, try again")
+            blablabao = self.encryptDeviceSecret(base64.b64decode(e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
+            e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
+            if 'error' not in e2eeLogin:
+                res = self.loginV2(None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
+                if res.get('error', {}).get('code', -1) == 20:
+                    print(f"can't login: {res['error']['message']}, try use LoginZ...")
+                    return self.requestEmailLogin(email, pw)
+                self.saveEmailCert(email, res[2])
+            else:
+                raise Exception(f"confirmE2EELogin failed, try again")
+        self.authToken = res[9][1]
+        refreshToken = res[9][2]
+        print(f"AuthToken: {self.authToken}")
+        print(f"RefreshToken: {refreshToken}")
+        return True
+
     def requestSQR(self, isSelf=True):
         sqr = self.createSession()[1]
         url = self.createQrCode(sqr)[1]
@@ -472,29 +514,29 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
-        
-    def loginV2(self, provider, keynm, encData, deviceName='Chrome'):
-        """ same loginZ , but i using it for E2EE :D and not work now :P"""
-        _headers = {
-            'x-lpqs': "/api/v3p/rs"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('loginV2') + [0, 0, 0, 0]
-        sqrd += [12, 0, 2]
-        sqrd += [8, 0, 1] + self.getIntBytes(2)
-        sqrd += [8, 0, 2] + self.getIntBytes(provider)
-        sqrd += [11, 0, 3] + self.getStringBytes(keynm)
-        sqrd += [11, 0, 4] + self.getStringBytes(encData)
-        sqrd += [2, 0, 5, 1]
-        sqrd += [11, 0, 7] + self.getStringBytes(deviceName)
-        sqrd += [8, 0, 11] + self.getIntBytes(1)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+    
+    def loginV2(self, keynm, encData, secret, deviceName='Chrome', cert=None, verifier=None):
+        loginType = 2
+        if verifier is not None:
+            loginType = 1
+        params = [
+            [12, 2, [
+                [8, 1, loginType],
+                [8, 2, 1], # provider
+                [11, 3, keynm],
+                [11, 4, encData],
+                [2, 5, 0],
+                [11, 6, ''],
+                [11, 7, deviceName],
+                [11, 8, cert],
+                [11, 9, verifier],
+                [11, 10, secret],
+                [8, 11, 1],
+                [11, 12, "System Product Name"],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('loginV2', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)
         
     def loginZ(self, keynm, encData, systemName='DeachSword-2021', certificate=None, verifier=None):
         _headers = {
@@ -541,6 +583,24 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         res = self.server.postContent(self.url, data=data, headers=hr)
         if res.status_code != 200:
             raise Exception("checkLoginZPinCode failed")
+        data = self.decData(res.content)
+        return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
+        
+    def checkLoginV2PinCode(self, accessSession):
+        _headers = {
+            'X-Line-Access': accessSession,
+            'x-lpqs': "/LF1"
+        }
+        a = self.encHeaders(_headers)
+        sqr_rd = a
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            'x-lhm': 'GET'
+        })
+        res = self.server.postContent(self.url, data=data, headers=hr)
+        if res.status_code != 200:
+            raise Exception("checkLoginV2PinCode failed")
         data = self.decData(res.content)
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         

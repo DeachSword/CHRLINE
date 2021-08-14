@@ -144,3 +144,11 @@ class AuthService(object):
         ]
         sqrd = self.generateDummyProtocol('verifyQrcodeWithE2EE', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        
+    def confirmE2EELogin(self, verifier, deviceSecret):
+        params = [
+            [11, 1, verifier],
+            [11, 2, deviceSecret],
+        ]
+        sqrd = self.generateDummyProtocol('confirmE2EELogin', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)

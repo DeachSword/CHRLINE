@@ -26,7 +26,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             self.LINE_SERVICE_REGION = region
             
         if authTokenOrEmail is not None and password is not None:
-            self.requestEmailLogin(authTokenOrEmail, password)
+            self.requestEmailLoginV2(authTokenOrEmail, password)
         elif authTokenOrEmail:
             self.authToken = authTokenOrEmail
         elif phone:

@@ -266,6 +266,8 @@ class Models(object):
             _type = param[0]
             _id = param[1]
             _data = param[2]
+            if _data is None:
+                continue
             if type == 3:
                 data += [_type, 0, _id]
                 isCompact = False
@@ -461,6 +463,20 @@ class Models(object):
         fn = f"{mid}.json"
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
+        keys = self.getE2EEPublicKeys()
+        for key in keys:
+            _keyData = self.getE2EESelfKeyDataByKeyId(key[2])
+            if _keyData is not None:
+                return _keyData
+        return None
+
+    def getE2EESelfKeyDataByKeyId(self, keyId):
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"key_{keyId}.json"
+        if os.path.exists(savePath + f"/{fn}"):
+            return json.loads(open(savePath + f"/{fn}", "r").read())
         return None
 
     def saveE2EESelfKeyData(self, mid, pubK, privK, kI, e2eeVersion):
@@ -468,13 +484,16 @@ class Models(object):
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{mid}.json"
+        fn2 = f"key_{kI}.json"
         data = json.dumps({
             "keyId": kI,
             "privKey": b64encode(privK).decode(),
             "pubKey": b64encode(pubK).decode(),
             "e2eeVersion": e2eeVersion,
         })
-        open(savePath + f"/{fn}", "w").write(data)
+        if mid is not None:
+            open(savePath + f"/{fn}", "w").write(data)
+        open(savePath + f"/{fn2}", "w").write(data)
         return True
 
     def getCacheData(self, cT, cN, needHash=True):
@@ -499,10 +518,10 @@ class Models(object):
         open(savePath + f"/{fn}", "w").write(data)
         return True
     
-    def decodeE2EEKeyV1(self, data, secret, mid):
+    def decodeE2EEKeyV1(self, data, secret, mid=None):
         if 'encryptedKeyChain' in data:
             encryptedKeyChain = base64.b64decode(data['encryptedKeyChain'])
-            hashKeyChain = data['hashKeyChain']
+            #hashKeyChain = data['hashKeyChain']
             keyId = data['keyId']
             publicKey = base64.b64decode(data['publicKey'])
             e2eeVersion = data['e2eeVersion']
@@ -512,6 +531,12 @@ class Models(object):
             print(f"keyId: {keyId}")
             print(f"e2eeVersion: {e2eeVersion}")
             self.saveE2EESelfKeyData(mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
+            return {
+                "keyId": keyId,
+                "privKey": e2eeKey[0],
+                "pubKey": e2eeKey[1],
+                "e2eeVersion": e2eeVersion,
+            }
         
     def tryReadData(self, data, mode=1):
         _data = {}
@@ -827,6 +852,9 @@ class Models(object):
         nextPos = 0
         if ftype == 0:
             _data = None
+        elif ftype == 4:
+            _data[fid] = _dec.readDouble(data[offset:])
+            nextPos += 8
         elif ftype == 5:
             (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
             nextPos += 1
@@ -835,7 +863,7 @@ class Models(object):
             nextPos += 1
         elif ftype == 8:
             (_data[fid], nextPos) = _dec.readBinary(data[offset:])
-        elif ftype == 9:
+        elif ftype == 9 or ftype == 10:
             (vtype, vsize, vlen) = _dec.readCollectionBegin(data[offset:])
             offset += vlen
             _data[fid] = []

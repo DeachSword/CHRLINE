@@ -54,7 +54,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
 
 ## Function overview
 - E2EE SQR Login
-- Email Login
+- E2EE Email Login
 - Services
     - TalkService
         - getEncryptedIdentity
@@ -201,6 +201,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - setClovaCredential
         - validateClovaAppToken
         - verifyQrcodeWithE2EE
+        - confirmE2EELogin
     - BuddyService
         - getPromotedBuddyContacts
     - CallService
@@ -375,5 +376,5 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getCountrySettingV4
         - getRSAKeyInfo
         - loginZ
-        - loginV2 (WIP)
+        - loginV2
 
