@@ -31,7 +31,6 @@ def create_token(auth_key: str) -> str:
 
 
 UPDATE_NAME = True
-TURN_OFF_E2EE = False
 DISPLAY_NAME = "yinmo"
 
 
@@ -54,13 +53,15 @@ print(f"[SESSION] {session}")
 info = cl.getCountryInfo(session)
 phone = input('input your phone number(0936....): ')
 region = input('input phone number region(TW or JP or...): ')
-phone2 = cl.getPhoneVerifMethod(session, phone, region)[3] # 1 is availableMethods
+phone2 = cl.getPhoneVerifMethodV2(session, phone, region)
+print(f"[PHONE] {phone2[3]}")
+print(f"[VerifMethod] {phone2[1]}") # if it is not include number 1, maybe will return error
 
-sendPin = cl.sendPinCodeForPhone(session, phone, region)
+sendPin = cl.requestToSendPhonePinCode(session, phone, region, phone2[1][0])
 print(f"[SEND PIN CODE] {sendPin}")
 
 pin = input('Enter Pin code: ')
-verify = cl.verifyPhone(session, phone, region, pin)
+verify = cl.verifyPhonePinCode(session, phone, region, pin)
 print(f"[VERIFY PIN CODE] {verify}")
 if 'error' in verify:
     if verify['error']['code'] == 5:
@@ -93,26 +94,39 @@ hmacd = hmac.new(
     digestmod=hashlib.sha256
 ).digest()
 encPwd = base64.b64encode(doFinal + hmacd).decode()
+print(f"[encPwd] {encPwd}")
 
 setPwd = cl.setPassword(session, encPwd, 1)
-print(setPwd)
+print(f"[setPassword] {setPwd}")
 
-
-register = cl.registerPrimaryUsingPhone(session)
+register = cl.registerPrimaryWithTokenV3(session)
 print(f"[REGISTER] {register}")
+print(f"---------------------------")
+authKey = register[1]
+tokenV3IssueResult = register[2]
+mid = register[3]
+primaryToken = create_token(authKey)
+print(f"[AuthKey]: {authKey}")
+print(f"[PrimaryToken]: {primaryToken}")
+print(f"[UserMid]: {mid}")
+print(f"---------------------------")
+accessTokenV3 = tokenV3IssueResult[1]
+print(f"[accessTokenV3]: {accessTokenV3}")
+refreshToken = tokenV3IssueResult[2]
+print(f"[refreshToken]: {refreshToken}")
+durationUntilRefreshInSec = tokenV3IssueResult[3]
+print(f"[durationUntilRefreshInSec]: {durationUntilRefreshInSec}")
+refreshApiRetryPolicy = tokenV3IssueResult[4]
+loginSessionId = tokenV3IssueResult[5]
+print(f"[loginSessionId]: {loginSessionId}")
+tokenIssueTimeEpochSec = tokenV3IssueResult[6]
+print(f"[tokenIssueTimeEpochSec]: {tokenIssueTimeEpochSec}")
 
-authKey = register[1] #authKey, using create_token(the key)
-authToken = create_token(authKey) #authToken for login
-
-print(f"authKey: {authKey}")
-print(f"authToken: {authToken}")
-
-cl = CHRLINE(authToken, device="ANDROID") #login
+cl = CHRLINE(primaryToken, device="ANDROID") #login
 
 if UPDATE_NAME:
     cl.updateProfileAttribute(2, DISPLAY_NAME) #update display name
 
-if TURN_OFF_E2EE:
-    sett = cl.getSettingsAttributes2([33])
-    sett[61] = False
-    cl.updateSettingsAttributes2(sett, [33])
+# for i in range(100):
+    # accessTokenV3 = cl.refreshAccessToken(refreshToken)
+    # print(f"[accessTokenV3_2]: {accessTokenV3}")

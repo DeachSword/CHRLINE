@@ -7,10 +7,10 @@ class PrimaryAccountInitService(object):
 
     def __init__(self):
         self.register_headers  = {
-            "x-line-application": "ANDROID\t11.3.1\tAndroid OS\t10.0.1",
+            "x-line-application": "ANDROID\t11.14.0\tAndroid OS\t10.0.1",
             "x-le": self.le,
             "x-lcs": self._encryptKey,
-            "User-Agent": "Line/11.3.1",
+            "User-Agent": "Line/11.14.0",
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lpv": "1",
         }
@@ -188,3 +188,80 @@ class PrimaryAccountInitService(object):
         res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
         data = self.decData(res.content)
         return self.tryReadData(data)
+        
+    def getPhoneVerifMethodV2(self, authSessionId, phoneNumber, countryCode, deviceModel="SM-N950F"):
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [12, 2, [
+                    [11, 1, self.uuid],
+                    [11, 2, deviceModel]
+                ]],
+                [12, 3, [
+                    [11, 1, phoneNumber],
+                    [11, 2, countryCode]
+                ]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('getPhoneVerifMethodV2', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
+        
+    def requestToSendPhonePinCode(self, authSessionId, phoneNumber, countryCode, verifMethod=1):
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [12, 2, [
+                    [11, 1, phoneNumber],
+                    [11, 2, countryCode]
+                ]],
+                [8, 3, verifMethod],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('requestToSendPhonePinCode', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
+        
+    def verifyPhonePinCode(self, authSessionId, phoneNumber, countryCode, pinCode):
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [12, 2, [
+                    [11, 1, phoneNumber],
+                    [11, 2, countryCode]
+                ]],
+                [11, 3, pinCode],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('verifyPhonePinCode', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
+        
+    def verifyAccountUsingPwd(self, authSessionId, identifier, countryCode, cipherText):
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [12, 2, [
+                    [8, 1, 1], # type
+                    [11, 2, identifier],
+                    [11, 3, countryCode]
+                ]],
+                [12, 3, [
+                    [8, 1, 1], # encryptionKeyVersion
+                    [11, 2, cipherText]
+                ]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('verifyAccountUsingPwd', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
+        
+    def registerPrimaryUsingPhoneWithTokenV3(self, authSessionId):
+        params = [
+            [11, 2, authSessionId]
+        ]
+        sqrd = self.generateDummyProtocol('registerPrimaryUsingPhoneWithTokenV3', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
+        
+    def registerPrimaryWithTokenV3(self, authSessionId):
+        params = [
+            [11, 2, authSessionId]
+        ]
+        sqrd = self.generateDummyProtocol('registerPrimaryUsingPhoneWithTokenV3', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)

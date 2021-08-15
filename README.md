@@ -251,6 +251,12 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - exchangeEncryptionKey
         - setPassword
         - registerPrimaryUsingPhone
+        - getPhoneVerifMethodV2
+        - requestToSendPhonePinCode
+        - verifyPhonePinCode
+        - verifyAccountUsingPwd
+        - registerPrimaryUsingPhoneWithTokenV3
+        - registerPrimaryWithTokenV3
     - SearchService (WIP)
         - searchAll
         - searchCollection
