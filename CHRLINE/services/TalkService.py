@@ -914,8 +914,15 @@ class TalkService():
         sqrd = self.generateDummyProtocol('getE2EEPublicKeysEx', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
-    def removeE2EEPublicKey(self):
-        params = []
+    
+    def removeE2EEPublicKey(self, spec, keyId, keyData):
+        params = [
+            [12, 2, [
+                [8, 1, spec],
+                [8, 2, keyId],
+                [11, 4, keyData]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol('removeE2EEPublicKey', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
