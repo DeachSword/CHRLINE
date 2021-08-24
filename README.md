@@ -15,7 +15,6 @@ So I don’t recommend you to use this to run the bot, even if it has many funct
 If you have a certain degree of understanding of Line thrift, then you must have heard of **TMoreCompact** \
 But for most people, it is difficult to decompile TMoreCompact, even if it has lower confusion in some version \
 But if you can use this project to understand the differences in LINE thrift
-\
 
 ## TMoreCompactProtocol
 We added the simple function of TMoreCompact for the [first time on 26 May](https://github.com/DeachSword/CHRLINE/commit/3192377714730ddf83208836661182d641d21cb0) \
@@ -124,6 +123,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getE2EEGroupSharedKey
         - getLastE2EEGroupSharedKey
         - getLastE2EEPublicKeys
+        - requestE2EEKeyExchange
+        - respondE2EEKeyExchange
         - createChat
         - updateRegion
         - getChatExistence
@@ -185,6 +186,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - invalidateUserTicket
         - unregisterUserAndDevice
         - checkCanUnregisterEx
+        - verifyQrcode
     - AccessTokenRefreshService
         - refreshAccessToken
     - AuthService

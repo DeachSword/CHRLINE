@@ -73,8 +73,8 @@ class E2EE():
             'text': text
         }).encode()
         encData = self.encryptE2EEMessageV2(data, gcmKey, sign, aad)
-        print(f'senderKeyId: {senderKeyId} ({self.getIntBytes(senderKeyId)})')
-        print(f'receiverKeyId: {receiverKeyId} ({self.getIntBytes(receiverKeyId)})')
+        self.log(f'senderKeyId: {senderKeyId} ({self.getIntBytes(senderKeyId)})', True)
+        self.log(f'receiverKeyId: {receiverKeyId} ({self.getIntBytes(receiverKeyId)})', True)
         return [salt, encData, sign, bytes(self.getIntBytes(senderKeyId)), bytes(self.getIntBytes(receiverKeyId))]
     
     def decryptE2EETextMessage(self, messageObj):
@@ -98,7 +98,7 @@ class E2EE():
         
         aesgcm = AESGCM(gcmKey)
         decrypted = aesgcm.decrypt(sign, message, aad)
-        print(f'decrypted: {decrypted}')
+        self.log(f'decrypted: {decrypted}', True)
         return json.loads(decrypted)['text'] # todo: contentType
     
     def decryptE2EETextMessageV2(self, to , _from, chunks, privK, pubK):
@@ -110,8 +110,8 @@ class E2EE():
         sign = chunks[2]
         senderKeyId = byte2int(chunks[3])
         receiverKeyId = byte2int(chunks[4])
-        print(f'senderKeyId: {senderKeyId}')
-        print(f'receiverKeyId: {receiverKeyId}')
+        self.log(f'senderKeyId: {senderKeyId}', True)
+        self.log(f'receiverKeyId: {receiverKeyId}', True)
         
         aesKey = self.generateSharedSecret(privK, pubK)
         gcmKey = self.getSHA256Sum(aesKey, salt, b'Key')
@@ -120,7 +120,7 @@ class E2EE():
         
         aesgcm = AESGCM(gcmKey)
         decrypted = aesgcm.decrypt(sign, message, aad)
-        print(f'decrypted: {decrypted}')
+        self.log(f'decrypted: {decrypted}', True)
         return json.loads(decrypted)['text']
     
     def encryptE2EEMessageV2(self, data, gcmKey, nonce, aad):

@@ -36,8 +36,10 @@ class Models(object):
         #self.initWithBiz()
         #self.initWithAndroid()
         
-    def log(self, text):
-        print("[{}] {}".format(str(datetime.now()), text))
+    def log(self, text, debugOnly=False):
+        if debugOnly and not self.isDebug:
+            return
+        print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {text}")
         
     def genOBSParams(self, newList, returnAs='json', ext='jpg'):
         oldList = {'name': f'CHRLINE-{int(time.time())}.{ext}','ver': '1.0'}
@@ -166,7 +168,21 @@ class Models(object):
         data = [255 & o] + data
         data = [255 & o >> 8] + data
         return data
-        
+
+    def decHeaders(self, data):
+        headers = {}
+        tbin = self.TBinaryProtocol()
+        tbin.data = data
+        dataLen = tbin.readI16() + 2
+        headerLen = tbin.readI16()
+        for i in range(headerLen):
+            size = tbin.readI16()
+            _k = tbin.y(size)
+            size = tbin.readI16()
+            _v = tbin.y(size)
+            headers[_k] = _v
+        return headers, data[dataLen:]
+
     def encEncKey(self):
         # heh
         a = rsaenc.new(self.key)
@@ -266,8 +282,8 @@ class Models(object):
             _type = param[0]
             _id = param[1]
             _data = param[2]
-            if _data is None:
-                continue
+            # if _data is None:
+                # continue
             if type == 3:
                 data += [_type, 0, _id]
                 isCompact = False
@@ -321,7 +337,7 @@ class Models(object):
         return data
         
     def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None, access_token=None):
-        if self.isDebug: print(f"POST {path}")
+        self.log(f"--> POST {path}", True)
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -338,7 +354,7 @@ class Models(object):
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
             res = self.req_h2.post(self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
-            data = bytes(4) + res.content + bytes(4)
+            data = res.content
         elif encType == 1:
             if access_token is not None:
                 _headers = {
@@ -359,16 +375,20 @@ class Models(object):
             data = self.decData(res.content)
         else:
             raise Exception(f"Unknown encType: {encType}")
-        if self.isDebug: print(f"<-- {res.status_code}")
-        if self.isDebug: print(data)
+        self.log(f"<--  {res.status_code}", True)
+        self.log(f"{data}", True)
         if res.status_code == 200:
-            if 'x-line-next-access' in res.headers:
-                self.handleNextToken(res.headers['x-line-next-access'])
             if res.headers['x-lc'] not in ['200', '410']:
                 raise Exception(f'Invalid response code: {res.headers["x-lc"]}')
+            if encType == 1:
+                respHeaders, data = self.decHeaders(data)
+            else:
+                respHeaders = res.headers
+            if 'x-line-next-access' in respHeaders:
+                self.handleNextToken(respHeaders['x-line-next-access'])
             res = None
             if ttype == 3:
-                res = self.tryReadData(data)
+                res = self.TBinaryProtocol(data).res
             elif ttype == 4:
                 res = self.tryReadTCompactData(data)
             elif ttype == 5:
@@ -377,9 +397,10 @@ class Models(object):
                 raise Exception(f"Unknown ThriftType: {ttype}")
             if type(res) == dict and 'error' in res:
                 print(res['error'])
-                if res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"]:
+                if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended:')):
                     self.is_login = False
                     self.log(f"LOGIN OUT: {res['error']['message']}")
+                    raise Exception(res['error'])
                 else:
                     print(res['error']['message'])
             return res
@@ -747,11 +768,7 @@ class Models(object):
                         e += f[1] + 1
                 else:
                     print(f"[readContainerStruct_LIST(15)]不支援Type: {type}")
-            if not stopWithFirst:
-                if d > 0:
-                    nextPos += e
-                else:
-                    nextPos = 8
+            nextPos += e
         elif data[0] != 0:
             print(f"[readContainerStruct]不支援Type: {data[0]} => ID: {id}")
         if nextPos > 0 and not stopWithFirst:
@@ -769,6 +786,7 @@ class Models(object):
         
     def tryReadTCompactData(self, data):
         _data = {}
+        data = bytes(4) + data
         if data[4] == 130:
             a = 8 + data[7]
             b = data[8:a].decode()

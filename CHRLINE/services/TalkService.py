@@ -461,15 +461,12 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
         
     def getChatRoomAnnouncementsBulk(self, chatRoomMids):
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 28, 103, 101, 116, 67, 104, 97, 116, 82, 111, 111, 109, 65, 110, 110, 111, 117, 110, 99, 101, 109, 101, 110, 116, 115, 66, 117, 108, 107, 0, 0, 0, 0]
-        sqrd += [15, 0, 2, 11, 0, 0, 0, len(chatRoomMids)]
-        for mid in chatRoomMids:
-            sqrd += [0, 0, 0, 33]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [8, 0, 3, 0, 0, 0, 7]
-        sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
+        params = [
+            [15, 2, [11, chatRoomMids]],
+            [8, 3, 0]
+        ]
+        sqrd = self.generateDummyProtocol('getChatRoomAnnouncementsBulk', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
         
     def getChatRoomAnnouncements(self, chatRoomMid):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('getChatRoomAnnouncements') + [0, 0, 0, 0]
@@ -914,7 +911,6 @@ class TalkService():
         sqrd = self.generateDummyProtocol('getE2EEPublicKeysEx', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
-    
     def removeE2EEPublicKey(self, spec, keyId, keyData):
         params = [
             [12, 2, [
@@ -979,6 +975,28 @@ class TalkService():
         sqrd = self.generateDummyProtocol('getLastE2EEPublicKeys', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
 
+    def requestE2EEKeyExchange(self, temporalPublicKey: str, keyVersion: int, keyId: int, verifier: str):
+        params = [
+            [8, 1, 0], # reqSeq
+            [11, 2, temporalPublicKey],
+            [12, 3, [
+                [8, 1, keyVersion],
+                [8, 2, keyId]
+            ]],
+            [11, 4, verifier]
+        ]
+        sqrd = self.generateDummyProtocol('requestE2EEKeyExchange', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
+    def respondE2EEKeyExchange(self, encryptedKeyChain: str, hashKeyChain: str):
+        params = [
+            [8, 1, 0], # reqSeq
+            [11, 2, encryptedKeyChain],
+            [11, 3, hashKeyChain]
+        ]
+        sqrd = self.generateDummyProtocol('respondE2EEKeyExchange', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
+
     def negotiateE2EEPublicKey(self, mid: str):
         sqrd = [128, 1, 0, 1] + self.getStringBytes('negotiateE2EEPublicKey') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(mid)
@@ -994,7 +1012,6 @@ class TalkService():
                     [8, 1, reactionType]
                 ]]
             ]]
-            
         ]
         sqrd = self.generateDummyProtocol('react', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5" ,sqrd, 5)
@@ -1601,3 +1618,11 @@ class TalkService():
         ]
         sqrd = self.generateDummyProtocol('checkCanUnregisterEx', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        
+    def verifyQrcode(self, verifier, pinCode):
+        params = [
+            [11, 2, verifier],
+            [11, 3, pinCode],
+        ]
+        sqrd = self.generateDummyProtocol('verifyQrcode', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S4" ,sqrd, 4)

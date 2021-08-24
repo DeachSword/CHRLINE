@@ -128,22 +128,22 @@ class AuthService(object):
         sqrd = self.generateDummyProtocol('validateClovaAppToken', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
         
-    def verifyQrcodeWithE2EE(self, verifier, pinCode, keyId, keyData, encryptedKeyChain, hashKeyChain):
+    def verifyQrcodeWithE2EE(self, verifier, keyId, keyData, createdTime, encryptedKeyChain, hashKeyChain, pinCode=""):
         params = [
             [11, 2, verifier],
-            # [11, 3, pinCode],
+            [11, 3, pinCode],
             [8, 4, 95], # errorCode
             [12, 5, [
                 [8, 1, 1], # version
                 [8, 2, keyId],
                 [11, 4, keyData],
-                [10, 5, 0] # createdTime
+                [10, 5, createdTime]
             ]],
             [11, 6, encryptedKeyChain],
             [11, 7, hashKeyChain]
         ]
         sqrd = self.generateDummyProtocol('verifyQrcodeWithE2EE', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_ENDPOINT_V4 ,sqrd, 4)
+        return self.postPackDataAndGetUnpackRespData("/S4" ,sqrd, 4)
         
     def confirmE2EELogin(self, verifier, deviceSecret):
         params = [

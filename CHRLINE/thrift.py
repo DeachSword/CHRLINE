@@ -5,6 +5,159 @@ class Thrift(object):
     
     def __init__(self):
         pass
+    
+    class TBinaryProtocol(object):
+
+        VERSION_MASK = -65536
+        VERSION_1 = -2147418112
+        TYPE_MASK = 0x000000ff
+
+        def __init__(self, data: bytes = None):
+            self.__last_fid = 0
+            self.__last_pos = 0
+            self.__last_sid = 0
+            self.res = None
+            self.data = data
+            if self.data is not None:
+                self.x()
+
+        def readBool(self):
+            byte = self.readByte()
+            if byte == 0:
+                return False
+            return True
+
+        def readI16(self):
+            buff = self.y(2)
+            val, = unpack('!h', buff)
+            return val
+
+        def readI32(self):
+            buff = self.y(4)
+            val, = unpack('!i', buff)
+            return val
+
+        def readI64(self):
+            buff = self.y(8)
+            val, = unpack('!q', buff)
+            return val
+
+        def readDouble(self):
+            buff = self.y(8)
+            val, = unpack('!d', buff)
+            return val
+
+        def readBinary(self):
+            size = self.readI32()
+            s = self.y(size)
+            try:
+                s = s.decode()
+            except:
+                pass
+            return s
+
+        def readByte(self):
+            buff = self.y(1)
+            val, = unpack('!b', buff)
+            return val
+
+        def readMessageBegin(self):
+            sz = self.readI32()
+            data = {}
+            if sz < 0:
+                version = sz & self.VERSION_MASK
+                if version != self.VERSION_1:
+                    raise Exception('Bad version in readMessageBegin: %d' % (sz))
+                type = sz & self.TYPE_MASK
+                name = self.readBinary()
+                seqid = self.readI32()
+            else:
+                raise Exception('Bad version in readMessageBegin: %d' % (sz))
+            return (name, type, seqid)
+
+        def readFieldBegin(self):
+            type = self.readByte()
+            if type == 0:
+                return (None, type, 0)
+            id = self.readI16()
+            return (None, type, id)
+
+        def readMapBegin(self):
+            ktype = self.readByte()
+            vtype = self.readByte()
+            size = self.readI32()
+            return (ktype, vtype, size)
+
+        def readListBegin(self):
+            etype = self.readByte()
+            size = self.readI32()
+            return (etype, size)
+
+        def x(self):
+            name, type, seqid = self.readMessageBegin()
+            _, ftype, fid = self.readFieldBegin()
+            data = None
+            if fid == 0:
+                data = self.z(ftype)
+            elif fid == 1:
+                error = self.z(ftype)
+                data = {
+                    "error": {
+                        "code": error.get(1),
+                        "message": error.get(2),
+                        "metadata": error.get(3),
+                        "_data": error
+                    }
+                }
+            else:
+                raise Exception(f"unknown fid: {fid}")
+            self.res = data
+
+        def y(self, num: int):
+            data = self.data[self.__last_pos:self.__last_pos + num]
+            self.__last_pos += num
+            return data
+
+        def z(self, ftype: int):
+            data = None
+            if ftype == 0:
+                pass
+            if ftype == 2:
+                data = self.readBool()
+            elif ftype == 3:
+                data = self.readByte()
+            elif ftype == 4:
+                data = self.readDouble()
+            elif ftype == 6:
+                data = self.readI16()
+            elif ftype == 8:
+                data = self.readI32()
+            elif ftype == 10:
+                data = self.readI64()
+            elif ftype == 11:
+                data = self.readBinary()
+            elif ftype == 12:
+                data = {}
+                while True:
+                    _, _ftype, _fid = self.readFieldBegin()
+                    if _ftype == 0:
+                        break
+                    data[_fid] = self.z(_ftype)
+            elif ftype == 13:
+                ktype, vtype, size = self.readMapBegin()
+                data = {}
+                for i in range(size):
+                    _key = self.z(ktype)
+                    _val = self.z(vtype)
+                    data[_key] = _val
+            elif ftype == 14 or ftype == 15:
+                etype, size = self.readListBegin()
+                data = []
+                for i in range(size):
+                    data.append(self.z(etype))
+            else:
+                raise Exception(f"can't not read type {ftype}")
+            return data
 
     class TCompactProtocol(object):
 
@@ -224,7 +377,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.3
+        Version: 1.0.4 (令和最新版)
         """
 
         def __init__(self, a=None):
@@ -401,7 +554,7 @@ class Thrift(object):
             return b                                                    # - break! -
 
         def t(self):
-            self.__last_pos = 7                                     # fixed pos
+            self.__last_pos = 3                                     # fixed pos
             if len(self.data) == 4:                                 # 
                 raise Exception(f"無效Data: {self.data} (code: 20)")# 
             a = self.b()                                            # first data

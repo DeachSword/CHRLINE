@@ -67,6 +67,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             secret, secretPK = self.createSqrSecret(True)
             self.putExchangeKey(pwless_code, secretPK)
             self.requestPaakAuth(pwless_code)
+            print(f'need Paak Auth Confind')
             pa = self.checkPaakAuthenticated(pwless_code)
             if pa is not None and 'error' not in pa:
                 ek = self.getE2eeKey(pwless_code)
@@ -127,6 +128,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pincode = b"1314520"
         _secret = self._encryptAESECB(self.getSHA256Sum(pincode), base64.b64decode(secretPK))
         res = self.loginV2(keynm, crypto, _secret, deviceName=self.SYSTEM_NAME, cert=certificate)
+        if res.get('error', {}).get('code', -1) == 20:
+            print(f"can't login: {res['error']['message']}, try use LoginZ...")
+            return self.requestEmailLogin(email, pw)
         if 9 not in res:
             verifier = res[3]
             if res[5] == 3:
@@ -149,6 +153,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 raise Exception(f"confirmE2EELogin failed, try again")
         self.authToken = res[9][1]
         refreshToken = res[9][2]
+        self.saveCacheData('.refreshToken', self.authToken, refreshToken)
         print(f"AuthToken: {self.authToken}")
         print(f"RefreshToken: {refreshToken}")
         return True
