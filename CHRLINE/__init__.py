@@ -2,7 +2,7 @@ from .client import CHRLINE
 
 # ORIGINAL LICENSE
 __copyright__       = 'Copyright 2020-2021 by DeachSword'
-__version__         = '1.4.6'
+__version__         = '1.4.7'
 __license__         = 'BSD-3-Clause'
 __author__          = 'DeachSword - YinMo'
 __url__             = 'http://github.com/DeachSword'

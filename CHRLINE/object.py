@@ -114,7 +114,7 @@ class Object(object):
             hashmap["GID"] = gid
             nc = 2
             for img in paths[1:]:
-                print(f"Upload image-{nc} with GID-{gid}...")
+                self.log(f"Upload image-{nc} with GID-{gid}...")
                 hashmap["GSEQ"] = str(nc)
                 sqrd = sqrd_base + self.getIntBytes(len(hashmap.keys()))
                 for hm in hashmap.keys():
@@ -143,7 +143,7 @@ class Object(object):
             "ver": "2.0",
             "name": files['file'].name,
             "oid": "reqseq",
-            "reqseq": str(self.revision),
+            "reqseq": str(self.getCurrReqId()),
             "cat": "original"
         }
         if objId != None:
@@ -159,7 +159,7 @@ class Object(object):
                 'ver': '2.0',
                 'name': files['file'].name,
                 'oid': 'reqseq',
-                'reqseq': '%s' % str(self.revision),
+                'reqseq': '%s' % str(self.getCurrReqId()),
                 'tomid': '%s' % str(to),
                 'cat': 'original'
             }

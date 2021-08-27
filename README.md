@@ -1,5 +1,7 @@
 # LINE DemoS Bot - CHRLINE API
 
+![logo](/examples/assets/logo.png)
+
 >What is CHRLINE?\
 >It is LINE Chrome API, just for debug
 
