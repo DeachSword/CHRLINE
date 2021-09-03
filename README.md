@@ -191,6 +191,11 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - verifyQrcode
     - AccessTokenRefreshService
         - refreshAccessToken
+    - AccountAuthFactorEapConnectService
+        - connectEapAccount
+        - disconnectEapAccount
+        - openAAFECSession
+        - verifyEapLogin
     - AuthService
         - openAuthSession
         - getAuthRSAKey
@@ -206,6 +211,10 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - validateClovaAppToken
         - verifyQrcodeWithE2EE
         - confirmE2EELogin
+        - issueV3TokenForPrimary
+    - BotExternalService
+        - notifyOATalkroomEvents (WIP)
+        - notifyChatAdEntry
     - BuddyService
         - getPromotedBuddyContacts
     - CallService
@@ -241,6 +250,13 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getCommonDomains
         - issueRequestTokenWithAuthScheme
         - getReturnUrlWithRequestTokenForAutoLogin
+    - ChatAppService
+        - getChatapp
+        - getMyChatapps
+    - E2EEKeyBackupService
+        - createE2EEKeyBackup
+        - getE2EEKeyBackupCertificates
+        - getE2EEKeyBackupInfo
     - LiffService
         - issueLiffView
         - getLiffViewWithoutUserContext
@@ -380,9 +396,6 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - Others
         - returnTicket (test)
         - getModulesV2
-        - openSession
-        - connectEapAccount
-        - verifyEapLogin
         - getCountrySettingV4
         - getRSAKeyInfo
         - loginZ

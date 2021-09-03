@@ -357,7 +357,10 @@ class TalkService():
         sqrd += [12, 0, 1]
         sqrd += [8, 0, 1, 0, 0, 0, 0]
         sqrd += [12, 0, 2]
-        sqrd += [8, 0, 1, 0, 0, 0, 2] # type
+        if chatSet.get(1) is not None:
+            sqrd += [8, 0, 1] + self.getIntBytes(chatSet[1])
+        else:
+            sqrd += [8, 0, 1, 0, 0, 0, 1] # type
         sqrd += [11, 0, 2] + self.getStringBytes(chatMid)
         if chatSet.get(4) is not None:
             sqrd += [2, 0, 4, int(chatSet[4])]
@@ -1020,7 +1023,7 @@ class TalkService():
         params = [
             [12, 1, [
                 [8, 1, 0],
-                [8, 2, 2],
+                [8, 2, type],
                 [11, 3, name],
                 [14, 4, [11, targetUserMids]],
                 [11, 5 , picturePath]

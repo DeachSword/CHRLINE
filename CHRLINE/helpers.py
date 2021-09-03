@@ -22,8 +22,8 @@ class Helpers(object):
             error = liff.get('error', {})
             print(f"[sendLiff]{error}")
             if error.get('code') == 3 and tryConsent:
-                self.tryConsentLiff(error['metadata'][3][1])
-                return self.sendLiff(to, messages, tryConsent=False)
+                if self.tryConsentLiff(error['metadata'][3][1]):
+                    return self.sendLiff(to, messages, tryConsent=False)
             return error
         liff_headers = {
             'Accept' : 'application/json, text/plain, */*',
@@ -50,15 +50,19 @@ class Helpers(object):
         }
         data = json.dumps(payload)
         hr = {
-            'X-LINE-ChannelId': channelId,
+            'X-LINE-ChannelId': str(channelId),
             'X-LINE-Access': self.authToken,
             'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.1; SAMSUNG Realise/DeachSword; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/56.0.2924.87 Mobile Safari/537.36',
             'Content-Type': 'application/json',
-            'X-Line-Application': '',
+            'X-Line-Application': self.APP_NAME,
             'X-Requested-With': 'XMLHttpRequest',
             'Accept-Language': 'zh-TW,en-US;q=0.8'
         }
         r = self.server.postContent("https://access.line.me/dialog/api/permissions", data=data, headers=hr)
+        if r.status_code == 200:
+            return True
+        print(f"tryConsentLiff failed: {r.status_code}")
+        return False
     
     def getToType(self, mid):
         """

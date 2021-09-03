@@ -152,3 +152,14 @@ class AuthService(object):
         ]
         sqrd = self.generateDummyProtocol('confirmE2EELogin', params, 3)
         return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)
+        
+    def issueV3TokenForPrimary(self, udid: str, systemDisplayName: str, modelName: str):
+        params = [
+            [12, 1, [
+                [11, 1, udid],
+                [11, 2, systemDisplayName],
+                [11, 3, modelName]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('issueV3TokenForPrimary', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)

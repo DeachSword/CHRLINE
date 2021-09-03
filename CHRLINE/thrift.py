@@ -217,8 +217,12 @@ class Thrift(object):
         del k
         del v
             
-        def __init__(self):
+        def __init__(self, data=None):
             self.__last_fid = 0
+            self.__last_pos = 0
+            if data is not None:
+                self.data = data
+                self.x()
     
         def getFieldHeader(self, type, fid):
             delta = fid - self.__last_fid
@@ -305,14 +309,29 @@ class Thrift(object):
                 res = res.decode()
             except:
                 pass
-            return [res, len + size + 1]
+            return [res, len + size]
             
         def __writeUByte(self, byte):
             return list(pack('!B', byte))
 
         def __writeSize(self, i32):
             return self.writeVarint(i32)
-                
+
+        def readMessageBegin(self):
+            proto_id = self.__readUByte(self.y(1))
+            if proto_id != 130:
+                raise Exception('Bad protocol id in the message: %d' % proto_id)
+            ver_type = self.__readUByte(self.y(1))
+            type = (ver_type >> 5) & 7
+            version = ver_type & 15
+            if version != 1:
+                raise Exception('Bad version: %d (expect %d)' % (version, 1))
+            seqid, offset = self.__readVarint(self.data[self.__last_pos:], True)
+            self.__last_pos += offset
+            name, offset = self.readBinary(self.data[self.__last_pos:])
+            self.__last_pos += offset
+            return (name, type, seqid)
+
         def readFieldBegin(self, data):
             type = data[0]
             offset = 1
@@ -364,6 +383,71 @@ class Thrift(object):
             buff = data[:8]
             val, = unpack('<d', buff)
             return val
+
+        def x(self):
+            name, type, seqid = self.readMessageBegin()
+            _, ftype, fid, offset = self.readFieldBegin(self.data[self.__last_pos:])
+            self.__last_pos += offset
+            data = None
+            if fid == 0:
+                data = self.z(ftype)
+            elif fid == 1:
+                error = self.z(ftype)
+                data = {
+                    "error": {
+                        "code": error.get(1),
+                        "message": error.get(2),
+                        "metadata": error.get(3),
+                        "_data": error
+                    }
+                }
+            else:
+                raise Exception(f"unknown fid: {fid}")
+            self.res = data
+
+        def y(self, num: int):
+            data = self.data[self.__last_pos:self.__last_pos + num]
+            self.__last_pos += num
+            return data
+
+        def z(self, ftype: int):
+            data = None
+            if ftype == 0:
+                pass
+            if ftype == 1:
+                data = True
+            elif ftype == 2:
+                data = False
+            elif ftype == 4:
+                data = self.readDouble(self.data[self.__last_pos:])
+                self.__last_pos += 8
+            elif ftype == 5:
+                data, offset = self.readI32(self.data[self.__last_pos:], True)
+                self.__last_pos += offset
+            elif ftype == 6:
+                data, offset = self.readI64(self.data[self.__last_pos:], True)
+                self.__last_pos += offset
+            elif ftype == 8:
+                data, offset = self.readBinary(self.data[self.__last_pos:])
+                self.__last_pos += offset
+            elif ftype == 9 or ftype == 10:
+                data = []
+                vtype, vsize, vlen = self.readCollectionBegin(self.data[self.__last_pos:])
+                self.__last_pos += vlen
+                for _i in range(vsize):
+                    data.append(self.z(vtype))
+            elif ftype == 12:
+                data = {}
+                _dec = Thrift.TCompactProtocol()
+                while True:
+                    _, _ftype, _fid, offset = _dec.readFieldBegin(self.data[self.__last_pos:])
+                    self.__last_pos += offset
+                    if _ftype == 0:
+                        break
+                    data[_fid] = self.z(_ftype)
+            else:
+                raise Exception(f"can't not read type {ftype}")
+            return data
 
         readByte = __readByte
         __readI16 = __readZigZag

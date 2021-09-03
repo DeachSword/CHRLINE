@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json, requests, urllib
+import httpx
 
 class Server(object):
 
@@ -7,7 +8,7 @@ class Server(object):
         self.Headers = {}
         self.timelineHeaders = {}
         self.channelHeaders = {}
-        self._session = requests.session()
+        self._session = httpx.Client(http2=True, timeout=300) # for h2
 
     def parseUrl(self, path):
         return self.LINE_HOST_DOMAIN + path

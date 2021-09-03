@@ -59,7 +59,7 @@ class Config(object):
     LINE_AGE_CHECK_ENDPOINT              = '/ACS4'
     LINE_AUTH_ENDPOINT                   = '/RS3'
     LINE_AUTH_ENDPOINT_V4                = '/RS4'
-    LINE_AUTH_EAP_ENDPOINT               = '/acct/authfactor/eap/v1'
+    LINE_AUTH_EAP_ENDPOINT               = '/ACCT/authfactor/eap/v1'
     LINE_BEACON_ENDPOINT                 = '/BEACON4'
     LINE_BUDDY_ENDPOINT                  = '/BUDDY3'
     LINE_CALL_ENDPOINT                   = '/V3'
@@ -90,6 +90,8 @@ class Config(object):
     LINE_SECONDARY_AUTH_FACTOR_PIN_CODE_ENDPOINT = "/acct/authfactor/second/pincode/v1"
     LINE_PWLESS_CREDENTIAL_MANAGEMENT_ENDPOINT = "/acct/authfactor/pwless/manage/v1"
     LINE_PWLESS_PRIMARY_REGISTRATION_ENDPOINT = "/acct/authfactor/pwless/v1"
+    LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT = "/EXT/groupcall/youtube-api"
+    LINE_E2EE_KEY_BACKUP_ENDPOINT = "/EKBS4"
 
     LINE_LAN_ANDROID_URL                 = 'https://lan.line.me/v1/line/android/notification'
     LINE_LAN_IOS_URL                     = 'https://lan.line.me/v1/line/ios/notification'
@@ -124,18 +126,18 @@ class Config(object):
             self.APP_VER = "2.16.0"
             self.SYSTEM_NAME = "Android OS"
             self.isSecondary = True
-        elif type == "IOSIPAD":
-            self.APP_VER = "11.2.0"
-            self.SYSTEM_NAME = "iOS"
         elif type == "ANDROID":
             self.APP_VER = "11.13.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "11.12.1"
+            self.APP_VER = "11.15.0"
             self.SYSTEM_NAME = "iOS"
             self.SYSTEM_NAME = "12.1.2"
+        elif type == "IOSIPAD":
+            self.APP_VER = "11.15.0"
+            self.SYSTEM_NAME = "iOS"
         elif type == "WATCHOS":
-            self.APP_VER = "10.16.2"
+            self.APP_VER = "11.15.0"
             self.SYSTEM_NAME = "Watch OS"
         elif type == "OPENCHAT_PLUS":
             self.APP_VER = "11.13.2"

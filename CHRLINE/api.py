@@ -16,8 +16,11 @@ from .services.AccessTokenRefreshService import AccessTokenRefreshService
 from .services.CallService import CallService
 from .services.SecondaryPwlessLoginService import SecondaryPwlessLoginService
 from .services.SecondaryPwlessLoginPermitNoticeService import SecondaryPwlessLoginPermitNoticeService
+from .services.ChatAppService import ChatAppService
+from .services.AccountAuthFactorEapConnectService import AccountAuthFactorEapConnectService
+from .services.E2EEKeyBackupService import E2EEKeyBackupService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -53,12 +56,16 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         CallService.__init__(self)
         SecondaryPwlessLoginService.__init__(self)
         SecondaryPwlessLoginPermitNoticeService.__init__(self)
+        ChatAppService.__init__(self)
+        AccountAuthFactorEapConnectService.__init__(self)
+        E2EEKeyBackupService.__init__(self)
     
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.createPwlessSession(phone)
         pwless_code = pwless_code[1]
         print(f'PWLESS SESSION: {pwless_code}')
-        certVerify = self.verifyLoginCertificate(pwless_code, self.getCacheData('.pwless', phone))
+        cert = self.getCacheData('.pwless', phone)
+        certVerify = self.verifyLoginCertificate(pwless_code, '' if cert is None else cert)
         if 'error' in certVerify:
             pwless_pincode = self.requestPinCodeVerif(pwless_code)[1]
             print(f'PWLESS PINCODE: {pwless_pincode}')
@@ -376,77 +383,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         for value in etag:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def openSession(self, udid, deviceModel):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/ACCT/authfactor/eap/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 111, 112, 101, 110, 83, 101, 115, 115, 105, 111, 110, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [12, 0, 1]
-        udid = str(udid).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(udid))
-        for value2 in udid:
-            sqrd.append(value2)
-        deviceModel = str(deviceModel).encode()
-        sqrd += [11, 0, 2] + self.getIntBytes(len(deviceModel))
-        for value2 in deviceModel:
-            sqrd.append(value2)
-        sqrd += [0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def connectEapAccount(self, authSessionId):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/ACCT/authfactor/eap/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 99, 111, 110, 110, 101, 99, 116, 69, 97, 112, 65, 99, 99, 111, 117, 110, 116, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        authSessionId = str(authSessionId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(authSessionId))
-        for value2 in authSessionId:
-            sqrd.append(value2)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-        
-    def verifyEapLogin(self, authSessionId, type, accessToken):
-        _headers = {
-            'X-Line-Access': self.authToken, 
-            'x-lpqs': "/ACCT/authfactor/eap/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 14, 118, 101, 114, 105, 102, 121, 69, 97, 112, 76, 111, 103, 105, 110, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        authSessionId = str(authSessionId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(authSessionId))
-        for value2 in authSessionId:
-            sqrd.append(value2)
-        sqrd += [12, 0, 2]
-        sqrd += [8, 0, 1] + self.getIntBytes(type) # 1: FB  2: APPLE
-        accessToken = str(accessToken).encode()
-        sqrd += [11, 0, 2] + self.getIntBytes(len(accessToken))
-        for value2 in accessToken:
-            sqrd.append(value2)
-        sqrd += [0, 0, 0]
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)

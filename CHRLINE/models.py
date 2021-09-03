@@ -282,8 +282,8 @@ class Models(object):
             _type = param[0]
             _id = param[1]
             _data = param[2]
-            # if _data is None:
-                # continue
+            if _data is None:
+                continue
             if type == 3:
                 data += [_type, 0, _id]
                 isCompact = False
@@ -344,6 +344,8 @@ class Models(object):
             access_token = self.authToken
         ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
         headers["content-type"] = "application/x-thrift; protocol=" + ptype
+        headers["x-lal"] = self.LINE_LANGUAGE
+        headers["accept"] = "application/x-thrift"
         if encType is None:
             encType = self.encType
         if encType == 0:
@@ -385,27 +387,40 @@ class Models(object):
             else:
                 respHeaders = res.headers
             if 'x-line-next-access' in respHeaders:
+                print(respHeaders)
                 self.handleNextToken(respHeaders['x-line-next-access'])
             res = None
             if ttype == 3:
                 res = self.TBinaryProtocol(data).res
             elif ttype == 4:
-                res = self.tryReadTCompactData(data)
+                res = self.TCompactProtocol(data).res
             elif ttype == 5:
                 res = self.TMoreCompactProtocol(data).res
             else:
                 raise Exception(f"Unknown ThriftType: {ttype}")
             if type(res) == dict and 'error' in res:
                 print(res['error'])
-                if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended:')):
+                if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended')):
                     self.is_login = False
+                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                    raise Exception(res['error'])
+                elif res['error']['code'] == 119:
+                    refreshToken = self.getCacheData('.refreshToken', self.authToken)
+                    print(f'try to refresh access token... {refreshToken}')
+                    if refreshToken is not None:
+                        newToken = self.refreshAccessToken(refreshToken)[1]
+                        if 'error' not in newToken:
+                            self.handleNextToken(newToken)
+                            return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
+                        else:
+                            print(f"refresh access token failed. : {newToken}")
                     self.log(f"LOGIN OUT: {res['error']['message']}")
                     raise Exception(res['error'])
                 else:
                     print(res['error']['message'])
             return res
         else:
-            print(data)
+            print(f"get resp failed: {res.status_code}")
             return None
         
     def getCurrReqId(self):

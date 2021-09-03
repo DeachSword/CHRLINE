@@ -16,9 +16,8 @@ class TimelineBiz():
         TIMELINE_BIZ_LIFF_ID = "1654109201-MgN2z4Nd"
         self.can_use_timeline_biz = False
         try:
-            self.cmsToken = self.issueLiffView(None, TIMELINE_BIZ_LIFF_ID)[8]
+            self.cmsToken = self.issueLiffView(None, TIMELINE_BIZ_LIFF_ID)[7]
             self.cmsSession = self.getCmsSession()
-            self.can_use_timeline_biz = True
         except Exception as e:
             self.log(f"can't use Timeline Biz: {e}")
 
@@ -26,6 +25,10 @@ class TimelineBiz():
         url = 'https://timeline.line.biz/api/auth/getSessionByIdToken?idToken=' + self.cmsToken
         req = requests.session()
         res = req.get(url)
+        if res.status_code == 200:
+            self.can_use_timeline_biz = True
+        else:
+            raise Exception(f'failed to get Cms Session: {res.status_code}')
         return req
 
     @loggedIn
