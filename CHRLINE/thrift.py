@@ -217,9 +217,10 @@ class Thrift(object):
         del k
         del v
             
-        def __init__(self, data=None):
+        def __init__(self, data=None, passProtocol=False):
             self.__last_fid = 0
             self.__last_pos = 0
+            self.passProtocol = passProtocol
             if data is not None:
                 self.data = data
                 self.x()
@@ -385,11 +386,12 @@ class Thrift(object):
             return val
 
         def x(self):
-            name, type, seqid = self.readMessageBegin()
+            if not self.passProtocol:
+                name, type, seqid = self.readMessageBegin()
             _, ftype, fid, offset = self.readFieldBegin(self.data[self.__last_pos:])
             self.__last_pos += offset
             data = None
-            if fid == 0:
+            if fid == 0 or self.passProtocol:
                 data = self.z(ftype)
             elif fid == 1:
                 error = self.z(ftype)

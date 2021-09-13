@@ -20,35 +20,25 @@ class PrimaryAccountInitService(object):
         self.uuid = uuid
         
     def openPrimarySession(self):
-        _headers = {
-            'x-lpqs': "/acct/pais/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('openSession') + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [13, 0, 1, 11, 11] + self.getIntBytes(0)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [12, 1, [
+                [13, 1, [11, 11, []]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('openSession', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def getCountryInfo(self, authSessionId, simCard=None):
-        _headers = {
-            'x-lpqs': "/acct/pais/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('getCountryInfo') + [0, 0, 0, 0]
-        sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [11, 1, authSessionId],
+            # [12, 11, [
+                # [11, 1, countryCode],
+                # [11, 2, hni],
+                # [11, 3, carrierName],
+            # ]]
+        ]
+        sqrd = self.generateDummyProtocol('getCountryInfo', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def getPhoneVerifMethod(self, authSessionId, phoneNumber, countryCode, deviceModel="SM-N950F"):
         _headers = {
@@ -122,57 +112,35 @@ class PrimaryAccountInitService(object):
         return self.tryReadData(data)
         
     def validateProfile(self, authSessionId, displayName):
-        _headers = {
-            'x-lpqs': "/acct/pais/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('validateProfile') + [0, 0, 0, 0]
-        sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
-        sqrd += [11, 0, 2] + self.getStringBytes(displayName)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [11, 1, authSessionId],
+            [11, 2, displayName]
+        ]
+        sqrd = self.generateDummyProtocol('validateProfile', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def exchangeEncryptionKey(self, authSessionId, publicKey, nonce, authKeyVersion=1):
-        _headers = {
-            'x-lpqs': "/acct/pais/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('exchangeEncryptionKey') + [0, 0, 0, 0]
-        sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
-        sqrd += [12, 0, 2]
-        sqrd += [8, 0, 1] + self.getIntBytes(authKeyVersion)
-        sqrd += [11, 0, 2] + self.getStringBytes(publicKey)
-        sqrd += [11, 0, 3] + self.getStringBytes(nonce)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [11, 1, authSessionId],
+            [12, 2, [
+                [8, 1, authKeyVersion],
+                [11, 2, publicKey],
+                [11, 3, nonce],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('exchangeEncryptionKey', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def setPassword(self, authSessionId, cipherText, encryptionKeyVersion=1):
-        _headers = {
-            'x-lpqs': "/acct/pais/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('setPassword') + [0, 0, 0, 0]
-        sqrd += [11, 0, 1] + self.getStringBytes(authSessionId)
-        sqrd += [12, 0, 2]
-        sqrd += [8, 0, 1] + self.getIntBytes(encryptionKeyVersion)
-        sqrd += [11, 0, 2] + self.getStringBytes(cipherText)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent('https://ga2.line.naver.jp', data=data, headers=self.register_headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [11, 1, authSessionId],
+            [12, 2, [
+                [8, 1, encryptionKeyVersion],
+                [11, 2, cipherText],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('exchangeEncryptionKey', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def registerPrimaryUsingPhone(self, authSessionId):
         _headers = {

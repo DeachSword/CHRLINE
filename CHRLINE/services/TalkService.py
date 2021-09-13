@@ -102,11 +102,15 @@ class TalkService():
             sqrd.append(2)
         else:
             raise Exception(f"unknown midType: {midType}")
-        sqrd += [134, 134, 3] # seq?
+        _reqId = self.getCurrReqId()
+        sqrd += self.getIntBytes(_reqId, isCompact=True)
         sqrd += self.getMagicStringBytes(to[1:])
         sqrd += self.getStringBytes(text, isCompact=True)
         sqrd.append(2)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT ,sqrd)
+        hr = self.server.additionalHeaders(self.server.Headers, {
+            'x-lai': str(_reqId)
+        })
+        return self.postPackDataAndGetUnpackRespData(self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT ,sqrd, 0, headers=hr)
     
     def getEncryptedIdentity(self):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 103, 101, 116, 69, 110, 99, 114, 121, 112, 116, 101, 100, 73, 100, 101, 110, 116, 105, 116, 121, 0, 0, 0, 0, 0]

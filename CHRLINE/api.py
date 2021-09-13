@@ -19,8 +19,9 @@ from .services.SecondaryPwlessLoginPermitNoticeService import SecondaryPwlessLog
 from .services.ChatAppService import ChatAppService
 from .services.AccountAuthFactorEapConnectService import AccountAuthFactorEapConnectService
 from .services.E2EEKeyBackupService import E2EEKeyBackupService
+from .services.SquareBotService import SquareBotService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -59,6 +60,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         ChatAppService.__init__(self)
         AccountAuthFactorEapConnectService.__init__(self)
         E2EEKeyBackupService.__init__(self)
+        SquareBotService.__init__(self)
     
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.createPwlessSession(phone)
@@ -91,9 +93,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                     cert = loginInfo[2]
                     mid = loginInfo[4]
                 self.authToken = token
-                self.decodeE2EEKeyV1(ek[1], secret, mid)
-                self.saveCacheData('.pwless', phone, cert)
                 print(f'Auth Token: {self.authToken}')
+                self.saveCacheData('.pwless', phone, cert)
+                self.decodeE2EEKeyV1(ek[1], secret, mid)
                 return True
         raise Exception('login failed.')
 
@@ -528,21 +530,14 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         
     def checkLoginV2PinCode(self, accessSession):
-        _headers = {
-            'X-Line-Access': accessSession,
-            'x-lpqs': "/LF1"
-        }
-        a = self.encHeaders(_headers)
-        sqr_rd = a
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
         hr = self.server.additionalHeaders(self.server.Headers, {
-            'x-lhm': 'GET'
+            'x-lhm': 'GET',
+            'x-lt': accessSession,
         })
-        res = self.server.postContent(self.url, data=data, headers=hr)
+        res = self.server.postContent(self.LINE_GW_HOST_DOMAIN + self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE, headers=hr)
         if res.status_code != 200:
             raise Exception("checkLoginV2PinCode failed")
-        data = self.decData(res.content)
+        data = res.content
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         
     def testFunc(self, path, funcName, funcValue=None, funcValueId=1):

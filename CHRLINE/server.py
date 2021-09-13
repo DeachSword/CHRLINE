@@ -8,7 +8,8 @@ class Server(object):
         self.Headers = {}
         self.timelineHeaders = {}
         self.channelHeaders = {}
-        self._session = httpx.Client(http2=True, timeout=300) # for h2
+        self._session = requests.session()
+        self._sessionH2 = httpx.Client(http2=True, timeout=300) # for h2
 
     def parseUrl(self, path):
         return self.LINE_HOST_DOMAIN + path
@@ -50,7 +51,10 @@ class Server(object):
     def postContent(self, url, data=None, files=None, headers=None, json=None):
         if headers is None:
             headers = self.Headers
-        res = self._session.post(url, headers=headers, data=data, files=files, json=json)
+        _s = self._sessionH2
+        if 'x-le' in headers:
+            _s = self._session
+        res = _s.post(url, headers=headers, data=data, files=files, json=json)
         return res
 
     def getContent(self, url, headers=None):

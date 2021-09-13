@@ -92,6 +92,8 @@ class Config(object):
     LINE_PWLESS_PRIMARY_REGISTRATION_ENDPOINT = "/acct/authfactor/pwless/v1"
     LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT = "/EXT/groupcall/youtube-api"
     LINE_E2EE_KEY_BACKUP_ENDPOINT = "/EKBS4"
+    SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE = "/LF1"
+    SECONDARY_DEVICE_LOGIN_VERIFY_PIN = "/Q"
 
     LINE_LAN_ANDROID_URL                 = 'https://lan.line.me/v1/line/android/notification'
     LINE_LAN_IOS_URL                     = 'https://lan.line.me/v1/line/ios/notification'

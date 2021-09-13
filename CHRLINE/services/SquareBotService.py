@@ -12,4 +12,4 @@ class SquareBotService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('getSquareBot', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_BOT_ENDPOINT ,sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_BOT_ENDPOINT ,sqrd, 4)

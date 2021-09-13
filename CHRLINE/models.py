@@ -34,7 +34,7 @@ class Models(object):
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
         #self.initWithBiz()
-        #self.initWithAndroid()
+        #self.initWithAndroid(4)
         
     def log(self, text, debugOnly=False):
         if debugOnly and not self.isDebug:
@@ -337,7 +337,6 @@ class Models(object):
         return data
         
     def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None, access_token=None):
-        self.log(f"--> POST {path}", True)
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -348,6 +347,7 @@ class Models(object):
         headers["accept"] = "application/x-thrift"
         if encType is None:
             encType = self.encType
+        self.log(f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
         if encType == 0:
             data = bytes(bdata)
             if "x-le" in headers:
@@ -360,7 +360,7 @@ class Models(object):
         elif encType == 1:
             if access_token is not None:
                 _headers = {
-                    'X-Line-Access': access_token, 
+                    'x-lt': access_token, 
                     'x-lpqs': path
                 }
             else:
@@ -385,12 +385,16 @@ class Models(object):
             if encType == 1:
                 respHeaders, data = self.decHeaders(data)
             else:
-                respHeaders = res.headers
+                respHeaders = {}
+            respHeaders.update(res.headers)
+            self.log(f"RespHraders: {respHeaders}", True)
             if 'x-line-next-access' in respHeaders:
                 print(respHeaders)
                 self.handleNextToken(respHeaders['x-line-next-access'])
             res = None
-            if ttype == 3:
+            if ttype == 0:
+                pass
+            elif ttype == 3:
                 res = self.TBinaryProtocol(data).res
             elif ttype == 4:
                 res = self.TCompactProtocol(data).res
@@ -419,6 +423,9 @@ class Models(object):
                 else:
                     print(res['error']['message'])
             return res
+        elif res.status_code in [400, 401, 403]:
+            self.is_login = False
+            raise Exception(f'Invalid response status code: {res.status_code}')
         else:
             print(f"get resp failed: {res.status_code}")
             return None
@@ -556,8 +563,9 @@ class Models(object):
     
     def decodeE2EEKeyV1(self, data, secret, mid=None):
         if 'encryptedKeyChain' in data:
+            print("Try to decode E2EE Key")
             encryptedKeyChain = base64.b64decode(data['encryptedKeyChain'])
-            #hashKeyChain = data['hashKeyChain']
+            # hashKeyChain = data['hashKeyChain']
             keyId = data['keyId']
             publicKey = base64.b64decode(data['publicKey'])
             e2eeVersion = data['e2eeVersion']

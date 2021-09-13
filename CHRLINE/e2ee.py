@@ -40,9 +40,9 @@ class E2EE():
         keychain_data = aes.decrypt(encryptedKeyChain)
         key = keychain_data.hex()
         key = bin2bytes(key)
-        key = self.tryReadThriftContainerStruct(key)
-        public_key = bytes(key[1][0][4])
-        private_key = bytes(key[1][0][5])
+        key = self.TCompactProtocol(key, passProtocol=True).res
+        public_key = bytes(key[0][4])
+        private_key = bytes(key[0][5])
         return [private_key, public_key]
     
     def encryptDeviceSecret (self, publicKey, privateKey, encryptedKeyChain):
@@ -58,8 +58,8 @@ class E2EE():
         aad += b.encode()
         aad += bytes(self.getIntBytes(c))
         aad += bytes(self.getIntBytes(d))
-        aad += bytes(self.getIntBytes(e))
-        aad += bytes(self.getIntBytes(f))
+        aad += bytes(self.getIntBytes(e)) #e2ee version
+        aad += bytes(self.getIntBytes(f)) # content type
         return aad
     
     def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to ,_from):
