@@ -28,6 +28,10 @@ class Timeline():
                 "X-LAP": "5",
                 "X-LPV": "1",
                 "X-LSR": self.LINE_SERVICE_REGION,
+                'x-line-bdbtemplateversion': 'v1',
+                'x-line-global-config': "discover.enable=true; follow.enable=true"
+                # "X-Line-PostShare": "true"
+                # "X-Line-StoryShare": "true"
             }
             self.can_use_timeline = True
         except:
@@ -119,7 +123,7 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/mapi/v53/contacts/block/partly.json', params)
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v57/contacts/block/partly.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -667,7 +671,7 @@ class Timeline():
         url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/photos/%s' % albumId, params)
         r = self.server.postContent(url, headers=hr)
         
-        return r.json()    
+        return r.json()
 
     @loggedIn
     def deleteAlbumImages(self, mid, albumId, id):
@@ -685,9 +689,36 @@ class Timeline():
         r = self.server.postContent(url, data=data, headers=hr)
         #{"code":0,"message":"success","result":true}
         return r.json()
+
+    @loggedIn
+    def getAlbums(self, homeId):
+        params = {'homeId': homeId}
+        data = {}
+            
         
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'GET',
+            'content-type': "application/json"
+        })
+
+        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/albums', params)
+        r = self.server.postContent(url, json=data, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def getAlbumUsers(self, mid, albumId):
+        params = {'homeId': mid}
+        data = {}
+            
         
-        return res["result"]["feeds"]
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'GET',
+            'content-type': "application/json"
+        })
+
+        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/users/%s' % albumId, params)
+        r = self.server.postContent(url, json=data, headers=hr)
+        return r.json()
 
 
     """ STORY """
@@ -801,4 +832,249 @@ class Timeline():
         })
         url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/sync.json', params)
         r = self.server.postContent(url, headers=hr)
+        return r.json()
+
+    """ GroupCall YotTube """
+
+    @loggedIn
+    def getYouTubeVideos(
+            self, videoIds):
+        params = {}
+        data = {
+            "id": ",".join(videoIds),
+            "part": "snippet,contentDetails,id,liveStreamingDetails,status,statistics",
+            "fields": "items(snippet(publishedAt,title,thumbnails(default,high,medium),channelTitle,liveBroadcastContent),contentDetails(duration,contentRating),id,liveStreamingDetails(concurrentViewers,scheduledStartTime),status(embeddable),statistics(viewCount, commentCount))"
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'content-type': "application/json",
+            'x-voip-service-id': "gc"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN + self.LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT,
+            '/api/videos',
+            params
+        )
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def getYouTubeVideosWithQuery(
+            self, query="bao", pageToken=None):
+        params = {}
+        data = {
+            "q": query,
+            "part": "id",
+            "fields": "nextPageToken,items(id/videoId)",
+            "safeSearch": "strict",
+            "order": "relevance",
+            "maxResults": 50,
+            "type": "video"
+        }
+        if pageToken is not None:
+            data['pageToken'] = pageToken
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'content-type': "application/json",
+            'x-voip-service-id': "gc"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN + self.LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT,
+            '/api/search',
+            params
+        )
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def getYouTubeVideosWithPopular(
+            self, pageToken=None):
+        params = {}
+        data = {
+            "chart": "mostPopular",
+            "part": "snippet,contentDetails,id,liveStreamingDetails,status,statistics",
+            "fields": "items(snippet(publishedAt,title,thumbnails(default,high,medium),channelTitle,liveBroadcastContent),contentDetails(duration,contentRating),id,liveStreamingDetails(concurrentViewers,scheduledStartTime),status(embeddable),statistics(viewCount))",
+            "regionCode": "TW",
+            "maxResults": 50
+        }
+        if pageToken is not None:
+            data['pageToken'] = pageToken
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'content-type': "application/json",
+            'x-voip-service-id': "gc"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN + self.LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT,
+            '/api/videos',
+            params
+        )
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def getYouTubeVideosWithPlaylists(
+            self, ids, pageToken=None):
+        params = {}
+        data = {
+            "id": ",".join(ids),
+            "part": "id,contentDetails, snippet",
+            "fields": "items(contentDetails,id,snippet)",
+            "regionCode": "TW",
+            "maxResults": 50
+        }
+        if pageToken is not None:
+            data['pageToken'] = pageToken
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'content-type': "application/json",
+            'x-voip-service-id': "gc"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN + self.LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT,
+            '/api/playlists',
+            params
+        )
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    """ BDB """
+
+    @loggedIn
+    def incrBDBCelebrate(
+            self, boardId: str, incrCnt: int = 1):
+        params = {}
+        data = {
+            "boardId": boardId,
+            "from": "POST",
+            "incrCnt": incrCnt,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/celebrate/incr'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def cancelBDBCelebrate(
+            self, boardId: str):
+        params = {}
+        data = {
+            "boardId": boardId,
+            "from": "POST",
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/celebrate/cancel'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def getBDBBoard(
+            self, boardId: str):
+        params = {}
+        data = {
+            "boardId": boardId,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/board/get'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def likeBDBCard(
+            self, boardId: str, cardId: str):
+        params = {}
+        data = {
+            "boardId": boardId,
+            "cardId": cardId,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/card/like/create'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def unlikeBDBCard(
+            self, boardId: str, cardId: str):
+        params = {}
+        data = {
+            "boardId": boardId,
+            "cardId": cardId,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/card/like/cancel'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    @loggedIn
+    def createBDBCard(
+            self, boardId: str, celebratorMid: str, text: str, cardStatus: str = "NORMAL"):
+        params = {}
+        data = {
+            "boardId": boardId,
+            "cardStatus": cardStatus, # NORMAL or HIDDEN
+            "celebratorMid": celebratorMid, # self mid, but why? 🤔
+            "text": text,
+            "from": "BOARD",
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/card/create'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
         return r.json()

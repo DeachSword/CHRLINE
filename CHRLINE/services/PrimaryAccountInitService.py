@@ -139,7 +139,7 @@ class PrimaryAccountInitService(object):
                 [11, 2, cipherText],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('exchangeEncryptionKey', params, 3)
+        sqrd = self.generateDummyProtocol('setPassword', params, 3)
         return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
         
     def registerPrimaryUsingPhone(self, authSessionId):

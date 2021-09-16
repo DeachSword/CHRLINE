@@ -189,8 +189,12 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - unregisterUserAndDevice
         - checkCanUnregisterEx
         - verifyQrcode
+        - reportAbuseEx
+            - reportAbuseExWithMessage
+            - reportAbuseExWithLineMeeting
     - AccessTokenRefreshService
         - refreshAccessToken
+        - reportRefreshedAccessToken
     - AccountAuthFactorEapConnectService
         - connectEapAccount
         - disconnectEapAccount
@@ -378,6 +382,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - addImageToAlbum
             - getAlbumImages
             - deleteAlbumImages
+            - getAlbums
+            - getAlbumUsers
         - Story (WIP)
             - uploadStoryObject (WIP)
             - createStoryContent (WIP)
@@ -387,6 +393,18 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - Search
         - Keep
             - syncKeep
+        - GroupCallYT
+            - getYouTubeVideos
+            - getYouTubeVideosWithQuery
+            - getYouTubeVideosWithPopular
+            - getYouTubeVideosWithPlaylists
+        - BDB
+            - incrBDBCelebrate
+            - cancelBDBCelebrate
+            - getBDBBoard
+            - likeBDBCard
+            - unlikeBDBCard
+            - createBDBCard
     - CubeService (beta)
         - issueBillSplitId
         - getBillSplitShareLink

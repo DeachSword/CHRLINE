@@ -1216,6 +1216,7 @@ class TalkService():
         
     def isAbusive(self):
         """ idk """
+        # 2021/09/16 it removed...
         params = [
             [8, 1, 0],
             [8, 2, 1], # reportSource
@@ -1633,3 +1634,72 @@ class TalkService():
         ]
         sqrd = self.generateDummyProtocol('verifyQrcode', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S4" ,sqrd, 4)
+        
+    def reportAbuseEx(self, message: list = None, lineMeeting: list = None):
+        """
+        - reportSource
+            UNKNOWN(0),
+            DIRECT_INVITATION(1),
+            DIRECT_CHAT(2),
+            GROUP_INVITATION(3),
+            GROUP_CHAT(4),
+            ROOM_INVITATION(5),
+            ROOM_CHAT(6),
+            FRIEND_PROFILE(7),
+            DIRECT_CHAT_SELECTED(8),
+            GROUP_CHAT_SELECTED(9),
+            ROOM_CHAT_SELECTED(10),
+            DEPRECATED(11);
+        - spammerReasons
+            OTHER(0),
+            ADVERTISING(1),
+            GENDER_HARASSMENT(2),
+            HARASSMENT(3);
+        """
+        if message is None and lineMeeting is None:
+            raise Exception("Should use reportAbuseExWithMessage() or reportAbuseExWithLineMeeting()")
+        params = [
+            [12, 2, [
+                [12, 1, [
+                    [12, 1, message],
+                    [12, 2, lineMeeting],
+                ]],
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('reportAbuseEx', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S4" ,sqrd, 4)
+    
+    def reportAbuseExWithMessage(self, reportSource: int, spammerReasons: int, messageIds: list, messages: list, senderMids: list, contentTypes: list, createdTimes: list, metadatas: list, metadata: list, applicationType: int = 384):
+        abuseMessages = []
+        for i in range(len(messageIds)):
+            abuseMessages.append([
+                [10, 1, messageIds.get(i, 0)],
+                [11, 2, messages.get(i, "")],
+                [11, 3, senderMids.get(i, "")],
+                [8, 4, contentTypes.get(i, 0)],
+                [10, 5, createdTimes.get(i, 0)],
+                [13, 6, [11, 11, metadatas.get(i, {})]],
+            ])
+        withMessage = [
+            [8, 1, reportSource],
+            [8, 2, applicationType],
+            [15, 3, [8, [spammerReasons]]],
+            [15, 4, [12, abuseMessages]],
+            [13, 5, [11, 11, metadata]],
+        ]
+        return self.reportAbuseEx(message=withMessage)
+    
+    def reportAbuseExWithLineMeeting(self, reporteeMid: str, spammerReasons: int, spaceIds: list, objectIds: list, chatMid: str):
+        evidenceIds = []
+        for i in range(len(spaceIds)):
+            evidenceIds.append([
+                [11, 1, spaceIds.get(i, "")],
+                [11, 2, objectIds.get(i, "")],
+            ])
+        withLineMeeting = [
+            [11, 1, reporteeMid],
+            [15, 2, [8, [spammerReasons]]],
+            [15, 3, [12, evidenceIds]],
+            [11, 4, chatMid],
+        ]
+        return self.reportAbuseEx(lineMeeting=withLineMeeting)

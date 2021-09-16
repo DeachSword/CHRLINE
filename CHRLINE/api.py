@@ -137,7 +137,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pincode = b"1314520"
         _secret = self._encryptAESECB(self.getSHA256Sum(pincode), base64.b64decode(secretPK))
         res = self.loginV2(keynm, crypto, _secret, deviceName=self.SYSTEM_NAME, cert=certificate)
-        if res.get('error', {}).get('code', -1) == 20:
+        if res.get('error', {}).get('code', -1) in [20, 89]:
             print(f"can't login: {res['error']['message']}, try use LoginZ...")
             return self.requestEmailLogin(email, pw)
         if 9 not in res:
@@ -530,14 +530,21 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         
     def checkLoginV2PinCode(self, accessSession):
+        _headers = {
+            'X-Line-Access': accessSession,
+            'x-lpqs': self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE
+        }
+        a = self.encHeaders(_headers)
+        sqr_rd = a
+        _data = bytes(sqr_rd)
+        data = self.encData(_data)
         hr = self.server.additionalHeaders(self.server.Headers, {
-            'x-lhm': 'GET',
-            'x-lt': accessSession,
+            'x-lhm': 'GET'
         })
-        res = self.server.postContent(self.LINE_GW_HOST_DOMAIN + self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE, headers=hr)
+        res = self.server.postContent(self.url, data=data, headers=hr)
         if res.status_code != 200:
             raise Exception("checkLoginV2PinCode failed")
-        data = res.content
+        data = self.decData(res.content)
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
         
     def testFunc(self, path, funcName, funcValue=None, funcValueId=1):

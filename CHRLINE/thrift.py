@@ -122,7 +122,7 @@ class Thrift(object):
             data = None
             if ftype == 0:
                 pass
-            if ftype == 2:
+            elif ftype == 2:
                 data = self.readBool()
             elif ftype == 3:
                 data = self.readByte()

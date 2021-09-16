@@ -132,14 +132,14 @@ class Config(object):
             self.APP_VER = "11.13.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "11.15.0"
+            self.APP_VER = "11.16.0"
             self.SYSTEM_NAME = "iOS"
             self.SYSTEM_NAME = "12.1.2"
         elif type == "IOSIPAD":
-            self.APP_VER = "11.15.0"
+            self.APP_VER = "11.16.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "WATCHOS":
-            self.APP_VER = "11.15.0"
+            self.APP_VER = "11.16.0"
             self.SYSTEM_NAME = "Watch OS"
         elif type == "OPENCHAT_PLUS":
             self.APP_VER = "11.13.2"
