@@ -53,6 +53,17 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
     - httpx[http2]
     - gevent
 
+## Thanks 
+`This project got their help directly/indirectly, thank them deeply`
+ * [fadhiilrachman](https://github.com/fadhiilrachman)
+ * [ii64](https://github.com/ii64)
+ * [ドマオー](https://github.com/Dosugamea)
+ * [Zero Cool](https://github.com/crash-override404)
+ * [sakura](https://github.com/sakura-rip)
+ * [ぐるぐる](https://github.com/f0reachARR)
+ * LINE _GUILTY CROWN LOST XMAS_ & _Hey LINE!_ 's group members
+ * Discord _DemoS_'s group members
+
 ## Function overview
 - E2EE SQR Login
 - E2EE Email Login
@@ -418,4 +429,3 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getRSAKeyInfo
         - loginZ
         - loginV2
-

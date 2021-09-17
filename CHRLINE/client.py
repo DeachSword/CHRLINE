@@ -55,7 +55,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         if self.customDataId is None:
             self.customDataId = self.mid
         system(f"title CHRLINE - {self.profile[20]}")
-        self.revision = self.getLastOpRevision()
+        self.revision = -1
         self.groups = self.getAllChatMids()[1]
 
         E2EE.__init__(self)

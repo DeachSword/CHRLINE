@@ -1669,17 +1669,22 @@ class TalkService():
         sqrd = self.generateDummyProtocol('reportAbuseEx', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S4" ,sqrd, 4)
     
-    def reportAbuseExWithMessage(self, reportSource: int, spammerReasons: int, messageIds: list, messages: list, senderMids: list, contentTypes: list, createdTimes: list, metadatas: list, metadata: list, applicationType: int = 384):
+    def reportAbuseExWithMessage(self, reportSource: int, spammerReasons: int, messageIds: list, messages: list, senderMids: list, contentTypes: list, createdTimes: list, metadatas: list, metadata: dict, applicationType: int = 384):
         abuseMessages = []
+        _get = lambda a, b, c : a[b] if len(a) > b else c
         for i in range(len(messageIds)):
             abuseMessages.append([
-                [10, 1, messageIds.get(i, 0)],
-                [11, 2, messages.get(i, "")],
-                [11, 3, senderMids.get(i, "")],
-                [8, 4, contentTypes.get(i, 0)],
-                [10, 5, createdTimes.get(i, 0)],
-                [13, 6, [11, 11, metadatas.get(i, {})]],
+                [10, 1, _get(messageIds, i, 0)],
+                [11, 2, _get(messages, i, "")],
+                [11, 3, _get(senderMids, i, "")],
+                [8, 4, _get(contentTypes, i, 0)],
+                [10, 5, _get(createdTimes, i, 0)],
+                [13, 6, [11, 11, _get(metadatas, i, {})]],
             ])
+        # metadata["groupMid"] = groupMid
+        # metadata["groupName"] = groupName
+        # metadata["inviterMid"] = inviterMid
+        # metadata["picturePath"] = picturePath
         withMessage = [
             [8, 1, reportSource],
             [8, 2, applicationType],
@@ -1691,10 +1696,11 @@ class TalkService():
     
     def reportAbuseExWithLineMeeting(self, reporteeMid: str, spammerReasons: int, spaceIds: list, objectIds: list, chatMid: str):
         evidenceIds = []
+        _get = lambda a, b, c : a[b] if len(a) > b else c
         for i in range(len(spaceIds)):
             evidenceIds.append([
-                [11, 1, spaceIds.get(i, "")],
-                [11, 2, objectIds.get(i, "")],
+                [11, 1, _get(spaceIds, i, "")],
+                [11, 2, _get(objectIds, i, "")],
             ])
         withLineMeeting = [
             [11, 1, reporteeMid],
