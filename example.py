@@ -1,24 +1,48 @@
 from CHRLINE import *
+from CHRLINE_hook.hooks import HooksTracer
 
 cl = CHRLINE()
 #cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")#with IOSIPAD
 #cl = CHRLINE("your email", "your password") #with Email
 #cl = CHRLINE(phone="your phone number(0911....)", region="your phone region(TW ,JP, ID..)") #with phone number
+
 token = cl.authToken
 print(f"authToken: {token}")
 
-print(cl.profile) # Profile
-print(cl.sendMessage('uaff1346eb5adc4928c6b99cda0272226', 'hello world')) # send message
+# #
+# HooksTracer is implemented in CHRLINE v1.5.0, thanks to the code provided by Domao!
+# For more detailed usage, just refer to examples/test_hooks_bot.py
+# #
+tracer = HooksTracer(
+    cl, # main account
+    prefixes=[""], # cmd prefixes
+)
 
-rev = cl.getLastOpRevision()
-print(rev)
-while True:
-    Ops = cl.fetchOps(rev)
-    for op in Ops:
-        if op and 0 not in op and op[3] != 0: # dont ask why
-            rev = max(rev, op[1]) # oh yes
-            if op[3] == 26: # 25 = sent messages, 26 = received messages
-                msg = op[20]
-                if msg[15] == 0: # 0 = text, 1 = image....e.g.
-                    if msg[10] == 'ping':
-                        cl.sendMessage(msg[2], 'pong!')
+class EventHook:
+
+    @tracer.Event
+    def onReady():
+        print('Ready!')
+
+class OpHook(object):
+
+    @tracer.Operation(26)
+    def recvMessage(self, op, cl):
+        msg = op[20]
+        self.trace(msg, self.HooksType["Content"], cl)
+
+class ContentHook(object):
+
+    @tracer.Content(0)
+    def TextMessage(self, msg, cl):
+        text = msg.get(10)
+        self.trace(msg, self.HooksType['Command'], cl)
+
+class NormalCmd(object):
+
+    @tracer.Command(ignoreCase=True)
+    def ping(self, msg, cl):
+        '''Ping.'''
+        cl.replyMessage(msg, "Pong!")
+
+tracer.run()
