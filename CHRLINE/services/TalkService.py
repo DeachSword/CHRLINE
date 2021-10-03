@@ -64,7 +64,15 @@ class TalkService():
         # [8, 0, 25] appExtensionType
         sqrd += [0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT ,sqrd)
-        
+
+    def replyMessage(self, msgData: dict, text: str, contentType: int = 0, contentMetadata: dict = {}):
+        to = msgData[2]
+        toType = msgData[3]
+        if toType == 0:
+            to = msgData[1]
+        relatedMessageId = msgData[4]
+        return self.sendMessage(to, text, contentType, contentMetadata, relatedMessageId)
+
     def sendContact(self, to, mid):
         return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
         
@@ -1618,13 +1626,6 @@ class TalkService():
     def unregisterUserAndDevice(self):
         params = []
         sqrd = self.generateDummyProtocol('unregisterUserAndDevice', params, 4)
-        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
-        
-    def checkCanUnregisterEx(self, type=1):
-        params = [
-            [8, 1, type]
-        ]
-        sqrd = self.generateDummyProtocol('checkCanUnregisterEx', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
         
     def verifyQrcode(self, verifier, pinCode):
