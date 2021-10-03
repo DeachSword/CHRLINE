@@ -42,7 +42,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lal": self.LINE_LANGUAGE,
-            "x-lhm": "POST"
+            "x-lhm": "POST",
+            "X-Forwarded-For": "20.21.94.53",
         }
         self.authToken = None
         self.revision = 0
@@ -138,6 +139,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         _secret = self._encryptAESECB(self.getSHA256Sum(pincode), base64.b64decode(secretPK))
         res = self.loginV2(keynm, crypto, _secret, deviceName=self.SYSTEM_NAME, cert=certificate)
         if res.get('error', {}).get('code', -1) in [20, 89]:
+            # 89 = not supported
             print(f"can't login: {res['error']['message']}, try use LoginZ...")
             return self.requestEmailLogin(email, pw)
         if 9 not in res:
@@ -190,6 +192,49 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                     print(f"AuthToken: {self.authToken}")
                 else:
                     yield e
+                    return
+                yield self.authToken
+                return
+            raise Exception('can not check pin code, try again?')
+        raise Exception('can not check qr code, try again?')
+
+    def requestSQR2(self, isSelf=True):
+        sqr = self.createSession()[1]
+        url = self.createQrCode(sqr)[1]
+        secret, secretUrl = self.createSqrSecret()
+        yield f"URL: {url}{secretUrl}"
+        if self.checkQrCodeVerified(sqr):
+            b = self.verifyCertificate(sqr, self.getSqrCert())
+            isCheck = False
+            if b is not None and 'error' in b:
+                c = self.createPinCode(sqr)
+                yield f"請輸入pincode: {c}"
+                if self.checkPinCodeVerified(sqr):
+                    isCheck = True
+            else:
+                isCheck = True
+            if isCheck:
+                e = self.qrCodeLoginV2(sqr, secret)
+                if 'error' in e:
+                    if e['error']['code'] == 4:
+                        yield "try using requestSQR()..."
+                        return self.requestSQR(isSelf)
+                cert = e[1]
+                self.saveSqrCert(cert)
+                tokenV3Info = e[3]
+                _mid = e[4]
+                bT = e[9]
+                metadata = e[10]
+                e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
+                authToken = tokenV3Info[1]
+                refreshToken = tokenV3Info[2]
+                self.saveCacheData('.refreshToken', authToken, refreshToken)
+                print(f"AuthToken: {authToken}")
+                print(f"RefreshToken: {refreshToken}")
+                if isSelf:
+                    self.authToken = authToken
+                else:
+                    yield authToken
                     return
                 yield self.authToken
                 return

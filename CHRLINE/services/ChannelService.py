@@ -50,10 +50,11 @@ class ChannelService(object):
         sqrd += [0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_CHANNEL_ENDPOINT ,sqrd)
     
-    def getReturnUrlWithRequestTokenForAutoLogin(self, url):
+    def getReturnUrlWithRequestTokenForAutoLogin(self, url, sessionString=None):
         params = [
             [12, 2, [
-                [11, 1, url]
+                [11, 1, url],
+                [11, 2, sessionString]
             ]]
         ]
         sqrd = self.generateDummyProtocol('getReturnUrlWithRequestTokenForAutoLogin', params, 4)

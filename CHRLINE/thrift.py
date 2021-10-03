@@ -362,6 +362,15 @@ class Thrift(object):
                 size, len = self.__readSize(data[1:])
             return type, size, len + 1
 
+        def readMapBegin(self, data):
+            size, len = self.__readSize(data)
+            types = 0
+            if size > 0:
+                types = self.__readUByte(data[len:len + 1])
+            vtype = types & 0x0f
+            ktype = types >> 4
+            return (ktype, vtype, size, len + 1)
+
         def writeCollectionBegin(self, etype, size):
             a = []
             if size <= 14:
@@ -438,6 +447,14 @@ class Thrift(object):
                 self.__last_pos += vlen
                 for _i in range(vsize):
                     data.append(self.z(vtype))
+            elif ftype == 11:
+                data = {}
+                ktype, vtype, size, len = self.readMapBegin(self.data[self.__last_pos:])
+                self.__last_pos += len
+                for _i in range(size):
+                    _key = self.z(ktype)
+                    _val = self.z(vtype)
+                    data[_key] = _val
             elif ftype == 12:
                 data = {}
                 _dec = Thrift.TCompactProtocol()

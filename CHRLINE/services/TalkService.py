@@ -1458,6 +1458,11 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
         
     def updateExtendedProfileAttribute(self, year: str, yearPrivacyLevelType: int, yearEnabled: bool, day: str, dayPrivacyLevelType: int, dayEnabled: bool):
+        """
+        - PrivacyLevelType
+            PUBLIC(0),
+            PRIVATE(1);
+        """
         params = [
             [8, 1, self.getCurrReqId()],
             [8, 2, 0], # attr
@@ -1465,7 +1470,8 @@ class TalkService():
                 [12, 1, [
                     [11, 1, year],
                     [8, 2, yearPrivacyLevelType],
-                    [2, 3, year],
+                    [2, 3, yearEnabled],
+                    [11, 5, day],
                     [8, 6, dayPrivacyLevelType],
                     [2, 7, dayEnabled],
                 ]]
@@ -1710,3 +1716,8 @@ class TalkService():
             [11, 4, chatMid],
         ]
         return self.reportAbuseEx(lineMeeting=withLineMeeting)
+        
+    def getCountryWithRequestIp(self):
+        params = []
+        sqrd = self.generateDummyProtocol('getCountryWithRequestIp', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)

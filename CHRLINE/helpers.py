@@ -40,12 +40,9 @@ class Helpers(object):
         resp = self.server.postContent("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
         return resp.text
     
-    def tryConsentLiff(self, channelId):
+    def tryConsentLiff(self, channelId, on=["P", "CM"], referer=None):
         payload = {
-            "on": [
-                "P",
-                "CM"
-            ],
+            "on": on,
             "off": []
         }
         data = json.dumps(payload)
@@ -58,6 +55,8 @@ class Helpers(object):
             'X-Requested-With': 'XMLHttpRequest',
             'Accept-Language': 'zh-TW,en-US;q=0.8'
         }
+        if referer is not None:
+            hr['referer'] = referer
         r = self.server.postContent("https://access.line.me/dialog/api/permissions", data=data, headers=hr)
         if r.status_code == 200:
             return True
@@ -89,3 +88,18 @@ class Helpers(object):
             return 5
         if _u == "v":
             return 6
+
+    def getAccessToken(self, client_id, redirect_uri, otp, code):
+        data = {
+            "client_id": str(client_id), # channel id
+            "redirect_uri": redirect_uri, # intent://result#Intent;package=xxx;scheme=lineauth;end",
+            "otp": otp, # len 20
+            "code": code, # len 20
+            "grant_type": "authorization_code"
+        }
+        hr = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.1; SAMSUNG Realise/DeachSword; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/56.0.2924.87 Mobile Safari/537.36',
+        }
+        r = self.server.postContent("https://access.line.me/v2/oauth/accessToken", data=data, headers=hr)
+        return r.json['access_token']
