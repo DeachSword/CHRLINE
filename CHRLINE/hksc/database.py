@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+# import sqlite
 
 class BaseDatabase:
 
@@ -10,7 +12,7 @@ class BaseDatabase:
         print("Initialize database...")
         self.loadDatabase()
 
-class SqliDatabase(BaseDatabase):
+class SqliteDatabase(BaseDatabase):
 
     def loadDatabase(self):
         print(f"Loading db_{self.db_name} with Sqli")
@@ -21,15 +23,15 @@ class JsonDatabase(BaseDatabase):
     def loadDatabase(self):
         print(f"Loading db_{self.db_name} with Json")
         _data = self.cl.getCacheData(".database", f"{self.db_name}.json")
-        self._json = json.loads(_data) if _data is not None else {}
+        self._json = json.loads(_data) if _data is not None and _data != '' else {}
 
     def getData(self, _key, _defVal=None):
         return self._json.get(_key, _defVal)
 
     def saveData(self, _key, _val):
         self._json[_key] = _val
-        self.db.saveDatabase()
+        self.saveDatabase()
 
     def saveDatabase(self):
-        self.saveCacheData(".database", f"{self.db_name}.json", self._json)
+        self.cl.saveCacheData(".database", f"{self.db_name}.json", json.dumps(self._json))
         print(f"Save db_{self.db_name} with Json success")
