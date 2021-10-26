@@ -40,11 +40,35 @@ class Timeline():
     """ TIMELINE """
 
     @loggedIn
-    def getProfileDetail(self, mid, styleMediaVersion='v2', storyVersion='v6'):
+    def getSocialProfileDetail(self, mid, withSocialHomeInfo=True, postLimit=10, likeLimit=6, commentLimit=10, storyVersion='v7', timelineVersion='v57', postId=None, updatedTime=None):
+        params = {
+            'homeId': mid,
+            'withSocialHomeInfo': withSocialHomeInfo,
+            'postLimit': postLimit,
+            'likeLimit': likeLimit,
+            'commentLimit': commentLimit,
+            'storyVersion': storyVersion,
+            'timelineVersion': timelineVersion
+        }
+        if postId is not None:
+            # post offset
+            params['postId'] = postId
+            params['updatedTime'] = updatedTime
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET"
+        })
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/hm/api/v1/home/socialprofile/post.json', params)
+        r = self.server.postContent(url, headers=hr, data='')
+        return r.json()
+
+    @loggedIn
+    def getProfileDetail(self, mid, styleMediaVersion='v2', storyVersion='v7', timelineVersion='v57'):
         params = {
             'homeId': mid,
             'styleMediaVersion': styleMediaVersion,
-            'storyVersion': storyVersion
+            'storyVersion': storyVersion,
+            'timelineVersion': timelineVersion,
+            'profileBannerRevision': 0
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
@@ -52,6 +76,26 @@ class Timeline():
         })
         url = self.server.urlEncode('https://ga2.line.naver.jp/hm', '/api/v1/home/profile.json', params)
         r = self.server.postContent(url, headers=hr, data='')
+        return r.json()
+
+    @loggedIn
+    def updateProfileDetail(self, mid):
+        params = {}
+        data = {
+            "homeId": self.mid,
+            "styleMediaVersion": "v2",
+            "userStyleMedia": {
+                "profile": {
+                    "displayName": "鴻"
+                },
+            },
+            "storyShare": "false"
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST"
+        })
+        url = 'https://ga2.line.naver.jp/hm/api/v1/home/profile'
+        r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
     @loggedIn
@@ -68,11 +112,11 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def updateProfileCoverById(self, objid, vObjid=None):
+    def updateProfileCoverById(self, objid, vObjid=None, storyShare=False):
         data = {
             "homeId": self.profile[1],
             "coverObjectId": objid,
-            "storyShare": True,
+            "storyShare": storyShare,
             "meta":{} # heh
         }
         if vObjid:
@@ -733,24 +777,47 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def createStoryContent(self, mid, albumId, name):
+    def createStoryContent(self):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
             'content-type': "application/json"
         })
         data = {"content":{"sourceType":"USER","contentType":"USER","media":[{"oid":"83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3","service":"story","sid":"st","hash":"0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ","mediaType":"IMAGE"}]},"shareInfo":{"shareType":"FRIEND"}}
-        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/content/create')
+        data = {
+            "content": {
+                "sourceType": "USER",
+                "contentType": "USER",
+                "media": [{
+                    "oid": "e88802cbd512535ef8443199bc8802c15c099875t0e831281",
+                    "service": "story",
+                    "sid": "st",
+                    "hash": "0hGSdna6MEGHxZFw9dv9FnK3dVAxI3b0FoIG8DE3UeR08mdAouZXJTGHhDEUVxIl0qbXkESHUeR08mJ1t4ZHlfE3oTA00gLl0qZnhX",
+                    "extra": {
+                        "playtime": 99999999999999999999999999
+                    },
+                    "mediaType": "VIDEO"
+                }]
+            },
+            "shareInfo": {
+                "shareType": "ALL"
+            }
+        }
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v6/story/content/create')
         r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
 
     @loggedIn
-    def getRecentstoryStory(self, lastRequestTime=None):
+    def getRecentstoryStory(self, lastRequestTime=0, lastTimelineVisitTime=0):
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
             'content-type': "application/json"
         })
-        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/recentstory/list')
-        r = self.server.postContent(url, data=data, headers=hr)
+        data = {
+            "lastRequestTime": lastRequestTime,
+            "lastTimelineVisitTime": lastTimelineVisitTime
+        }
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v7/story/recentstory/list')
+        r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
     @loggedIn
@@ -769,6 +836,20 @@ class Timeline():
             "message": message}
         url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/message/send')
         r = self.server.postContent(url, data=data, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def getNewStory(self, newStoryTypes=["GUIDE"], lastTimelineVisitTime=0):
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': 'POST',
+            'content-type': "application/json"
+        })
+        data = {
+            "newStoryTypes": newStoryTypes,
+            "lastTimelineVisitTime": 0
+        }
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v7/story/newstory')
+        r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
     """ Search """

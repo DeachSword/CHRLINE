@@ -360,6 +360,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - sendContactV2
             - getProfileDetail
             - getTimelintTab
+            - getSocialProfileDetail
+            - updateProfileDetail
         - Post
             - getPost
             - createComment
@@ -401,6 +403,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - createStoryContent (WIP)
             - getRecentstoryStory
             - sendMessageForStoryAuthor
+            - getNewStory
         - Search
             - Search
         - Keep

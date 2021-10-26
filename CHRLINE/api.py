@@ -43,7 +43,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lal": self.LINE_LANGUAGE,
             "x-lhm": "POST",
-            "X-Forwarded-For": "20.21.94.53",
+            # "X-Forwarded-For": "20.21.94.53",
         }
         self.authToken = None
         self.revision = 0
@@ -218,7 +218,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 if 'error' in e:
                     if e['error']['code'] == 4:
                         yield "try using requestSQR()..."
-                        return self.requestSQR(isSelf)
+                        for _ in self.requestSQR(isSelf):
+                            yield _
+                        return
                 cert = e[1]
                 self.saveSqrCert(cert)
                 tokenV3Info = e[3]

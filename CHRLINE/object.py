@@ -16,23 +16,32 @@ class Object(object):
     
     """
     
-    def updateProfileImage(self, path):
-        url = self.LINE_OBS_DOMAIN + f'/r/talk/p/{self.profile[1]}'
+    def updateProfileImage(self, path, storyShare=False):
+        url = self.LINE_OBS_DOMAIN + f'/r/talk/p/{self.mid}'
         file = open(path, 'rb')
         hstr = 'DearSakura_%s' % int(time.time() * 1000)
         file_name = hashlib.md5(hstr.encode()).hexdigest()
+        metaData = {
+            "profileContext": {
+                "storyShare": storyShare
+            }
+        }
         params = {
             'name': file_name,
             'quality': '100',
             "type": "image",
             "ver": "2.0"
         }
-        r = self.server.postContent(url, headers=self.server.timelineHeaders, data={'params': json.dumps(params)}, files={'file':file})
+        talkMeta = b64encode(json.dumps(metaData).encode('utf-8')).decode('utf-8')
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-talk-meta': talkMeta
+        })
+        r = self.server.postContent(url, headers=hr, data={'params': json.dumps(params)}, files={'file':file})
         if r.status_code != 201:
             raise Exception(f"updateProfileImage failure. Receive statue code: {r.status_code}")
         return True
     
-    def updateProfileCover(self, path):
+    def updateProfileCover(self, path, storyShare=False):
         hstr = 'DearSakura_%s' % int(time.time() * 1000)
         objid = hashlib.md5(hstr.encode()).hexdigest()
         if not objid:
@@ -51,7 +60,7 @@ class Object(object):
         if r.status_code != 201:
             raise Exception(f"Upload object home failure. Receive statue code: {r.status_code}")
         objId = r.headers['x-obs-oid']
-        home = self.updateProfileCoverById(objId)
+        home = self.updateProfileCoverById(objId, storyShare=storyShare)
         return home
     
     def updateImageToAlbum(self, mid, albumId, path):
@@ -132,7 +141,7 @@ class Object(object):
         return gid
         
     def uploadObjTalk(self, path=None, type='image', objId=None, to=None, talkMeta=None, returnHeaders=False):
-        if type not in ['image','gif','video','audio','file']:
+        if type not in ['image', 'gif', 'video', 'audio', 'file']:
             raise Exception('Invalid type value')
         headers=self.server.timelineHeaders
         files = {'file': open(path, 'rb')}
@@ -144,7 +153,6 @@ class Object(object):
             "name": files['file'].name,
             "oid": "reqseq",
             "reqseq": str(self.getCurrReqId()),
-            "cat": "original"
         }
         if objId != None:
             params['oid'] = objId
@@ -152,6 +160,11 @@ class Object(object):
             params['tomid'] = to
         if type != 'gif':
             params['type'] = type
+            if type == 'image':
+                params['cat'] = 'original'
+            if type in ['video', 'audio']:
+                params["audlen"] = str(1)
+                params["duration"] = str(1)
             data = {'params': self.genOBSParams(params)}
         elif type == 'gif':
             params = {
@@ -247,6 +260,23 @@ class Object(object):
         obs_path = f'/r/{"g2" if self.getToType(objFrom) == 4 else "talk"}/m/{objId}'
         r = self.server.getContent(self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders)
         with open(path, 'wb') as f:
+            f.write(r.content)
+        return r.content
+        
+    def downloadObjectMyhome(self, objId, path, objFrom='h'):
+        return self.downloadObjectForService(objId, path, objFrom=f'myhome/{objFrom}')
+        
+    def downloadObjectForService(self, objId, savePath, obsPathPrefix='myhome/h', size=None, suffix=None):
+        obs_path = f'/r/{obsPathPrefix}/{objId}'
+        if size is not None:
+            # eg. size = "m800x1200" or "L800x1200"or "w800"
+            # must be an existing size :p
+            obs_path += f'/{size}'
+        if suffix is not None:
+            # eg. suffix = "mp4"
+            obs_path += f'/{suffix}'
+        r = self.server.getContent(self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders)
+        with open(savePath, 'wb') as f:
             f.write(r.content)
         return r.content
 
