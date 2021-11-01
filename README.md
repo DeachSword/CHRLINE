@@ -178,7 +178,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - blockRecommendation
         - unblockRecommendation
         - getRecommendationIds
-        - sync (DIED)
+        - sync (for IOS)
         - reissueTrackingTicket
         - updateChatRoomAnnouncement
         - getExtendedProfile
@@ -331,6 +331,30 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getStudentInformation
         - canReceivePresent
         - getOwnedProductSummaries
+        - getShowcaseV3
+        - getProductV2
+        - getProductByVersion
+        - placePurchaseOrderForFreeProduct
+        - placePurchaseOrderWithLineCoin
+        - placePurchaseOrderWithIAP
+        - getOwnedProducts
+        - getPurchasedProducts
+        - getReceivedPresents
+        - getSentPresents
+        - notifyProductEvent
+        - getProductValidationScheme
+        - validateProduct
+        - getProductsByBillingItemId
+        - getUpdates
+        - searchProductsV2
+        - getAggregatedHomeV2
+        - getAggregatedHomeNative
+        - getDynamicHomeNative
+        - getAggregatedPremiumHome
+        - getAggregatedShowcaseV4
+        - getRecommendationForUser
+        - getRecommendationList
+        - getCategories
     - SquareService
         - inviteIntoSquareChat
         - inviteToSquare
@@ -343,6 +367,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - fetchSquareChatEvents
         - getSquare
         - getJoinableSquareChats
+        - createSquare
+        - getSquareChatAnnouncements
     - SquareBotService
         - getSquareBot
     - ObsService

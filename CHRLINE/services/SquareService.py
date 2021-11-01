@@ -140,3 +140,48 @@ class SquareService(object):
         ]
         sqrd = self.generateDummyProtocol('getJoinableSquareChats', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT ,sqrd, 4, encType=0)
+    
+    def createSquare(self, name: str, displayName: str, profileImageObsHash: str = "0h6tJf0hQsaVt3H0eLAsAWDFheczgHd3wTCTx2eApNKSoefHNVGRdwfgxbdgUMLi8MSngnPFMeNmpbLi8MSngnPFMeNmpbLi8MSngnOA", desc: str = "test with CHRLINE API", searchable: bool = True, SquareJoinMethodType: int = 0):
+        """
+        - SquareJoinMethodType
+            NONE(0),
+            APPROVAL(1),
+            CODE(2);
+        """
+        params = [
+            [12, 1, [
+                [8, 2, self.getCurrReqId()],
+                [12, 2, [
+                    [11, 2, name],
+                    [11, 4, profileImageObsHash],
+                    [11, 5, desc],
+                    [2, 6, searchable],
+                    [8, 7, 1], # type
+                    [8, 8, 1], # categoryId
+                    [10, 10, 0], # revision
+                    [2, 11, True], # ableToUseInvitationTicket
+                    [12, 14, [
+                        [8, 1, SquareJoinMethodType]
+                    ]],
+                    [2, 15, False], # adultOnly
+                    [15, 16, [11, []]] # svcTags
+                ]],
+                [12, 3, [
+                    [11, 3, displayName],
+                    # [11, 4, profileImageObsHash],
+                    [2, 5, True], # ableToReceiveMessage
+                    [10, 9, 0], # revision
+                ]]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('createSquare', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT ,sqrd, 4, encType=0)
+    
+    def getSquareChatAnnouncements(self, squareMid: str):
+        params = [
+            [12, 1, [
+                [11, 2, squareMid],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('getSquareChatAnnouncements', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT ,sqrd, 4, encType=0)

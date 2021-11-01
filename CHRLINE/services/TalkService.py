@@ -1422,15 +1422,30 @@ class TalkService():
         sqrd = self.generateDummyProtocol('getBlockedRecommendationIds', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
         
-    def sync(self):
-        """ what is it? """
+    def sync(self, revision: int, count: int = 50):
+        """ fetchOps for IOS """
         # 2021/7/26 it blocked, but 2021/7/20 it working
         # LINE are u here?
         params = [
-            [12, 1, []]
+            [12, 1, [
+                [10, 1, revision],
+                [8, 2, count],
+                [10, 4, self.individualRev],
+                # [10, 5, self.globalRev]
+            ]]
         ]
         sqrd = self.generateDummyProtocol('sync', params, 4)
-        return self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        res = self.postPackDataAndGetUnpackRespData('/S5' ,sqrd, 5)
+        if 1 in res:
+            res = res[1]
+            ops = res[1]
+            isSync = res[2]
+            if not isSync:
+                self.individualRev = res[4][2]
+            return ops
+        elif 2 in res:
+            return self.sync(res[2][2] - 1, count) # revision - 1 for sync revision on next req
+        return None
         
     def updateChatRoomAnnouncement(self, gid, announcementId, messageLink, text):
         params = [

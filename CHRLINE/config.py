@@ -125,7 +125,7 @@ class Config(object):
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
         elif type == "ANDROIDLITE":
-            self.APP_VER = "2.16.0"
+            self.APP_VER = "2.17.1"
             self.SYSTEM_NAME = "Android OS"
             self.isSecondary = True
         elif type == "ANDROID":

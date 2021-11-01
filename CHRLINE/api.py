@@ -20,8 +20,9 @@ from .services.ChatAppService import ChatAppService
 from .services.AccountAuthFactorEapConnectService import AccountAuthFactorEapConnectService
 from .services.E2EEKeyBackupService import E2EEKeyBackupService
 from .services.SquareBotService import SquareBotService
+from .services.TestService import TestService
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
     
@@ -62,6 +63,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         AccountAuthFactorEapConnectService.__init__(self)
         E2EEKeyBackupService.__init__(self)
         SquareBotService.__init__(self)
+        TestService.__init__(self)
     
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.createPwlessSession(phone)
@@ -214,13 +216,14 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             else:
                 isCheck = True
             if isCheck:
-                e = self.qrCodeLoginV2(sqr, secret)
+                e = self.qrCodeLoginV2(sqr, secret, self.SYSTEM_NAME, self.APP_NAME)
+                print(e)
                 if 'error' in e:
-                    if e['error']['code'] == 4:
-                        yield "try using requestSQR()..."
-                        for _ in self.requestSQR(isSelf):
-                            yield _
-                        return
+                    # if e['error']['code'] == 4:
+                    yield "try using requestSQR()..."
+                    for _ in self.requestSQR(isSelf):
+                        yield _
+                    return
                 cert = e[1]
                 self.saveSqrCert(cert)
                 tokenV3Info = e[3]
@@ -327,25 +330,17 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             return True
         return False
         
-    def qrCodeLogin(self, qrcode, secret):
-        _headers = {
-            "x-lpqs": "/acct/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 113, 114, 67, 111, 100, 101, 76, 111, 103, 105, 110, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        self.APP_TYPE = 'CHANNELGW'
-        sqrd += [11, 0, 2, 0, 0, 0, len(self.APP_TYPE)]
-        for device in self.APP_TYPE:
-            sqrd.append(ord(device))
-        sqrd += [2, 0, 3, 0, 0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        data = self.tryReadData(data)
+    def qrCodeLogin(self, authSessionId: str, secret: str, autoLoginIsRequired: bool = True):
+    
+        params = [
+            [12, 1, [
+                [11, 1, authSessionId],
+                [11, 2, self.SYSTEM_NAME],
+                [2, 3, autoLoginIsRequired]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('qrCodeLogin', params, 3)
+        data = self.postPackDataAndGetUnpackRespData("/acct/lgn/sq/v1" ,sqrd, 3)
         pem = data[1]
         self.saveSqrCert(pem)
         print("證書: ", pem)
@@ -359,8 +354,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         params = [
             [12, 1, [
                 [11, 1, authSessionId],
-                [11, 2, self.APP_TYPE],
-                [11, 3, self.APP_TYPE],
+                [11, 2, systemName],
+                [11, 3, modelName],
                 [2, 4, autoLoginIsRequired]
             ]]
         ]
