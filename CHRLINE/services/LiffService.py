@@ -13,7 +13,7 @@ class LiffService(object):
         context = [12, 1, []]
         if chatMid is not None:
             chat = [11, 1, chatMid]
-            if chatMid[0] not in ['u', 'c', 'r']:
+            if chatMid[0] in ['u', 'c', 'r']:
                 chatType = 2
             else:
                 chatType = 3
@@ -25,8 +25,8 @@ class LiffService(object):
                     context
                 ]],
                 [11, 3, lang],
-                [12, 4, []],
-                [11, 5, None] # msit
+                # [12, 4, []], # deviceSetting
+                # [11, 5, None] # msit
             ]]
         ]
         sqrd = self.generateDummyProtocol('issueLiffView', params, self.LIFF_REQ_TYPE)
