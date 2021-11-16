@@ -68,8 +68,6 @@ class TalkService():
     def replyMessage(self, msgData: dict, text: str, contentType: int = 0, contentMetadata: dict = {}):
         to = msgData[2]
         toType = msgData[3]
-        if toType == 0:
-            to = msgData[1]
         relatedMessageId = msgData[4]
         return self.sendMessage(to, text, contentType, contentMetadata, relatedMessageId)
 

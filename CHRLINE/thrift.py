@@ -101,6 +101,8 @@ class Thrift(object):
                 data = self.z(ftype)
             elif fid == 1:
                 error = self.z(ftype)
+                if ftype == 11:
+                    raise Exception(error)
                 data = {
                     "error": {
                         "code": error.get(1),

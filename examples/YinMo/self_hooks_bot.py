@@ -3,15 +3,13 @@ from CHRLINE import *
 from CHRLINE.hooks import HooksTracer
 import time
 
-cl = CHRLINE()
-# ...
-# cl8 = CHRLINE()
+cl = CHRLINE(device="IOSIPAD")
 
 tracer = HooksTracer(
     cl, # main account
-    prefixes=["bao:"], # cmd prefixes
+    prefixes=[""], # cmd prefixes
     # db="test_hook", # database name, if None will use main account's mid
-    # accounts=[cl8] # sub accounts
+    # accounts=[cl2, cl3] # sub accounts
 )
 
 class EventHook:
@@ -25,7 +23,7 @@ class OpHook(object):
     @tracer.Operation(25)
     def sendMessage(self, op, cl):
         msg = op[20]
-        pass
+        self.trace(msg, self.HooksType["Content"], cl)
 
     @tracer.Operation(26)
     def recvMessage(self, op, cl):
@@ -70,6 +68,7 @@ class OpHook(object):
     def __before(self, op, cl):
         # handle all op
         # u can do something here for the same operation when multiple accounts
+        # print(f"[{op[3]}]{op}")
         pass
 
     @tracer.After(tracer.HooksType["Operation"])
@@ -120,18 +119,5 @@ class NormalCmd(object):
     def checkOp(self, msg, cl):
         '''Admin Only.'''
         cl.replyMessage(msg, f'u is Admin!')
-
-    @tracer.Command(ignoreCase=True)
-    def getOp(self, msg, cl):
-        '''get Admin!'''
-        reply = "You are already an admin!"
-        if self.addPermission(msg[1], 'admin'):
-            reply = "You are now admin!"
-        cl.replyMessage(msg, reply)
-
-    @tracer.Command(ignoreCase=True)
-    def bye(self, msg, cl):
-        '''byebye'''
-        cl.deleteSelfFromChat(msg[2])
 
 tracer.run()
