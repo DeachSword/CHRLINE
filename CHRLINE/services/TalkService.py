@@ -1,5 +1,4 @@
 ﻿# -*- coding: utf-8 -*-
-import json
 import time
 
 import httpx
@@ -3161,4 +3160,34 @@ class TalkService():
         params = []
         sqrd = self.generateDummyProtocol(
             "requestIdentityUnbind", params, TalkService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(TalkService_API_PATH, sqrd, TalkService_RES_TYPE)
+
+    def addToFollowBlacklist(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("addToFollowBlacklist is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "addToFollowBlacklist", params, TalkService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(TalkService_API_PATH, sqrd, TalkService_RES_TYPE)
+
+    def removeFromFollowBlacklist(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("removeFromFollowBlacklist is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "removeFromFollowBlacklist", params, TalkService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(TalkService_API_PATH, sqrd, TalkService_RES_TYPE)
+
+    def getFollowBlacklist(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getFollowBlacklist is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getFollowBlacklist", params, TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(TalkService_API_PATH, sqrd, TalkService_RES_TYPE)

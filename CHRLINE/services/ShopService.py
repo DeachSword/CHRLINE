@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
-import json
 
 
 class ShopService(object):
@@ -826,4 +824,55 @@ class ShopService(object):
         params = []
         sqrd = self.generateDummyProtocol(
             "restoreSubscription", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def verifyBirthdayGiftAssociationToken(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception(
+            "verifyBirthdayGiftAssociationToken is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "verifyBirthdayGiftAssociationToken", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getShopPopups(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getPopups is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getPopups", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionSlotStatus(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionSlotStatus is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionSlotStatus", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionSlotHistory(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionSlotHistory is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionSlotHistory", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getProductKeyboardGlobalSetting(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getProductKeyboardGlobalSetting is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getProductKeyboardGlobalSetting", params, ShopService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
