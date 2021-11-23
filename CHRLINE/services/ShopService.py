@@ -2,16 +2,18 @@
 import time
 import json
 
+
 class ShopService(object):
     SHOPS_REQ_TYPE = 3
     SHOPS_RES_TYPE = 3
 
     def __init__(self):
         pass
-        
+
     def getProduct(self, shopId, productId, language="zh-TW", country="TW"):
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116, 80, 114, 111, 100, 117, 99, 116, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, 0, 0, len(shopId)] # e.g. stickershop
+        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116,
+                80, 114, 111, 100, 117, 99, 116, 0, 0, 0, 0]
+        sqrd += [11, 0, 2, 0, 0, 0, len(shopId)]  # e.g. stickershop
         for value in shopId:
             sqrd.append(ord(value))
         sqrd += [11, 0, 3, 0, 0, 0, len(productId)]
@@ -25,10 +27,11 @@ class ShopService(object):
         for value in country:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd)
 
     def getProductsByAuthor(self, authorId, productType=1):
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('getProductsByAuthor') + [0, 0, 0, 0]
+        sqrd = [128, 1, 0, 1] + \
+            self.getStringBytes('getProductsByAuthor') + [0, 0, 0, 0]
         sqrd += [12, 0, 2]
         sqrd += [8, 0, 1] + self.getIntBytes(productType)
         sqrd += [11, 0, 2] + self.getStringBytes(authorId)
@@ -36,28 +39,31 @@ class ShopService(object):
         sqrd += [8, 0, 4] + self.getIntBytes(100)
         sqrd += [2, 0, 6, int(True)]
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd)
-    
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd)
+
     def getStudentInformation(self):
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('getStudentInformation') + [0, 0, 0, 0]
+        sqrd = [128, 1, 0, 1] + \
+            self.getStringBytes('getStudentInformation') + [0, 0, 0, 0]
         sqrd += [12, 0, 2]
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd)
-    
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd)
+
     def canReceivePresent(self, shopId, productId, recipientMid):
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('canReceivePresent') + [0, 0, 0, 0]
+        sqrd = [128, 1, 0, 1] + \
+            self.getStringBytes('canReceivePresent') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(shopId)
         sqrd += [11, 0, 3] + self.getStringBytes(productId)
         sqrd += [12, 0, 4]
-        sqrd += [11, 0, 1] + self.getStringBytes('zh_TW') #language
-        sqrd += [11, 0, 2] + self.getStringBytes('TW') #country
+        sqrd += [11, 0, 1] + self.getStringBytes('zh_TW')  # language
+        sqrd += [11, 0, 2] + self.getStringBytes('TW')  # country
         sqrd += [0]
         sqrd += [11, 0, 5] + self.getStringBytes(recipientMid)
         sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd)
-    
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd)
+
     def getOwnedProductSummaries(self, shopId, offset=0, limit=200, language='zh_TW', country='TW'):
-        sqrd = [128, 1, 0, 1] + self.getStringBytes('getOwnedProductSummaries') + [0, 0, 0, 0]
+        sqrd = [128, 1, 0, 1] + \
+            self.getStringBytes('getOwnedProductSummaries') + [0, 0, 0, 0]
         sqrd += [11, 0, 2] + self.getStringBytes(shopId)
         sqrd += [8, 0, 3] + self.getIntBytes(offset)
         sqrd += [8, 0, 4] + self.getIntBytes(limit)
@@ -65,8 +71,8 @@ class ShopService(object):
         sqrd += [11, 0, 1] + self.getStringBytes(language)
         sqrd += [11, 0, 2] + self.getStringBytes(country)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd)
-    
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd)
+
     def getShowcaseV3(self, productType: int, showcaseType: int, subType: int, continuationToken: str = None, limit: int = 20):
         """
         - productType
@@ -82,7 +88,7 @@ class ShopService(object):
             STICON(2);
         """
         params = [
-            [12, 1, [ # Shop_ShowcaseRequest
+            [12, 1, [  # Shop_ShowcaseRequest
                 [8, 1, productType],
                 [8, 2, showcaseType],
                 [8, 3, subType],
@@ -90,9 +96,10 @@ class ShopService(object):
                 [8, 5, limit],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('getShowcaseV3', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getShowcaseV3', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getProductV2(self, productType: int, productId: str, carrierCode: str, saveBrowsingHistory: bool = True):
         params = [
             [12, 2, [
@@ -102,9 +109,10 @@ class ShopService(object):
                 [2, 4, saveBrowsingHistory],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('getProductV2', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getProductV2', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getProductByVersion(self, shopId: str, productId: str, productVersion: int, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -115,9 +123,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getProductByVersion', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getProductByVersion', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def placePurchaseOrderForFreeProduct(self, shopId: str, productId: str, recipientMid: str, price: str, amount: str, priceString: str, enableLinePointAutoExchange: bool = True, language: str = 'zh_TW', country: str = 'TW', presentAttributes: dict = {}):
         params = [
             [12, 2, [
@@ -137,9 +146,10 @@ class ShopService(object):
                 [13, 31, [11, 11, presentAttributes]],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('placePurchaseOrderForFreeProduct', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'placePurchaseOrderForFreeProduct', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def placePurchaseOrderWithLineCoin(self, shopId: str, productId: str, recipientMid: str, price: str, amount: str, priceString: str, enableLinePointAutoExchange: bool = True, language: str = 'zh_TW', country: str = 'TW', presentAttributes: dict = {}):
         params = [
             [12, 2, [
@@ -159,9 +169,10 @@ class ShopService(object):
                 [13, 31, [11, 11, presentAttributes]],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('placePurchaseOrderWithLineCoin', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'placePurchaseOrderWithLineCoin', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def placePurchaseOrderWithIAP(self, shopId: str, productId: str, recipientMid: str, price: str, amount: str, priceString: str, enableLinePointAutoExchange: bool = True, language: str = 'zh_TW', country: str = 'TW', presentAttributes: dict = {}):
         params = [
             [12, 2, [
@@ -181,9 +192,10 @@ class ShopService(object):
                 [13, 31, [11, 11, presentAttributes]],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('placePurchaseOrderWithIAP', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'placePurchaseOrderWithIAP', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getOwnedProducts(self, shopId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -194,9 +206,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getOwnedProducts', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getOwnedProducts', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getPurchasedProducts(self, shopId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -207,9 +220,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getPurchasedProducts', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getPurchasedProducts', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getReceivedPresents(self, shopId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -220,9 +234,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getReceivedPresents', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getReceivedPresents', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getSentPresents(self, shopId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -233,9 +248,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getSentPresents', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getSentPresents', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def notifyProductEvent(self, shopId: str, productId: str, productVersion: int, productEvent: int):
         params = [
             [11, 2, shopId],
@@ -243,18 +259,20 @@ class ShopService(object):
             [10, 4, productVersion],
             [10, 5, productEvent],
         ]
-        sqrd = self.generateDummyProtocol('notifyProductEvent', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'notifyProductEvent', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getProductValidationScheme(self, shopId: str, productId: str, productVersion: int):
         params = [
             [11, 2, shopId],
             [11, 3, productId],
             [10, 4, productVersion],
         ]
-        sqrd = self.generateDummyProtocol('getProductValidationScheme', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getProductValidationScheme', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def validateProduct(self, shopId: str, productId: str, productVersion: int, key: str, offset: int, size: int, authCode: str):
         params = [
             [11, 2, shopId],
@@ -269,9 +287,10 @@ class ShopService(object):
                 [11, 10, authCode]
             ]],
         ]
-        sqrd = self.generateDummyProtocol('validateProduct', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'validateProduct', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getProductsByBillingItemId(self, shopId: str, billingItemIds: list, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -281,9 +300,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getProductsByBillingItemId', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getProductsByBillingItemId', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getUpdates(self, shopId: str, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -292,9 +312,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getUpdates', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getUpdates', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def searchProductsV2(self, query: str, productTypes: list, subtypes: list, priceTiers: list, stickerResourceTypes: list, productResourceTypes: list, continuationToken: str, limit: int = 10, deprecatedOffsetForLineSearchServer: int = 0, sortType: int = 0, enableSearchSuggestKeywords: bool = False):
         params = [
             [12, 2, [
@@ -310,17 +331,18 @@ class ShopService(object):
                 [10, 14, [8, productResourceTypes]],
                 [2, 100, enableSearchSuggestKeywords],
                 # [12, 101, [
-                    # Shop_ShopFilter.h
+                # Shop_ShopFilter.h
                 # ]],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('searchProductsV2', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'searchProductsV2', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getAggregatedHomeV2(self, showcaseRequests: list, enableEditorsPickBanner: bool = True, enableAuthorList: bool = True, enableKeywordSticker: bool = True, enableDetailedEditorsPick: bool = True, enableDetailedCategory: bool = True, enableCategoryList: bool = True, enableTagsList: bool = True):
         params = [
             [12, 2, [
-                [15, 1, [12, showcaseRequests]], # Shop_ShowcaseRequest
+                [15, 1, [12, showcaseRequests]],  # Shop_ShowcaseRequest
                 [2, 2, enableEditorsPickBanner],
                 [2, 3, enableAuthorList],
                 [2, 4, enableKeywordSticker],
@@ -330,46 +352,51 @@ class ShopService(object):
                 [2, 8, enableTagsList],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getAggregatedHomeV2', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getAggregatedHomeV2', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getAggregatedHomeNative(self, productType: int):
         params = [
             [12, 2, [
                 [8, 1, productType],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getAggregatedHomeNative', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getAggregatedHomeNative', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getDynamicHomeNative(self, productType: int = 1):
         params = [
             [12, 2, [
                 [8, 1, productType],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getDynamicHomeNative', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getDynamicHomeNative', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getAggregatedPremiumHome(self, showcaseRequests: list):
         params = [
             [12, 2, [
-                [15, 1, [12, showcaseRequests]], # Shop_ShowcaseRequest
+                [15, 1, [12, showcaseRequests]],  # Shop_ShowcaseRequest
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getAggregatedPremiumHome', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getAggregatedPremiumHome', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getAggregatedShowcaseV4(self, productType: int, showcaseRequests: list):
         params = [
             [12, 2, [
                 [8, 1, productType],
-                [15, 2, [12, showcaseRequests]], # Shop_ShowcaseRequest
+                [15, 2, [12, showcaseRequests]],  # Shop_ShowcaseRequest
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getAggregatedShowcaseV4', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getAggregatedShowcaseV4', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getRecommendationForUser(self, shopId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
@@ -380,9 +407,10 @@ class ShopService(object):
                 [11, 2, country],
             ]],
         ]
-        sqrd = self.generateDummyProtocol('getRecommendationForUser', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
-    
+        sqrd = self.generateDummyProtocol(
+            'getRecommendationForUser', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
     def getRecommendationList(self, productType: int, recommendationType: int, productId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', continuationToken: str = None, shouldShuffle: bool = False, includeStickerIds: bool = True):
         params = [
             [12, 2, [
@@ -397,8 +425,9 @@ class ShopService(object):
                 # [12, 9, shopFilter],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('getRecommendationList', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'getRecommendationList', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
 
     def getCategories(self, productType: int, recommendationType: int, productId: str, offset: int = 0, limit: int = 20, language: str = 'zh_TW', continuationToken: str = None, shouldShuffle: bool = False, includeStickerIds: bool = True):
         params = [
@@ -414,5 +443,387 @@ class ShopService(object):
                 # [12, 9, shopFilter],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('getCategories', params, self.SHOPS_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT ,sqrd, self.SHOPS_RES_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'getCategories', params, self.SHOPS_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_UNIFIED_SHOP_ENDPOINT, sqrd, self.SHOPS_RES_TYPE)
+
+    def removeProductFromSubscriptionSlot(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("removeProductFromSubscriptionSlot is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "removeProductFromSubscriptionSlot", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getRecommendOa(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getRecommendOa is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getRecommendOa", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionCampaigns(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionCampaigns is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionCampaigns", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def buyMustbuyProduct(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("buyMustbuyProduct is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "buyMustbuyProduct", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionPlans(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionPlans is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionPlans", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def previewCustomizedImageText(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("previewCustomizedImageText is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "previewCustomizedImageText", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getBrowsingHistory(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getBrowsingHistory is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getBrowsingHistory", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def deleteAllBrowsingHistory(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("deleteAllBrowsingHistory is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "deleteAllBrowsingHistory", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionShowcase(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionShowcase is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionShowcase", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getExperiments(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getExperiments is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getExperiments", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getResourceFile(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getResourceFile is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getResourceFile", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getExperimentsV2(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getExperimentsV2 is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getExperimentsV2", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getAutoSuggestionShowcase(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getAutoSuggestionShowcase is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getAutoSuggestionShowcase", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def sendReportForShop(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("sendReport is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "sendReport", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getOldSticonMapping(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getOldSticonMapping is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getOldSticonMapping", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getEditorsPickShowcase(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getEditorsPickShowcase is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getEditorsPickShowcase", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getPurchasedSubscriptions(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getPurchasedSubscriptions is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getPurchasedSubscriptions", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getAuthorList(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getAuthorList is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getAuthorList", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def changeSubscription(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("changeSubscription is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "changeSubscription", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionStatus(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionStatus is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionStatus", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def findRestorablePlan(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("findRestorablePlan is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "findRestorablePlan", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def purchaseSubscription(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("purchaseSubscription is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "purchaseSubscription", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSimilarImageShowcase(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSimilarImageShowcase is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSimilarImageShowcase", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def setCustomizedImageText(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("setCustomizedImageText is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "setCustomizedImageText", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSuggestResources(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSuggestResources is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSuggestResources", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getProductSummariesInSubscriptionSlots(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception(
+            "getProductSummariesInSubscriptionSlots is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getProductSummariesInSubscriptionSlots", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getProductsByCategory(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getProductsByCategory is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getProductsByCategory", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getProductsByTags(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getProductsByTags is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getProductsByTags", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSuggestDictionarySetting(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSuggestDictionarySetting is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSuggestDictionarySetting", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSuggestResourcesV2(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSuggestResourcesV2 is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSuggestResourcesV2", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getAuthorsLatestProducts(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getAuthorsLatestProducts is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getAuthorsLatestProducts", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def addProductToSubscriptionSlot(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("addProductToSubscriptionSlot is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "addProductToSubscriptionSlot", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getSubscriptionRecommendations(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSubscriptionRecommendations is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getSubscriptionRecommendations", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def saveStudentInformation(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("saveStudentInformation is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "saveStudentInformation", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getProductsByTagsV2(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getProductsByTagsV2 is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getProductsByTagsV2", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def getTags(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getTags is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "getTags", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def produceInteractionEvent(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("produceInteractionEvent is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "produceInteractionEvent", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
+
+    def restoreSubscription(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("restoreSubscription is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "restoreSubscription", params, ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(ShopService_API_PATH, sqrd, ShopService_RES_TYPE)
