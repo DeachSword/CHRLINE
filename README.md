@@ -204,6 +204,16 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - reportAbuseExWithMessage
             - reportAbuseExWithLineMeeting
         - getCountryWithRequestIp
+        - updateProfileAttributes
+        - updateNotificationToken
+        - getRecentFriendRequests
+        - notifyRegistrationComplete
+        - noop
+        - getAnalyticsInfo
+        - isUseridAvailable
+        - registerUserid
+        - notifyUpdated
+        - reportPushRecvReports
     - AccessTokenRefreshService
         - refreshAccessToken
         - reportRefreshedAccessToken
@@ -323,6 +333,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - resetSetting
         - searchSettings
         - contextAgnosticSearchSettings
+        - bulkGetSetting
+        - bulkSetSetting
     - ShopAuthService
         - establishE2EESession
     - ShopService
@@ -355,6 +367,10 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getRecommendationForUser
         - getRecommendationList
         - getCategories
+        - getResourceFile
+        - getAutoSuggestionShowcase
+        - getOldSticonMapping
+        - getSuggestResourcesV2
     - SquareService
         - inviteIntoSquareChat
         - inviteToSquare
