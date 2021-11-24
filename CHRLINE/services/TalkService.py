@@ -3180,31 +3180,38 @@ class TalkService():
             "requestIdentityUnbind", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def addToFollowBlacklist(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("addToFollowBlacklist is not implemented")
-        params = []
+    def addToFollowBlacklist(self, mid: str = None, eMid: str = None):
+        params = [
+            [12, 2, [
+                [12, 1, [
+                    [11, 1, mid],
+                    [11, 2, eMid],
+                ]]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "addToFollowBlacklist", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def removeFromFollowBlacklist(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("removeFromFollowBlacklist is not implemented")
-        params = []
+    def removeFromFollowBlacklist(self, mid: str = None, eMid: str = None):
+        params = [
+            [12, 2, [
+                [12, 1, [
+                    [11, 1, mid],
+                    [11, 2, eMid],
+                ]]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "removeFromFollowBlacklist", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def getFollowBlacklist(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getFollowBlacklist is not implemented")
+    def getFollowBlacklist(self, cursor: str = None):
+        params = [
+            [12, 2, [
+                [11, 1, cursor]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "getFollowBlacklist", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)

@@ -214,6 +214,9 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - registerUserid
         - notifyUpdated
         - reportPushRecvReports
+        - addToFollowBlacklist
+        - removeFromFollowBlacklist
+        - getFollowBlacklist
     - AccessTokenRefreshService
         - refreshAccessToken
         - reportRefreshedAccessToken
