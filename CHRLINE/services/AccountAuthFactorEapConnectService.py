@@ -3,7 +3,7 @@
 class AccountAuthFactorEapConnectService(object):
     AAFEC_REQ_TYPE = 3
     AAFEC_RES_TYPE = 3
-    
+
     def __init__(self):
         pass
 
@@ -13,7 +13,8 @@ class AccountAuthFactorEapConnectService(object):
                 [11, 1, authSessionId]
             ]]
         ]
-        sqrd = self.generateDummyProtocol('connectEapAccount', params, self.AAFEC_REQ_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'connectEapAccount', params, self.AAFEC_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_EAP_ENDPOINT, sqrd, self.AAFEC_RES_TYPE)
 
     def disconnectEapAccount(self, eapType: int = 3):
@@ -22,24 +23,39 @@ class AccountAuthFactorEapConnectService(object):
                 [8, 1, eapType]
             ]]
         ]
-        sqrd = self.generateDummyProtocol('disconnectEapAccount', params, self.AAFEC_REQ_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'disconnectEapAccount', params, self.AAFEC_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_EAP_ENDPOINT, sqrd, self.AAFEC_RES_TYPE)
 
     def getHashedPpidForYahoojapan(self):
         params = [
             [12, 1, []]
         ]
-        sqrd = self.generateDummyProtocol('getHashedPpidForYahoojapan', params, self.AAFEC_REQ_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'getHashedPpidForYahoojapan', params, self.AAFEC_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_EAP_ENDPOINT, sqrd, self.AAFEC_RES_TYPE)
 
-    def openAAFECSession(self):
+    def openAAFECSession(self, udid: str, deviceModel: str = "Pixel 2"):
         params = [
-            [12, 1, []]
+            [12, 1, [
+                [12, 1, [
+                    [11, 1, udid],  # len 32
+                    [11, 1, deviceModel]
+                ]]
+            ]]
         ]
-        sqrd = self.generateDummyProtocol('openSession', params, self.AAFEC_REQ_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'openSession', params, self.AAFEC_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_EAP_ENDPOINT, sqrd, self.AAFEC_RES_TYPE)
 
     def verifyEapLogin(self, authSessionId: str, type: int, accessToken: str):
+        """
+        - type:
+            UNKNOWN(0),
+            FACEBOOK(1),
+            APPLE(2),
+            YAHOOJAPAN(3);
+        """
         params = [
             [12, 1, [
                 [11, 1, authSessionId],
@@ -49,5 +65,6 @@ class AccountAuthFactorEapConnectService(object):
                 ]]
             ]]
         ]
-        sqrd = self.generateDummyProtocol('verifyEapLogin', params, self.AAFEC_REQ_TYPE)
+        sqrd = self.generateDummyProtocol(
+            'verifyEapLogin', params, self.AAFEC_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.LINE_AUTH_EAP_ENDPOINT, sqrd, self.AAFEC_RES_TYPE)
