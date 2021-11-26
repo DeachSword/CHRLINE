@@ -1,25 +1,25 @@
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES
-import Crypto.Cipher.PKCS1_OAEP as rsaenc
-from base64 import b64encode, b64decode
-from Crypto.Util.Padding import pad, unpad
-from hashlib import md5, sha1
-import xxhash
-from datetime import datetime
-import struct
-import time
+from .exceptions import LineServiceException
+import base64
+import binascii
 import json
 import os
-import rsa
-import os
-import binascii
+import struct
+import time
 import urllib
-import base64
-import axolotl_curve25519 as curve
+from base64 import b64decode, b64encode
+from datetime import datetime
+from hashlib import md5, sha1
 
+import axolotl_curve25519 as curve
+import Crypto.Cipher.PKCS1_OAEP as rsaenc
 import gevent.monkey
+import xxhash
+from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
+from Crypto.Util.Padding import pad, unpad
+
 gevent.monkey.patch_all()
-import requests # patch after
+
 
 class Models(object):
 
@@ -29,25 +29,27 @@ class Models(object):
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
         self.encryptKey = b"DearSakura+2021/"
-        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
+        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
+                        128, 18, 123, 158, 251, 92, 45, 51])
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
-        #self.initWithBiz()
-        #self.initWithAndroid(4)
-        
+        # self.initWithBiz()
+        # self.initWithAndroid(4)
+
     def log(self, text, debugOnly=False):
         if debugOnly and not self.isDebug:
             return
         print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {text}")
-        
+
     def genOBSParams(self, newList, returnAs='json', ext='jpg'):
-        oldList = {'name': f'CHRLINE-{int(time.time())}.{ext}','ver': '1.0'}
-        if returnAs not in ['json','b64','default']:
+        oldList = {'name': f'CHRLINE-{int(time.time())}.{ext}', 'ver': '1.0'}
+        if returnAs not in ['json', 'b64', 'default']:
             raise Exception('Invalid parameter returnAs')
         oldList.update(newList)
         if 'range' in oldList:
-            new_range = 'bytes 0-%s\/%s' % ( str(oldList['range']-1), str(oldList['range']) )
+            new_range = 'bytes 0-%s\/%s' % (
+                str(oldList['range']-1), str(oldList['range']))
             oldList.update({'range': new_range})
         if returnAs == 'json':
             oldList = json.dumps(oldList)
@@ -57,9 +59,10 @@ class Models(object):
             return b64encode(oldList.encode('utf-8'))
         elif returnAs == 'default':
             return oldList
-        
+
     def checkNextToken(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.tokens')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.tokens')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.authToken.encode()).hexdigest()
@@ -70,7 +73,8 @@ class Models(object):
         return self.authToken
 
     def handleNextToken(self, newToken):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.tokens')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.tokens')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.authToken.encode()).hexdigest()
@@ -78,60 +82,69 @@ class Models(object):
         self.authToken = newToken
         self.log(f"New Token: {newToken}")
         self.server.timelineHeaders['X-Line-Access'] = self.authToken
-        self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[5] #need?
-        
+        # need?
+        self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[
+            5]
+
     def getCustomData(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.customDataId.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
-            self.custom_data = json.loads(open(savePath + f"/{fn}", "r").read())
+            self.custom_data = json.loads(
+                open(savePath + f"/{fn}", "r").read())
         self.log(f'Loading Custom Data: {fn}')
         return True
-        
+
     def saveCustomData(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.customDataId.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(json.dumps(self.custom_data))
         return True
-        
+
     def getSqrCert(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = "cert.pem"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
         return None
-        
+
     def saveSqrCert(self, cert):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = "cert.pem"
         open(savePath + f"/{fn}", "w").write(cert)
         return True
-        
+
     def getEmailCert(self, email):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{email}.crt"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
         return None
-        
+
     def saveEmailCert(self, email, cert):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.data')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{email}.crt"
         open(savePath + f"/{fn}", "w").write(cert)
         return True
-    
+
     def initWithAndroid(self, ver=7):
         if ver == 1:
             self.lcsStart = "0001"
@@ -139,7 +152,7 @@ class Models(object):
             self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZAAoZNRwIlLUXaUgrgYi8bAYq\nQeFVtXvCNIEm+F4/jAyTU3YoDwmoLaKQ6itGOonykGtwy2k/3BeWefL/q5eUGjVG\nBEa1vBeUNEb4IFU8n9WK3N/GIIPuD6ZiusB+U1FPg/NaEiVX8ldmEQJgmuG1hykk\n2dU3oy7O1M+Kwl1lJQIDAQAB\n-----END PUBLIC KEY-----'
         elif ver == 4:
             self.lcsStart = "0004"
-            self.le = "3" # LegyEncHelper.cpp::decryptStream -> legy xle value
+            self.le = "3"  # LegyEncHelper.cpp::decryptStream -> legy xle value
             self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwpAwTVluR1Z++tVzxtOD\nr7XxSv6oqrwvj/8c8SkfFsS8zM7CvIT8j+x+6Qs1JjNRDtYjAwPKO3tO+qOAdA+8\n7FHpx0THDJIi4VYxSZ2uDh0U8Luxh02whwM8gPbPQNN3sEd5++kJ3cCh5eeAIiUd\nDrwPhHzxO8swpBRdxJB/pzibEqpG2U2764JlPscN9D896qmBN6CBRKpXk/MmUDAI\n4xg+uQk/ykn3SNXJSgQwI1UD9KuiR+X9tbJlKRMN5JpUrSuEwRPQQDMaWpSIdCJM\noFqJLNwt9b1RR/JEB01Eup+3QCub20/CObCmHZY6G26KTDHLoTRZ1xzymdYhdJ43\nCwIDAQAB\n-----END PUBLIC KEY-----"
         elif ver == 6:
             self.lcsStart = "0007"
@@ -150,7 +163,8 @@ class Models(object):
             self.le = "7"
             self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
         self.key = RSA.importKey(self.PUBLIC_KEY)
-        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51])
+        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
+                        128, 18, 123, 158, 251, 92, 45, 51])
         self.encryptKey = b"DearSakura+2021/"
         self.encEncKey()
         print(self._encryptKey)
@@ -164,7 +178,7 @@ class Models(object):
             self.wYEpEYldst(i, data)
             self.mFhrnmxnNF(len(headers[i]), data)
             self.wYEpEYldst(headers[i], data)
-        o = len(data);
+        o = len(data)
         data = [255 & o] + data
         data = [255 & o >> 8] + data
         return data
@@ -186,33 +200,36 @@ class Models(object):
     def encEncKey(self):
         # heh
         a = rsaenc.new(self.key)
-        self._encryptKey = self.lcsStart + b64encode(a.encrypt(self.encryptKey)).decode()
-        
+        self._encryptKey = self.lcsStart + \
+            b64encode(a.encrypt(self.encryptKey)).decode()
+
     def encData(self, data):
-        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).encrypt(pad(data, AES.block_size))
+        _data = AES.new(self.encryptKey, AES.MODE_CBC,
+                        iv=self.IV).encrypt(pad(data, AES.block_size))
         debug = []
         return _data + self.XQqwlHlXKK(self.encryptKey, _data)
-        
+
     def decData(self, data):
         data = pad(data, AES.block_size)
-        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).decrypt(data)[:-16]
+        _data = AES.new(self.encryptKey, AES.MODE_CBC,
+                        iv=self.IV).decrypt(data)[:-16]
         _data = unpad(_data, AES.block_size)
         i = 1
         data = self.yVdzCLDwMN(_data, i)
         i = 3
         return _data
-        
+
     def mFhrnmxnNF(self, t, e):
-        i = 65536 
+        i = 65536
         if t < -1 * 32768 or t >= i:
             raise Exception(t + " is incorrect for i16.")
         e.append(255 & t >> 8)
         e.append(255 & t)
-        
+
     def wYEpEYldst(self, t, e):
         for i in range(len(t)):
             e.append(ord(t[i]))
-        
+
     def xZVpUuXFru(t):
         if 8 == len(t):
             return t
@@ -223,10 +240,10 @@ class Models(object):
             e += "0"
             i += 1
         return e + t
-        
+
     def pmAWhahfKx(self, t):
         e = []
-        i = 0 
+        i = 0
         n = len(t)
         while i < n:
             _i = 0
@@ -234,37 +251,36 @@ class Models(object):
                 _i = int(t[i:i + 2], 16)
             except:
                 _i = 16
-            e.append(_i);
+            e.append(_i)
             i += 2
         return e
-        
+
     def XQqwlHlXKK(self, e, i):
         r = []
         for o in range(16):
             r.append(92 ^ e[o])
-        n = xxhash.xxh32(b'',seed=0)
-        s = xxhash.xxh32(b'',seed=0)
+        n = xxhash.xxh32(b'', seed=0)
+        s = xxhash.xxh32(b'', seed=0)
         n.update(bytes(r))
         for o in range(16):
             r[o] ^= 106
         s.update(bytes(r))
         s.update(i)
-        a = s.hexdigest() # is b8a7c677?
+        a = s.hexdigest()  # is b8a7c677?
         n.update(bytes(self.pmAWhahfKx(a)))
-        c = n.hexdigest() # is 3f97d2f6?
+        c = n.hexdigest()  # is 3f97d2f6?
         d = self.pmAWhahfKx(c)
         return bytes(d)
-        
+
     def yVdzCLDwMN(self, d, i):
         return (255 & self.xnEmbaRWhy(d, i)) << 8 | 255 & self.xnEmbaRWhy(d, i+1)
-    
-        
+
     def xnEmbaRWhy(self, d, i):
-        t = d[i];
+        t = d[i]
         if t > 127:
             t = 0 - (t - 1 ^ 255)
         return t
-    
+
     def generateDummyProtocol(self, name, params, type):
         if type == 3:
             data = [128, 1, 0, 1] + self.getStringBytes(name) + [0, 0, 0, 0]
@@ -272,7 +288,7 @@ class Models(object):
             data = [130, 33, 00] + self.getStringBytes(name, isCompact=True)
         data += self.generateDummyProtocolField(params, type) + [0]
         return data
-    
+
     def generateDummyProtocolField(self, params, type):
         isCompact = False
         data = []
@@ -292,7 +308,7 @@ class Models(object):
                 isCompact = True
             data += self.generateDummyProtocolData(_data, _type, isCompact)
         return data
-    
+
     def generateDummyProtocolData(self, _data, type, isCompact=False):
         data = []
         tcp = self.TCompactProtocol()
@@ -318,10 +334,12 @@ class Models(object):
             if isCompact:
                 data += tcp.writeMapBegin(_ktype, _vtype, len(_vdata))
             else:
-                data += [_ktype, _vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
+                data += [_ktype, _vtype] + \
+                    self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _ktype, isCompact)
-                data += self.generateDummyProtocolData(_vdata[vd], _vtype, isCompact)
+                data += self.generateDummyProtocolData(
+                    _vdata[vd], _vtype, isCompact)
         elif type == 14 or type == 15:
             # [11, targetUserMids]
             _vtype = _data[0]
@@ -329,14 +347,16 @@ class Models(object):
             if isCompact:
                 data += tcp.writeCollectionBegin(_vtype, len(_vdata))
             else:
-                data += [_vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
+                data += [_vtype] + \
+                    self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _vtype, isCompact)
         else:
-            raise Exception(f"[generateDummyProtocolData] not support type: {type}")
+            raise Exception(
+                f"[generateDummyProtocolData] not support type: {type}")
         return data
-        
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType=None, headers=None, access_token=None):
+
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int=None, headers: dict=None, access_token: str=None, baseException: dict=None):
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -347,7 +367,8 @@ class Models(object):
         headers["accept"] = "application/x-thrift"
         if encType is None:
             encType = self.encType
-        self.log(f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
+        self.log(
+            f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
         if encType == 0:
             data = bytes(bdata)
             if "x-le" in headers:
@@ -355,12 +376,13 @@ class Models(object):
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
-            res = self.req_h2.post(self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
+            res = self.req_h2.post(
+                self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
             data = res.content
         elif encType == 1:
             if access_token is not None:
                 _headers = {
-                    'x-lt': access_token, 
+                    'x-lt': access_token,
                     'x-lpqs': path
                 }
             else:
@@ -373,7 +395,8 @@ class Models(object):
             _data = bytes(c)
             data = self.encData(_data)
             headers['x-cl'] = str(len(data))
-            res = self.req.post(self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=headers)
+            res = self.req.post(
+                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=headers)
             data = self.decData(res.content)
         else:
             raise Exception(f"Unknown encType: {encType}")
@@ -381,7 +404,8 @@ class Models(object):
         self.log(f"{data}", True)
         if res.status_code == 200:
             if res.headers['x-lc'] not in ['200', '410']:
-                raise Exception(f'Invalid response code: {res.headers["x-lc"]}')
+                raise Exception(
+                    f'Invalid response code: {res.headers["x-lc"]}')
             if encType == 1:
                 respHeaders, data = self.decHeaders(data)
             else:
@@ -395,21 +419,20 @@ class Models(object):
             if ttype == 0:
                 pass
             elif ttype == 3:
-                res = self.TBinaryProtocol(data).res
+                res = self.TBinaryProtocol(data, baseException=baseException).res
             elif ttype == 4:
                 res = self.TCompactProtocol(data).res
             elif ttype == 5:
                 res = self.TMoreCompactProtocol(data).res
             else:
-                raise Exception(f"Unknown ThriftType: {ttype}")
+                raise ValueError(f"Unknown ThriftType: {ttype}")
             if type(res) == dict and 'error' in res:
-                print(res['error'])
                 if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended')):
                     self.is_login = False
                     self.log(f"LOGIN OUT: {res['error']['message']}")
-                    raise Exception(res['error'])
                 elif res['error']['code'] == 119:
-                    refreshToken = self.getCacheData('.refreshToken', self.authToken)
+                    refreshToken = self.getCacheData(
+                        '.refreshToken', self.authToken)
                     print(f'try to refresh access token... {refreshToken}')
                     if refreshToken is not None:
                         newToken = self.refreshAccessToken(refreshToken)[1]
@@ -419,9 +442,7 @@ class Models(object):
                         else:
                             print(f"refresh access token failed. : {newToken}")
                     self.log(f"LOGIN OUT: {res['error']['message']}")
-                    raise Exception(res['error'])
-                else:
-                    print(res['error']['message'])
+                raise LineServiceException(res['error'])
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
@@ -429,7 +450,7 @@ class Models(object):
         else:
             print(f"get resp failed: {res.status_code}")
             return None
-        
+
     def getCurrReqId(self):
         self._msgSeq = 0
         if "_reqseq" in self.custom_data:
@@ -438,7 +459,7 @@ class Models(object):
         self.custom_data["_reqseq"] = self._msgSeq
         self.saveCustomData()
         return self._msgSeq
-        
+
     def getIntBytes(self, i, l=4, isCompact=False):
         i = int(i)
         if isCompact:
@@ -446,12 +467,12 @@ class Models(object):
             a = _compact.makeZigZag(i, 32 if l**2 == 16 else 64)
             b = _compact.writeVarint(a)
             return b
-        _seq = int(i).to_bytes(l, byteorder="big")
-        res = []
-        for value in _seq:
-            res.append(value)
-        return res
-        
+        if l**2 == 16:
+            res = struct.pack("!i", i)
+        else:
+            res = struct.pack("!q", i)
+        return list(res)
+
     def getStringBytes(self, text, isCompact=False):
         if text is None:
             text = ""
@@ -467,13 +488,13 @@ class Models(object):
         for value in text:
             sqrd.append(value)
         return sqrd
-        
+
     def getFloatBytes(self, val):
         res = []
         for value in struct.pack('!d', val):
             res.append(value)
         return res
-        
+
     def getMagicStringBytes(self, val, rev=False):
         res = []
         i = 0
@@ -487,7 +508,8 @@ class Models(object):
                     mgc = (int(val[iii], 16) << 4) + int(val[i], 16)
                     res.append(mgc)
             else:
-                raise Exception(f"getMagicStringBytes() expected 32, but got {len(val)}")
+                raise ValueError(
+                    f"getMagicStringBytes() expected 32, but got {len(val)}")
         return res
 
     def createSqrSecret(self, base64Only=False):
@@ -500,7 +522,8 @@ class Models(object):
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
 
     def getE2EESelfKeyData(self, mid):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{mid}.json"
@@ -514,7 +537,8 @@ class Models(object):
         return None
 
     def getE2EESelfKeyDataByKeyId(self, keyId):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"key_{keyId}.json"
@@ -523,7 +547,8 @@ class Models(object):
         return None
 
     def saveE2EESelfKeyData(self, mid, pubK, privK, kI, e2eeVersion):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{mid}.json"
@@ -540,7 +565,8 @@ class Models(object):
         return True
 
     def getCacheData(self, cT, cN, needHash=True):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), cT)
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{cN}"
@@ -551,7 +577,8 @@ class Models(object):
         return None
 
     def saveCacheData(self, cT, cN, cD, needHash=True):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), cT)
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{cN}"
@@ -560,7 +587,7 @@ class Models(object):
         data = cD
         open(savePath + f"/{fn}", "w").write(data)
         return True
-    
+
     def decodeE2EEKeyV1(self, data, secret, mid=None):
         if 'encryptedKeyChain' in data:
             print("Try to decode E2EE Key")
@@ -569,19 +596,21 @@ class Models(object):
             keyId = data['keyId']
             publicKey = base64.b64decode(data['publicKey'])
             e2eeVersion = data['e2eeVersion']
-            e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
+            e2eeKey = self.decryptKeyChain(
+                publicKey, secret, encryptedKeyChain)
             print(f"E2EE Priv Key: {e2eeKey[0]}")
             print(f"E2EE Pub Key: {e2eeKey[1]}")
             print(f"keyId: {keyId}")
             print(f"e2eeVersion: {e2eeVersion}")
-            self.saveE2EESelfKeyData(mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
+            self.saveE2EESelfKeyData(
+                mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
             return {
                 "keyId": keyId,
                 "privKey": e2eeKey[0],
                 "pubKey": e2eeKey[1],
                 "e2eeVersion": e2eeVersion,
             }
-        
+
     def tryReadData(self, data, mode=1):
         _data = {}
         if mode == 0:
@@ -607,7 +636,8 @@ class Models(object):
                 elif c == 13:
                     _data[b] = self.readContainerStruct(data[a + 4:])
                 elif c == 14 or c == 15:
-                    _data[b] = self.readContainerStruct(data[a + 4:], stopWithFirst=True)[0]
+                    _data[b] = self.readContainerStruct(
+                        data[a + 4:], stopWithFirst=True)[0]
                 else:
                     print(f"[tryReadData]不支援Type: {c} => ID: {id}")
             else:
@@ -636,7 +666,7 @@ class Models(object):
                 data = bytes([0, 0, 0, 0]) + data[26 + a:]
                 return self.tryReadData(data)
         return _data
-        
+
     def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
         _data = {}
         nextPos = 0
@@ -692,9 +722,9 @@ class Models(object):
         elif data[0] == 13:
             # dict
             # 0D 00 24 0B 0B 00 00 00 02 00 00 00 07
-            kt = data[3] # key type
-            a = data[4] # value type
-            b, = struct.unpack('!i', data[5:9]) # count
+            kt = data[3]  # key type
+            a = data[4]  # value type
+            b, = struct.unpack('!i', data[5:9])  # count
             c = 9
             _d = {}
             if b != 0:
@@ -702,10 +732,12 @@ class Models(object):
                 #print(f"kvalue: {a}")
                 for d in range(b):
                     if True:
-                        __key = self.readContainerStruct(bytes([kt, 0, 0]) + data[c:], get_data_len=True, stopWithFirst=True)
+                        __key = self.readContainerStruct(
+                            bytes([kt, 0, 0]) + data[c:], get_data_len=True, stopWithFirst=True)
                         _key = __key[0][0]
-                        vp = c + __key[1] - 3 # value pos
-                        __value = self.readContainerStruct(bytes([a, 0, 0]) + data[vp:], get_data_len=True, stopWithFirst=True)
+                        vp = c + __key[1] - 3  # value pos
+                        __value = self.readContainerStruct(
+                            bytes([a, 0, 0]) + data[vp:], get_data_len=True, stopWithFirst=True)
                         _value = __value[0][0]
                         c = vp + __value[1] - 3
                     # old code...
@@ -713,12 +745,14 @@ class Models(object):
                         # f = c + 1
                         # g = data[c + 4]
                         _key = data[c]
-                        _value = self.readContainerStruct(bytes([a, 0, 0]) + data[f + 1:])[0]
+                        _value = self.readContainerStruct(
+                            bytes([a, 0, 0]) + data[f + 1:])[0]
                         # h = f + 4 + g
                         # _value = data[f + 4:h].decode()
                         c += 5
                     else:
-                        g = int.from_bytes(data[f + 1:f + 5], "big") # value len
+                        g = int.from_bytes(
+                            data[f + 1:f + 5], "big")  # value len
                         _key = data[c + 1:f + 1].decode()
                         h = f + g + 5
                         if a == 10:
@@ -727,12 +761,14 @@ class Models(object):
                             h = f + 9
                             c = h + 3
                         elif a == 12:
-                            __value = self.readContainerStruct(data[f+1:], True)
+                            __value = self.readContainerStruct(
+                                data[f+1:], True)
                             _value = __value[0]
                             h = f + __value[1]
                             c = h
                         elif a == 15:
-                            __value = self.readContainerStruct(data[f+1:], True)
+                            __value = self.readContainerStruct(
+                                data[f+1:], True)
                             _value = __value[0]
                             h = f + __value[1]
                             c = h + 1
@@ -757,7 +793,8 @@ class Models(object):
                 for i in range(count):
                     if type == 8:
                         a = 0
-                        b = self.readContainerStruct(bytes([type, 0, 0]) + data[nextPos:])[0]
+                        b = self.readContainerStruct(
+                            bytes([type, 0, 0]) + data[nextPos:])[0]
                     else:
                         a = int.from_bytes(data[nextPos:nextPos + 4], "big")
                         b = data[nextPos + 4:nextPos + 4 + a].decode()
@@ -800,13 +837,13 @@ class Models(object):
                 c = self.readContainerStruct(data, True)
                 if c[0]:
                     _data.update(c[0])
-                    nextPos += c[1] # lol, why i forget it
+                    nextPos += c[1]  # lol, why i forget it
                     if c[2] != 0:
                         dataType = c[2]
         if get_data_len:
             return [_data, nextPos, dataType]
         return _data
-        
+
     def tryReadTCompactData(self, data):
         _data = {}
         data = bytes(4) + data
@@ -832,7 +869,7 @@ class Models(object):
                     }
             return _data[b]
         return None
-        
+
     def tryReadTCompactContainerStruct(self, data, id=0, get_data_len=False):
         _data = {}
         _dec = self.TCompactProtocol()
@@ -856,7 +893,7 @@ class Models(object):
         elif ftype == 8:
             (_data[fid], nextPos) = _dec.readBinary(data[offset:])
         elif ftype == 9 or ftype == 10:
-            ### todo:
+            # todo:
             #       ftype == 10 == SET
             (vtype, vsize, vlen) = _dec.readCollectionBegin(data[offset:])
             offset += vlen
@@ -869,21 +906,24 @@ class Models(object):
                     offset += _nextPos - 1
             nextPos += offset
         elif ftype == 12:
-            (__data, nextPos) = self.tryReadTCompactContainerStruct(data[offset:], get_data_len=True)
+            (__data, nextPos) = self.tryReadTCompactContainerStruct(
+                data[offset:], get_data_len=True)
             nextPos += 2
             _data[fid] = __data
         elif ftype != 0:
-            print(f"[tryReadTCompactContainerStruct]不支援Type: {ftype} => ID: {fid}")
+            print(
+                f"[tryReadTCompactContainerStruct]不支援Type: {ftype} => ID: {fid}")
         if nextPos > 0:
             data = data[nextPos:]
-            c = self.tryReadTCompactContainerStruct(data, id=fid, get_data_len=True)
+            c = self.tryReadTCompactContainerStruct(
+                data, id=fid, get_data_len=True)
             if c[0]:
                 _data.update(c[0])
                 nextPos += c[1]
         if get_data_len:
             return [_data, nextPos]
         return _data
-        
+
     def tryReadThriftContainerStruct(self, data, id=0, get_data_len=False):
         _data = {}
         _dec = self.TCompactProtocol()
@@ -911,14 +951,17 @@ class Models(object):
             _nextPos = 0
             for i in range(vsize):
                 if vtype == 12:
-                    _aaa, _bbb = self.tryReadThriftContainerStruct(data[offset:], get_data_len=True)
+                    _aaa, _bbb = self.tryReadThriftContainerStruct(
+                        data[offset:], get_data_len=True)
                     _data[fid].append(_aaa)
                     offset += _bbb + 1
         else:
-            print(f"[tryReadThriftContainerStruct]不支援Type: {ftype} => ID: {fid}")
+            print(
+                f"[tryReadThriftContainerStruct]不支援Type: {ftype} => ID: {fid}")
         if nextPos > 0:
             data = data[nextPos:]
-            c = self.tryReadThriftContainerStruct(data, id=fid, get_data_len=True)
+            c = self.tryReadThriftContainerStruct(
+                data, id=fid, get_data_len=True)
             if c[0] is not None:
                 _data.update(c[0])
             nextPos += c[1]
