@@ -13,6 +13,9 @@ class HookTypes(object):
             @wraps(func)
             def __check(self, *args):
                 op = args[0]
+                if op[3] in [25, 26]:
+                    op[20]['opType'] = op[3]
+                    op[20]['isE2EE'] = False
                 if op[3] == type:
                     func(self, args[0], args[1])
                     return True
@@ -40,7 +43,7 @@ class HookTypes(object):
                 _fname = lambda _name = None: func.__name__ if _name is None else _name
                 msg = args[0]
                 sender = msg[1]
-                if not self.checkPermissions(sender, permissions):
+                if sender != self.cl.mid and not self.checkPermissions(sender, permissions):
                     return False
                 msgToType = msg[3]
                 msgType = msg[15]
@@ -49,13 +52,15 @@ class HookTypes(object):
                         text = msg.get(10)
                         for __name in [None] + alt:
                             fname = _fname(__name)
+                            if text is None:
+                                # TODO: E2EE Message
+                                msg['isE2EE'] = True
+                                text = self.cl.decryptE2EETextMessage(msg, msg.get('opType', 26) == 25)
+                                msg[10] = text # maybe fixed in Operation__check?
                             if ignoreCase:
                                 text = text.lower()
                                 fname = fname.lower()
                             isUsePrefixes = not prefixes
-                            if text is None:
-                                # TODO: E2EE Message
-                                return False
                             if prefixes and len(self.prefixes) > 0:
                                 for _prefix in self.prefixes:
                                     if text.startswith(_prefix):
