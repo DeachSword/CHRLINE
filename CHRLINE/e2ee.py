@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Author: YinMo
-Version: 2.0.0
+Version: 2.1.0
 Description: support pm and group chat!
 """
 import hashlib
@@ -34,28 +34,41 @@ class E2EE():
                 else:
                     raise Exception(f'E2EE key id-{keyId} not found on {mid}')
             else:
-                E2EEGroupSharedKey = self.getLastE2EEGroupSharedKey(
-                    2, mid)  # always to issue
-                groupKeyId = E2EEGroupSharedKey[2]
-                # we do not cache groupKeys, so keyId is not verified here
-                creator = E2EEGroupSharedKey[3]
-                creatorKeyId = E2EEGroupSharedKey[4]
-                receiverKeyId = E2EEGroupSharedKey[6]
-                encryptedSharedKey = E2EEGroupSharedKey[7]
-                selfKey = base64.b64decode(
-                    self.getE2EESelfKeyDataByKeyId(receiverKeyId)['privKey'])
-                creatorKey = self.getE2EELocalPublicKey(creator, creatorKeyId)
-                aesKey = self.generateSharedSecret(selfKey, creatorKey)
-                aes_key = self.getSHA256Sum(aesKey, b'Key')
-                aes_iv = self._xor(self.getSHA256Sum(aesKey, b'IV'))
-                aes = AES.new(aes_key, AES.MODE_CBC, aes_iv)
-                decrypted = unpad(aes.decrypt(encryptedSharedKey), 16)
-                self.log(
-                    f'[getE2EELocalPublicKey] decrypted: {decrypted}', True)
-                return {
-                    'privKey': decrypted,
-                    'keyId': groupKeyId
-                }, creatorKey
+                fd = '.e2eeGroupKeys'
+                fn = f"{mid}.json"
+                key = self.getCacheData(fd, fn, False)
+                if keyId is not None and key is not None:
+                    keyData = json.loads(key)
+                    if keyId != keyData['keyId']:
+                        self.log(f'keyId mismatch: {mid}')
+                        key = None
+                if key is None:
+                    E2EEGroupSharedKey = self.getLastE2EEGroupSharedKey(
+                        2, mid)
+                    groupKeyId = E2EEGroupSharedKey[2]
+                    creator = E2EEGroupSharedKey[3]
+                    creatorKeyId = E2EEGroupSharedKey[4]
+                    receiver = E2EEGroupSharedKey[5]
+                    receiverKeyId = E2EEGroupSharedKey[6]
+                    encryptedSharedKey = E2EEGroupSharedKey[7]
+                    selfKey = base64.b64decode(
+                        self.getE2EESelfKeyDataByKeyId(receiverKeyId)['privKey'])
+                    creatorKey = self.getE2EELocalPublicKey(
+                        creator, creatorKeyId)
+                    aesKey = self.generateSharedSecret(selfKey, creatorKey)
+                    aes_key = self.getSHA256Sum(aesKey, b'Key')
+                    aes_iv = self._xor(self.getSHA256Sum(aesKey, b'IV'))
+                    aes = AES.new(aes_key, AES.MODE_CBC, aes_iv)
+                    decrypted = unpad(aes.decrypt(encryptedSharedKey), 16)
+                    self.log(
+                        f'[getE2EELocalPublicKey] decrypted: {decrypted}', True)
+                    data = {
+                        'privKey': base64.b64encode(decrypted).decode(),
+                        'keyId': groupKeyId
+                    }
+                    key = json.dumps(data)
+                    self.saveCacheData(fd, fn, key, False)
+                return json.loads(key)
         return base64.b64decode(key)
 
     def generateSharedSecret(self, private_key, public_key):
@@ -129,8 +142,9 @@ class E2EE():
                 bytes(private_key), receiver_key_data[2][4])
             specVersion = receiver_key_data[3]
         else:
-            groupK, pubK = self.getE2EELocalPublicKey(to, None)
-            privK = groupK['privKey']
+            groupK = self.getE2EELocalPublicKey(to, None)
+            privK = base64.b64decode(groupK['privKey'])
+            pubK = base64.b64decode(selfKeyData['pubKey'])
             receiverKeyId = groupK['keyId']
             keyData = self.generateSharedSecret(privK, pubK)
         chunks = self.encryptE2EETextMessage(
@@ -174,17 +188,16 @@ class E2EE():
         self.log(f'receiverKeyId: {receiverKeyId}', True)
 
         selfKey = self.getE2EESelfKeyData(self.mid)
-        targetKey = to
-        targetKeyId = receiverKeyId
-        if not isSelf:
-            targetKey = _from
-            targetKeyId = senderKeyId
+        privK = base64.b64decode(selfKey['privKey'])
         if toType == 0:
-            pubK = self.getE2EELocalPublicKey(to, targetKeyId)
-            privK = base64.b64decode(selfKey['privKey'])
+            pubK = self.getE2EELocalPublicKey(
+                to, receiverKeyId if isSelf else senderKeyId)
         else:
-            groupK, pubK = self.getE2EELocalPublicKey(to, targetKeyId)
-            privK = groupK['privKey']
+            groupK = self.getE2EELocalPublicKey(to, receiverKeyId)
+            privK = base64.b64decode(groupK['privKey'])
+            pubK = base64.b64decode(selfKey['pubKey'])
+            if _from != self.mid:
+                pubK = self.getE2EELocalPublicKey(_from, senderKeyId)
 
         if specVersion == '2':
             decrypted = self.decryptE2EEMessageV2(
