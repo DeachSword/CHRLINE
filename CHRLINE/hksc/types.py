@@ -43,7 +43,7 @@ class HookTypes(object):
                 _fname = lambda _name = None: func.__name__ if _name is None else _name
                 msg = args[0]
                 sender = msg[1]
-                if not self.checkPermissions(sender, permissions):
+                if sender != self.cl.mid and not self.checkPermissions(sender, permissions):
                     return False
                 msgToType = msg[3]
                 msgType = msg[15]
@@ -55,7 +55,6 @@ class HookTypes(object):
                             if text is None:
                                 # TODO: E2EE Message
                                 msg['isE2EE'] = True
-                                print(msg['opType'])
                                 text = self.cl.decryptE2EETextMessage(msg, msg.get('opType', 26) == 25)
                                 msg[10] = text # maybe fixed in Operation__check?
                             if ignoreCase:
