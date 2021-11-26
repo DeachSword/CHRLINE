@@ -34,7 +34,10 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             self.requestPwlessLogin(phone, self.LINE_SERVICE_REGION)
         else:
             if not noLogin:
-                for b in self.requestSQR2():
+                sqr_func = self.requestSQR
+                if device in self.LOGIN_V2_SUPPORT:
+                    sqr_func = self.requestSQR2
+                for b in sqr_func():
                     print(b)
         if self.authToken:
             self.initAll()

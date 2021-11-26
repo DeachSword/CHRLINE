@@ -20,6 +20,7 @@ from .services.AccountAuthFactorEapConnectService import \
     AccountAuthFactorEapConnectService
 from .services.AccessTokenRefreshService import AccessTokenRefreshService
 from .server import Server
+from .exceptions import LineServiceException
 import rsa
 import requests
 import httpx
@@ -209,7 +210,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 isCheck = True
             if isCheck:
                 e = self.qrCodeLogin(sqr, secret)
-                print(e)
                 if isSelf:
                     self.authToken = e
                     print(f"AuthToken: {self.authToken}")
@@ -237,34 +237,32 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             else:
                 isCheck = True
             if isCheck:
-                e = self.qrCodeLoginV2(
-                    sqr, secret, self.SYSTEM_NAME, self.APP_NAME)
-                print(e)
-                if 'error' in e:
-                    # if e['error']['code'] == 4:
+                try:
+                    e = self.qrCodeLoginV2(
+                        sqr, secret, self.SYSTEM_NAME, self.APP_NAME)
+                    cert = e[1]
+                    self.saveSqrCert(cert)
+                    tokenV3Info = e[3]
+                    _mid = e[4]
+                    bT = e[9]
+                    metadata = e[10]
+                    e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
+                    authToken = tokenV3Info[1]
+                    refreshToken = tokenV3Info[2]
+                    self.saveCacheData(
+                        '.refreshToken', authToken, refreshToken)
+                    print(f"AuthToken: {authToken}")
+                    print(f"RefreshToken: {refreshToken}")
+                    if isSelf:
+                        self.authToken = authToken
+                    yield authToken
+                    return
+                except LineServiceException as e:
+                    print(e)
                     yield "try using requestSQR()..."
                     for _ in self.requestSQR(isSelf):
                         yield _
                     return
-                cert = e[1]
-                self.saveSqrCert(cert)
-                tokenV3Info = e[3]
-                _mid = e[4]
-                bT = e[9]
-                metadata = e[10]
-                e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
-                authToken = tokenV3Info[1]
-                refreshToken = tokenV3Info[2]
-                self.saveCacheData('.refreshToken', authToken, refreshToken)
-                print(f"AuthToken: {authToken}")
-                print(f"RefreshToken: {refreshToken}")
-                if isSelf:
-                    self.authToken = authToken
-                else:
-                    yield authToken
-                    return
-                yield self.authToken
-                return
             raise Exception('can not check pin code, try again?')
         raise Exception('can not check qr code, try again?')
 
@@ -296,8 +294,11 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
+        headers = self.server.additionalHeaders(self.server.Headers, {
+            'x-lst': '150000'  # timeout
+        })
         res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
+            self.url, data=data, headers=headers)
         if res.status_code == 200:
             return True
         return False
@@ -354,8 +355,11 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr_rd = a + sqrd
         _data = bytes(sqr_rd)
         data = self.encData(_data)
+        headers = self.server.additionalHeaders(self.server.Headers, {
+            'x-lst': '150000'  # timeout
+        })
         res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
+            self.url, data=data, headers=headers)
         if res.status_code == 200:
             return True
         return False

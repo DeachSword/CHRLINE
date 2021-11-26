@@ -110,15 +110,17 @@ class Config(object):
     SYSTEM_VER  = '12.1.4'
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
+    
+    LOGIN_V2_SUPPORT = ["DESKTOPWIN"] # only desktop_win?
 
     def __init__(self, type="CHROME"):
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "7.1.0.2585"
+            self.APP_VER = "7.4.0.2647"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER  = '10.0.0-NT-x64'
         elif type == "DESKTOPMAC":
-            self.APP_VER = "5.13.0"
+            self.APP_VER = "7.4.0.2647"
             self.SYSTEM_NAME = "DESKTOPMAC"
         elif type == "CHROMEOS":
             self.APP_VER = "2.4.1"

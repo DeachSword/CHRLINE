@@ -101,7 +101,9 @@ class E2EE():
         keychain_data = aes.decrypt(encryptedKeyChain)
         key = keychain_data.hex()
         key = bin2bytes(key)
-        key = self.TCompactProtocol(key, passProtocol=True).res
+        tc = self.TCompactProtocol(passProtocol=True)
+        tc.data = key
+        key = tc.x(False)[1]
         public_key = bytes(key[0][4])
         private_key = bytes(key[0][5])
         return [private_key, public_key]
