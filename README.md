@@ -2,6 +2,10 @@
 
 ![logo](/examples/assets/logo.png)
 
+```
+pip install CHRLINE
+```
+
 >What is CHRLINE?\
 >It is LINE Chrome API, just for debug
 
@@ -27,7 +31,7 @@ Its purpose is to effectively compress mid (32 bytes) to 16 bytes
 
 
 ####  Example
-```
+```python
 from CHRLINE import *
 
 cl = CHRLINE() # login
@@ -246,6 +250,11 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - notifyChatAdEntry
     - BuddyService
         - getPromotedBuddyContacts
+        - getBuddyDetailWithPersonal
+        - getBuddyContacts
+        - getBuddyTopView
+        - getBuddyNewsView
+        - getBuddyDetail
     - CallService
         - acquireCallRoute
         - acquireOACallRoute

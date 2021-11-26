@@ -226,10 +226,11 @@ class Thrift(object):
         del k
         del v
             
-        def __init__(self, data=None, passProtocol=False):
+        def __init__(self, data=None, passProtocol=False, baseException: dict = None):
             self.__last_fid = 0
             self.__last_pos = 0
             self.passProtocol = passProtocol
+            self.baseException = baseException if baseException is not None else Thrift.BASE_EXCEPTION
             if data is not None:
                 self.data = data
                 self.x()
@@ -433,9 +434,9 @@ class Thrift(object):
                 error = self.z(ftype)
                 data = {
                     "error": {
-                        "code": error.get(1),
-                        "message": error.get(2),
-                        "metadata": error.get(3),
+                        "code": error.get(self.baseException['code']),
+                        "message": error.get(self.baseException['message']),
+                        "metadata": error.get(self.baseException['metadata']),
                         "_data": error
                     }
                 }
@@ -513,7 +514,7 @@ class Thrift(object):
         Version: 1.0.4 (令和最新版)
         """
 
-        def __init__(self, a=None):
+        def __init__(self, a=None, baseException: dict = None):
             self.__a = []       # 1st init
             self.__b = []       # 1st init
             self.__c = self._b  # 1st init
@@ -526,6 +527,7 @@ class Thrift(object):
             self.__last_sid = 0 # base sid
             self._a()           # 4th init
             self.res = None     # base res
+            self.baseException = baseException if baseException is not None else Thrift.BASE_EXCEPTION
             if a is not None:   # not None
                 self.d(a)       # for data
             
@@ -561,30 +563,30 @@ class Thrift(object):
             return self.t() # base init?
 
         def e(self):
-            a = None                                        # base init
-            b = None                                        # base init
-            c = 0                                           # base init
-            fid = self.y()                                  # can i del
-            if fid == 0:                                    # 
-                pass                                        # no data!!
-            elif  fid == 1:                                 # 
-                a = self.g(self.w())                        # read data
-            elif fid == 2:                                  # 
-                a = self.g(self.w())                        # read data
-                a = {                                       # 
-                    'error': {                              # 
-                        'code': a.get(1),                   # error code
-                        'message': a.get(2),                # error msg.
-                        'metadata': a.get(3),               # error data
-                        '_data': a                          # for debug.
-                    }                                       # 
-                }                                           # 
-            elif fid == 6:                                  # 
-                a = self.g(self.w())                        # read data
-                raise Exception(a)                          # exception!
-            else:                                           #
-                raise EOFError(f"fid {fid} not implemented")# exception!
-            self.res = a                                    # write data
+            a = None                                                        # base init
+            b = None                                                        # base init
+            c = 0                                                           # base init
+            fid = self.y()                                                  # can i del
+            if fid == 0:                                                    # 
+                pass                                                        # no data!!
+            elif  fid == 1:                                                 # 
+                a = self.g(self.w())                                        # read data
+            elif fid == 2:                                                  # 
+                a = self.g(self.w())                                        # read data     
+                a = {                                                       #
+                    "error": {                                              #
+                        "code": a.get(self.baseException['code']),          #
+                        "message": a.get(self.baseException['message']),    #
+                        "metadata": a.get(self.baseException['metadata']),  #
+                        "_data": a                                          #
+                    }                                                       #
+                }                                                           # 
+            elif fid == 6:                                                  # 
+                a = self.g(self.w())                                        # read data
+                raise Exception(a)                                          # exception!
+            else:                                                           #
+                raise EOFError(f"fid {fid} not implemented")                # exception!
+            self.res = a                                                    # write data
             
         def f(self, n):
             return (n >> 1) ^ -(n & 1) # hmm...

@@ -33,6 +33,11 @@ class Object(object):
             "ver": "2.0"
         }
         talkMeta = b64encode(json.dumps(metaData).encode('utf-8')).decode('utf-8')
+        params2 = {
+            "name":"profile.jpg",
+            "type":"IMAGE",
+            "ver":"2.0"
+        }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-talk-meta': talkMeta
         })
