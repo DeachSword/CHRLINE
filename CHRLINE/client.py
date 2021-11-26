@@ -10,6 +10,7 @@ from .helpers import Helpers
 from .cube import LineCube
 from os import system
 from .e2ee import E2EE
+from .exceptions import LineServiceException
 
 class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube, E2EE):
 
@@ -70,12 +71,12 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
 
         self.can_use_square = False
         self.squares = None
-        _squares = self.getJoinedSquares()
-        if 'error' not in _squares:
+        try:
+            _squares = self.getJoinedSquares()
             self.can_use_square = True
             self.squares = _squares
-        else:
-            self.log('Not support Square')
+        except LineServiceException as e:
+            self.log(f'Not support Square: {e.message}')
 
         self.custom_data = {}
         self.getCustomData()

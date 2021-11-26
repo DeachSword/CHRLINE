@@ -81,11 +81,10 @@ class TalkService():
         if toType == 0 and msgData.get('opType', 26) == 26:  # opType for hooks
             to = msgData[1]
         if msgData.get('isE2EE') == True:
-            print('e2ee!')
             chunk = self.encryptE2EEMessage(to, text)
             contentMetadata = self.server.additionalHeaders(contentMetadata, {
                 'e2eeVersion': '2',
-                'contentType': '0'
+                'contentType': '0',
             })
             return self.sendMessageWithChunks(to, chunk, contentType, contentMetadata, relatedMessageId)
         return self.sendMessage(to, text, contentType, contentMetadata, relatedMessageId)
@@ -102,7 +101,6 @@ class TalkService():
         return self.sendMessage(to, "test", location=data)
 
     def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}, relatedMessageId=None):
-        print(to)
         params = [
             [8, 1, self.getCurrReqId()],
             [12, 2, [

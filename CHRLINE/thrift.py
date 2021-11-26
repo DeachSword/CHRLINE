@@ -2,6 +2,12 @@ from struct import pack, unpack
 import binascii
 
 class Thrift(object):
+
+    BASE_EXCEPTION = {
+        'code': 1,
+        'message': 2,
+        'metadata': 3
+    }
     
     def __init__(self):
         pass
@@ -12,12 +18,13 @@ class Thrift(object):
         VERSION_1 = -2147418112
         TYPE_MASK = 0x000000ff
 
-        def __init__(self, data: bytes = None):
+        def __init__(self, data: bytes = None, baseException: dict = None):
             self.__last_fid = 0
             self.__last_pos = 0
             self.__last_sid = 0
             self.res = None
             self.data = data
+            self.baseException = baseException if baseException is not None else Thrift.BASE_EXCEPTION
             if self.data is not None:
                 self.x()
 
@@ -105,9 +112,9 @@ class Thrift(object):
                     raise Exception(error)
                 data = {
                     "error": {
-                        "code": error.get(1),
-                        "message": error.get(2),
-                        "metadata": error.get(3),
+                        "code": error.get(self.baseException['code']),
+                        "message": error.get(self.baseException['message']),
+                        "metadata": error.get(self.baseException['metadata']),
                         "_data": error
                     }
                 }
@@ -396,13 +403,31 @@ class Thrift(object):
             val, = unpack('<d', buff)
             return val
 
-        def x(self):
-            if not self.passProtocol:
+        def x(self, isFirst=True):
+            if isFirst:
                 name, type, seqid = self.readMessageBegin()
             _, ftype, fid, offset = self.readFieldBegin(self.data[self.__last_pos:])
             self.__last_pos += offset
             data = None
-            if fid == 0 or self.passProtocol:
+            if self.passProtocol:
+                if ftype == 0:
+                    return None
+                if isFirst:
+                    data = {
+                        name: {
+                            fid: self.z(ftype)
+                        }
+                    }
+                    while True:
+                        data2 = self.x(False)
+                        if data2 is None:
+                            break
+                        data[name].update(data2)
+                else:
+                    return {
+                        fid: self.z(ftype)
+                    }
+            elif fid == 0:
                 data = self.z(ftype)
             elif fid == 1:
                 error = self.z(ftype)
@@ -429,6 +454,9 @@ class Thrift(object):
                 pass
             if ftype == 1:
                 data = True
+            elif ftype == 3:
+                data = self.readByte(self.data[self.__last_pos:])
+                self.__last_pos += 1
             elif ftype == 2:
                 data = False
             elif ftype == 4:

@@ -5,6 +5,13 @@ import json
 
 class SquareService(object):
 
+
+    SQUARE_EXCEPTION = {
+        'code': 1,
+        'message': 3,
+        'metadata': 2
+    }
+
     def __init__(self):
         pass
 
@@ -19,7 +26,7 @@ class SquareService(object):
                 sqrd.append(ord(value))
         sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def inviteToSquare(self, squareMid, invitees, squareChatMid):
         sqrd = [128, 1, 0, 1] + \
@@ -33,7 +40,7 @@ class SquareService(object):
                 sqrd.append(ord(value))
         sqrd += [11, 0, 4] + self.getStringBytes(squareChatMid)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getJoinedSquares(self, continuationToken=None, limit=50):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 16, 103, 101, 116, 74, 111, 105,
@@ -47,7 +54,7 @@ class SquareService(object):
         #res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
         #data = res.content
         # return self.tryReadData(data, mode=0)['getJoinedSquares']
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def markAsRead(self, squareChatMid, messageId):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 109, 97, 114,
@@ -60,7 +67,7 @@ class SquareService(object):
         for value in messageId:
             sqrd.append(ord(value))
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def reactToMessage(self, squareChatMid, messageId, reactionType=2):
         """
@@ -82,7 +89,7 @@ class SquareService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(messageId)
         sqrd += [8, 0, 4] + self.getIntBytes(reactionType)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def findSquareByInvitationTicket(self, invitationTicket):
         sqrd = [128, 1, 0, 1] + \
@@ -90,7 +97,7 @@ class SquareService(object):
         sqrd += [12, 0, 1]
         sqrd += [11, 0, 2] + self.getStringBytes(invitationTicket)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def fetchMyEvents(self, subscriptionId=0, syncToken='', continuationToken=None, limit=50):
         sqrd = [128, 1, 0, 1] + \
@@ -101,7 +108,7 @@ class SquareService(object):
         sqrd += [8, 0, 3] + self.getIntBytes(limit)
         sqrd += [11, 0, 4] + self.getStringBytes(continuationToken)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=50):
         sqrd = [128, 1, 0, 1] + \
@@ -112,7 +119,7 @@ class SquareService(object):
         sqrd += [11, 0, 3] + self.getStringBytes(syncToken)
         sqrd += [8, 0, 4] + self.getIntBytes(limit)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def sendSquareMessage(self, squareChatMid, text):
         sqrd = [128, 1, 0, 1] + \
@@ -129,7 +136,7 @@ class SquareService(object):
         sqrd += [8, 0, 3] + self.getIntBytes(4)  # fromType
         # sqrd += [10, 0, 4] + self.getIntBytes(0, 8) # squareMessageRevision
         sqrd += [0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getSquare(self, squareMid):
         params = [
@@ -138,7 +145,7 @@ class SquareService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('getSquare', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getJoinableSquareChats(self, squareMid, continuationToken=None):
         params = [
@@ -149,7 +156,7 @@ class SquareService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('getJoinableSquareChats', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def createSquare(self, name: str, displayName: str, profileImageObsHash: str = "0h6tJf0hQsaVt3H0eLAsAWDFheczgHd3wTCTx2eApNKSoefHNVGRdwfgxbdgUMLi8MSngnPFMeNmpbLi8MSngnPFMeNmpbLi8MSngnOA", desc: str = "test with CHRLINE API", searchable: bool = True, SquareJoinMethodType: int = 0):
         """
@@ -185,7 +192,7 @@ class SquareService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('createSquare', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getSquareChatAnnouncements(self, squareMid: str):
         params = [
@@ -195,7 +202,7 @@ class SquareService(object):
         ]
         sqrd = self.generateDummyProtocol(
             'getSquareChatAnnouncements', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def leaveSquareChat(self):
         """

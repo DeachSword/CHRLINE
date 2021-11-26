@@ -4,9 +4,12 @@ import json
 
 
 class BuddyService(object):
+    BuddyService_REQ_TYPE = 3
+    BuddyService_RES_TYPE = 3
+    BuddyService_API_PATH = None
 
     def __init__(self):
-        pass
+        self.BuddyService_API_PATH = self.LINE_BUDDY_ENDPOINT
 
     def getPromotedBuddyContacts(self, language="zh_TW", country="TW"):
         sqrd = [128, 1, 0, 1] + \
@@ -23,8 +26,8 @@ class BuddyService(object):
         raise Exception("getBuddyCategoryView is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyCategoryView", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyCategoryView", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyChatBarV2(self):
         """
@@ -33,8 +36,8 @@ class BuddyService(object):
         raise Exception("getBuddyChatBarV2 is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyChatBarV2", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyChatBarV2", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyChatBar(self):
         """
@@ -43,8 +46,8 @@ class BuddyService(object):
         raise Exception("getBuddyChatBar is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyChatBar", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyChatBar", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getCountriesHavingBuddy(self):
         """
@@ -53,8 +56,8 @@ class BuddyService(object):
         raise Exception("getCountriesHavingBuddy is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getCountriesHavingBuddy", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getCountriesHavingBuddy", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getPopularBuddyBanner(self):
         """
@@ -63,8 +66,8 @@ class BuddyService(object):
         raise Exception("getPopularBuddyBanner is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getPopularBuddyBanner", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getPopularBuddyBanner", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyStatusBarV2(self):
         """
@@ -73,18 +76,17 @@ class BuddyService(object):
         raise Exception("getBuddyStatusBarV2 is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyStatusBarV2", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyStatusBarV2", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
-    def getBuddyDetailWithPersonal(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getBuddyDetailWithPersonal is not implemented")
-        params = []
+    def getBuddyDetailWithPersonal(self, buddyMid: str, attributeSet: list):
+        params = [
+            [11, 1, buddyMid],
+            [14, 2, [11, attributeSet]]
+        ]
         sqrd = self.generateDummyProtocol(
-            "getBuddyDetailWithPersonal", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyDetailWithPersonal", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyLive(self):
         """
@@ -93,28 +95,30 @@ class BuddyService(object):
         raise Exception("getBuddyLive is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyLive", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyLive", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
-    def getBuddyContacts(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getBuddyContacts is not implemented")
-        params = []
+    def getBuddyContacts(self, language: str, country: str, classification: str, fromIndex: int, count: int):
+        params = [
+            [11, 2, language],
+            [11, 3, country],
+            [11, 4, classification],
+            [10, 5, fromIndex],
+            [8, 6, count],
+        ]
         sqrd = self.generateDummyProtocol(
-            "getBuddyContacts", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyContacts", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
-    def getBuddyTopView(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getBuddyTopView is not implemented")
-        params = []
+    def getBuddyTopView(self, language: str, country: str):
+        """REMOVED"""
+        params = [
+            [11, 2, language],
+            [11, 3, country],
+        ]
         sqrd = self.generateDummyProtocol(
-            "getBuddyTopView", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyTopView", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyCollectionEntries(self):
         """
@@ -123,8 +127,8 @@ class BuddyService(object):
         raise Exception("getBuddyCollectionEntries is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyCollectionEntries", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyCollectionEntries", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getPopularBuddyLists(self):
         """
@@ -133,18 +137,14 @@ class BuddyService(object):
         raise Exception("getPopularBuddyLists is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getPopularBuddyLists", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getPopularBuddyLists", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getNewlyReleasedBuddyIds(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getNewlyReleasedBuddyIds is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getNewlyReleasedBuddyIds", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getNewlyReleasedBuddyIds", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyOnAir(self):
         """
@@ -153,18 +153,20 @@ class BuddyService(object):
         raise Exception("getBuddyOnAir is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyOnAir", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyOnAir", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
-    def getBuddyNewsView(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getBuddyNewsView is not implemented")
-        params = []
+    def getBuddyNewsView(self, language: str, country: str, fromIndex: int, count: int):
+        """REMOVED"""
+        params = [
+            [11, 2, language],
+            [11, 3, country],
+            [10, 4, fromIndex],
+            [8, 5, count],
+        ]
         sqrd = self.generateDummyProtocol(
-            "getBuddyNewsView", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyNewsView", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getCountriesServingOfficialAccountPromotionV2(self):
         """
@@ -174,8 +176,8 @@ class BuddyService(object):
             "getCountriesServingOfficialAccountPromotionV2 is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getCountriesServingOfficialAccountPromotionV2", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getCountriesServingOfficialAccountPromotionV2", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyStatusBar(self):
         """
@@ -184,8 +186,8 @@ class BuddyService(object):
         raise Exception("getBuddyStatusBar is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyStatusBar", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyStatusBar", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getRichMenuContents(self):
         """
@@ -194,18 +196,16 @@ class BuddyService(object):
         raise Exception("getRichMenuContents is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getRichMenuContents", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getRichMenuContents", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
-    def getBuddyDetail(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getBuddyDetail is not implemented")
-        params = []
+    def getBuddyDetail(self, buddyMid: str):
+        params = [
+            [11, 4, buddyMid]
+        ]
         sqrd = self.generateDummyProtocol(
-            "getBuddyDetail", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyDetail", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def findBuddyContactsByQuery(self):
         """
@@ -214,8 +214,8 @@ class BuddyService(object):
         raise Exception("findBuddyContactsByQuery is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "findBuddyContactsByQuery", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "findBuddyContactsByQuery", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getBuddyProfilePopup(self):
         """
@@ -224,8 +224,8 @@ class BuddyService(object):
         raise Exception("getBuddyProfilePopup is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getBuddyProfilePopup", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getBuddyProfilePopup", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
 
     def getLatestBuddyNewsTimestamp(self):
         """
@@ -234,5 +234,5 @@ class BuddyService(object):
         raise Exception("getLatestBuddyNewsTimestamp is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "getLatestBuddyNewsTimestamp", params, BuddyService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(BuddyService_API_PATH, sqrd, BuddyService_RES_TYPE)
+            "getLatestBuddyNewsTimestamp", params, self.BuddyService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.BuddyService_API_PATH, sqrd, self.BuddyService_RES_TYPE)
