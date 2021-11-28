@@ -121,9 +121,9 @@ class Config(object):
             self.SYSTEM_VER  = '10.0.0-NT-x64'
         elif type == "DESKTOPMAC":
             self.APP_VER = "7.4.0.2647"
-            self.SYSTEM_NAME = "DESKTOPMAC"
+            self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
-            self.APP_VER = "2.4.1"
+            self.APP_VER = "2.4.9"
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
         elif type == "ANDROIDLITE":

@@ -12,13 +12,10 @@ from hashlib import md5, sha1
 
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
-import gevent.monkey
 import xxhash
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
-
-gevent.monkey.patch_all()
 
 
 class Models(object):

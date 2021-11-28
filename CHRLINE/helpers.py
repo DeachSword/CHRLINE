@@ -103,3 +103,10 @@ class Helpers(object):
         }
         r = self.server.postContent("https://access.line.me/v2/oauth/accessToken", data=data, headers=hr)
         return r.json['access_token']
+    
+    def checkRespIsSuccessWithLpv(self, resp, lpv: int = 1, status_code: int = 200):
+        if resp.status_code != status_code:
+            return False
+        if lpv == 1 and resp.headers["x-lc"] != status_code:
+            return False
+        return True

@@ -1,3 +1,6 @@
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from .models import Models
 from .config import Config
 from .api import API
@@ -27,7 +30,10 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             self.LINE_SERVICE_REGION = region
             
         if authTokenOrEmail is not None and password is not None:
-            self.requestEmailLoginV2(authTokenOrEmail, password)
+            email_func = self.requestEmailLogin
+            if device in self.LOGIN_V2_SUPPORT:
+                email_func = self.requestEmailLoginV2
+            email_func(authTokenOrEmail, password)
         elif authTokenOrEmail:
             self.authToken = authTokenOrEmail
         elif phone:

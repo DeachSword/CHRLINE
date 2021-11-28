@@ -26,11 +26,6 @@ import requests
 import httpx
 import base64
 import binascii
-import json
-
-import gevent.monkey
-
-gevent.monkey.patch_all()
 
 
 class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService):
@@ -131,7 +126,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                    chr(len(pw)) + pw).encode('utf-8')
         pub_key = rsa.PublicKey(int(nvalue, 16), int(evalue, 16))
         crypto = binascii.hexlify(rsa.encrypt(message, pub_key)).decode()
-        res = self.loginZ(keynm, crypto, certificate=certificate)
+        res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, certificate=certificate)
         if 1 not in res:
             print(f"Enter Pincode: {res[4]}")
             verifier = self.checkLoginZPinCode(res[3])['verifier']
@@ -159,10 +154,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             pincode), base64.b64decode(secretPK))
         res = self.loginV2(keynm, crypto, _secret,
                            deviceName=self.SYSTEM_NAME, cert=certificate)
-        if res.get('error', {}).get('code', -1) in [20, 89]:
-            # 89 = not supported
-            print(f"can't login: {res['error']['message']}, try use LoginZ...")
-            return self.requestEmailLogin(email, pw)
         if 9 not in res:
             verifier = res[3]
             if res[5] == 3:
@@ -239,7 +230,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             if isCheck:
                 try:
                     e = self.qrCodeLoginV2(
-                        sqr, secret, self.SYSTEM_NAME, self.APP_NAME)
+                        sqr, self.APP_TYPE, self.SYSTEM_NAME, True)
                     cert = e[1]
                     self.saveSqrCert(cert)
                     tokenV3Info = e[3]
@@ -385,7 +376,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         _token = data[2]
         return _token
 
-    def qrCodeLoginV2(self, authSessionId, systemName="彥彥好睡", modelName="鴻鴻好暈", autoLoginIsRequired=True):
+    def qrCodeLoginV2(self, authSessionId, modelName="彥彥好睡", systemName="鴻鴻好暈", autoLoginIsRequired=True):
         params = [
             [12, 1, [
                 [11, 1, authSessionId],
@@ -573,10 +564,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData("/api/v3p/rs", sqrd, 3)
 
     def loginZ(self, keynm, encData, systemName='DeachSword-2021', certificate=None, verifier=None):
-        _headers = {
-            'x-lpqs': "/api/v3p/rs"
-        }
-        a = self.encHeaders(_headers)
         sqrd = [128, 1, 0, 1] + self.getStringBytes('loginZ') + [0, 0, 0, 0]
         sqrd += [12, 0, 2]
         loginType = 0
@@ -595,13 +582,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         # sqrd += [11, 0, 10] + self.getStringBytes("") #secret
         sqrd += [8, 0, 11] + self.getIntBytes(1)
         sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)
 
     def checkLoginZPinCode(self, accessSession):
         _headers = {
@@ -638,30 +619,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             raise Exception("checkLoginV2PinCode failed")
         data = self.decData(res.content)
         return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
-
-    def testFunc(self, path, funcName, funcValue=None, funcValueId=1):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': path
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, len(funcName)]
-        for name in funcName:
-            sqrd.append(ord(name))
-        sqrd += [0, 0, 0, 0]
-        print(sqrd)
-        if funcValue:
-            sqrd += [11, 0, funcValueId, 0, 0, 0, len(funcValue)]
-            for value in funcValue:  # string only
-                sqrd.append(ord(value))
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
 
     def testTBinary(self):
         _headers = {

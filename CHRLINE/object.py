@@ -16,7 +16,7 @@ class Object(object):
     
     """
     
-    def updateProfileImage(self, path, storyShare=False):
+    def updateProfileImage(self, path, storyShare=False, type='p'):
         url = self.LINE_OBS_DOMAIN + f'/r/talk/p/{self.mid}'
         file = open(path, 'rb')
         hstr = 'DearSakura_%s' % int(time.time() * 1000)
@@ -27,17 +27,21 @@ class Object(object):
             }
         }
         params = {
-            'name': file_name,
-            'quality': '100',
-            "type": "image",
+            'name': "profile.jpg",
+            "type": "IMAGE",
             "ver": "2.0"
         }
+        if type == 'vp':
+            params["cat"] = "vp.mp4" # let server know u have vp.mp4
+        if path[-4:] == '.mp4': # yes
+            url = self.LINE_OBS_DOMAIN + f'/r/talk/vp/{self.mid}'
+            params = {
+                "name": f"{file_name}.mp4", 
+                "type":"VIDEO",
+                "ver":"2.0",
+                "cat":"vp.mp4"
+            }
         talkMeta = b64encode(json.dumps(metaData).encode('utf-8')).decode('utf-8')
-        params2 = {
-            "name":"profile.jpg",
-            "type":"IMAGE",
-            "ver":"2.0"
-        }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-talk-meta': talkMeta
         })
@@ -213,7 +217,7 @@ class Object(object):
         }
         r = self.server.postContent(self.LINE_OBS_DOMAIN + '/g2/m/copy.nhn' if self.getToType(to) == 4 else '/talk/m/copy.nhn', data=data, headers=self.server.timelineHeaders)
         # self.LINE_HOST_DOMAIN + '/oa/r/talk/m/reqseq/copy.nhn'
-        if r.status_code != 200:
+        if not self.checkRespIsSuccessWithLpv(r):
             raise Exception(f'Forward object failure: {r.status_code}')
         return True
     
@@ -234,7 +238,7 @@ class Object(object):
         elif contentType in ['audio', 'video']:
             data['duration'] = '3000'
         r = self.server.postContent(self.LINE_HOST_DOMAIN + '/oa/r/talk/m/reqseq/copy.nhn', data=data, headers=self.server.timelineHeaders)
-        if r.status_code != 200:
+        if not self.checkRespIsSuccessWithLpv(r):
             raise Exception(f'Forward object failure: {r.status_code}')
         return r.text
 
@@ -257,12 +261,19 @@ class Object(object):
             "Content-Type": "application/json",
         })
         r = self.server.postContent(self.LINE_OBS_DOMAIN + '/px/talk/m/%s/recognition.obs' % msgId, data=json.dumps(data), headers=hr)
-        if r.status_code != 200:
+        if not self.checkRespIsSuccessWithLpv(r):
             raise Exception(f'Training image failure: {r.status_code}')
         return r.json()
         
     def downloadObjectMsg(self, objId, path, objFrom='c'):
         obs_path = f'/r/{"g2" if self.getToType(objFrom) == 4 else "talk"}/m/{objId}'
+        r = self.server.getContent(self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders)
+        with open(path, 'wb') as f:
+            f.write(r.content)
+        return r.content
+        
+    def downloadAlbumImage(self, oid: str, path: str):
+        obs_path = f'/album/a/download.nhn?ver=1.0&oid={oid}'
         r = self.server.getContent(self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders)
         with open(path, 'wb') as f:
             f.write(r.content)
@@ -284,4 +295,33 @@ class Object(object):
         with open(savePath, 'wb') as f:
             f.write(r.content)
         return r.content
+    
+    def getObjPlayback(self, oid: int, type: str = "VIDEO"):
+        url = self.LINE_HOST_DOMAIN + "/oa/talk/m/playback.obs?p=sg-1"
+        data = {
+            "networkType": "Cell",
+            "oid" : oid,
+            "type" : type,
+            "ver": "1.0",
+            "modelName": "ios",
+            "lang": "zh"
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            "x-obs-channeltype": "legy",
+        })
+        r = self.server.postContent(url, data=data, headers=hr)
+        if not self.checkRespIsSuccessWithLpv(r):
+            raise Exception(f'GetObjPlayback failure: {r.status_code}')
+        return r.json()
+
+    def uploadStoryObject(self, mid, albumId, name):
+        raise Exception("uploadStoryObject is not implemented")
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-obs-params': 'eyJuYW1lIjoidGltZWxpbmVfMjAyMTAyMjZfMDQzODExLmpwZyIsIm9pZCI6IjgzNTY2YWVmM2ZhNWRhMjllMGNkNGJkMzFiM2QzM2IxdGZmZmZmZmZmIiwicmFuZ2UiOiJieXRlcyAwLTIxNzEwXC8yMTcxMSIsInF1YWxpdHkiOiI3MCIsInR5cGUiOiJpbWFnZSIsInZlciI6IjEuMCJ9'
+        })
+        url = self.server.urlEncode(
+            self.LINE_OBS_DOMAIN, '/story/st/upload.nhn')
+        r = self.server.postContent(url, data=data, headers=hr)
+        return r.json()
+        
 

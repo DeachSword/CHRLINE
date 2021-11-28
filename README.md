@@ -415,8 +415,15 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - getProfileDetail
             - getTimelintTab
             - getSocialProfileDetail
+            - getSocialProfileMediaDetail
             - updateProfileDetail
+            - updateCmtLike
+            - getTalkroomStatus
+            - getHomeProfileBridge
         - Post
+            - createPost
+            - updatePost
+            - deletePost
             - getPost
             - createComment
             - deleteComment
