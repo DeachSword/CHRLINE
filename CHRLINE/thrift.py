@@ -100,6 +100,10 @@ class Thrift(object):
             size = self.readI32()
             return (etype, size)
 
+        def writeByte(self, byte):
+            buff = pack("!b", byte)
+            return buff
+
         def x(self):
             name, type, seqid = self.readMessageBegin()
             _, ftype, fid = self.readFieldBegin()
@@ -469,6 +473,9 @@ class Thrift(object):
             elif ftype == 6:
                 data, offset = self.readI64(self.data[self.__last_pos:], True)
                 self.__last_pos += offset
+            elif ftype == 7:
+                data = self.readDouble(self.data[self.__last_pos:])
+                self.__last_pos += 8
             elif ftype == 8:
                 data, offset = self.readBinary(self.data[self.__last_pos:])
                 self.__last_pos += offset
@@ -499,6 +506,7 @@ class Thrift(object):
                 raise Exception(f"can't not read type {ftype}")
             return data
 
+        writeByte = __writeByte
         readByte = __readByte
         __readI16 = __readZigZag
         readI16 = __readZigZag

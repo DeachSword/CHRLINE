@@ -308,6 +308,7 @@ class Models(object):
 
     def generateDummyProtocolData(self, _data, type, isCompact=False):
         data = []
+        tbp = self.TBinaryProtocol()
         tcp = self.TCompactProtocol()
         ttype = 4 if isCompact else 3
         if type == 2:
@@ -316,6 +317,11 @@ class Models(object):
                 a = _compact.getFieldHeader(1 if _data == True else 2, 0)
             else:
                 data += [1] if _data == True else [0]
+        elif type == 3:
+            if isCompact:
+                data += tcp.writeByte(_data)
+            else:
+                data += tbp.writeByte(_data)
         elif type == 8:
             data += self.getIntBytes(_data, isCompact=isCompact)
         elif type == 10:

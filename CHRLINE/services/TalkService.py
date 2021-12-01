@@ -14,65 +14,53 @@ class TalkService():
     def __init__(self):
         self.testPollConn = requests.session()
 
-    def sendMessage(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None, location=None):
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 115, 101, 110, 100,
-                77, 101, 115, 115, 97, 103, 101, 0, 0, 0, 0, 8, 0, 1]
-        sqrd += self.getIntBytes(self.getCurrReqId())
-        sqrd += [12, 0, 2, 11, 0, 1, 0, 0, 0, len(self.profile[1])]
-        for value in self.profile[1]:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 2, 0, 0, 0, len(to)]
-        for value in to:
-            sqrd.append(ord(value))
-        sqrd += [8, 0, 3]
-        if to[0] == 'u':
-            toType = 0
-        elif to[0] == 'r':
-            toType = 1
-        elif to[0] == 'c':
-            toType = 2
-        else:
-            raise Exception(f"未知的toType: {to[0]}")
-        _toType = (toType).to_bytes(4, byteorder="big")
-        for value in _toType:
-            sqrd.append(value)
-        sqrd += [11, 0, 4, 0, 0, 0, 0]
-        sqrd += [10, 0, 5] + \
-            self.getIntBytes(int(time.time()), 8)  # createTime
+    def sendMessage(self, to: str, text: str, contentType: int=0, contentMetadata: dict={}, relatedMessageId: str=None, location: dict=None, chunk: list=None):
+        message = [
+            [11, 2, to],
+            [10, 5, 0],  # createdTime
+            [10, 6, 0],  # deliveredTime
+            [2, 14, False],  # hasContent
+            [8, 15, contentType],
+            [13, 18, [11, 11, contentMetadata]],
+            [3, 19, 0],  # sessionId
+        ]
         if text is not None:
-            text = str(text).encode()
-            sqrd += [11, 0, 10] + self.getIntBytes(len(text))
-            for value2 in text:
-                sqrd.append(value2)
-        sqrd += [2, 0, 14, 0]  # hasContent
-        sqrd += [8, 0, 15] + self.getIntBytes(contentType)
-        if location and type(location) == dict:
-            sqrd += [12, 0, 11]
-            sqrd += [11, 0, 1] + \
-                self.getStringBytes(location.get(1, 'CHRLINE API'))
-            sqrd += [11, 0, 2] + \
-                self.getStringBytes(location.get(2, 'CHRLINE API'))
-            sqrd += [4, 0, 3] + self.getFloatBytes(location.get(3, 0))
-            sqrd += [4, 0, 4] + self.getFloatBytes(location.get(4, 0))
-            sqrd += [8, 0, 7] + self.getIntBytes(location.get(7, 1))
-            sqrd += [11, 0, 6] + self.getStringBytes(location.get(6, 'PC0'))
-            sqrd += [0]
-        if contentMetadata and type(contentMetadata) == dict:
-            _keys = contentMetadata.copy().keys()
-            sqrd += [13, 0, 18, 11, 11] + \
-                self.getIntBytes(len(_keys))  # key and val must str
-            for _k in _keys:
-                _v = contentMetadata[_k]
-                sqrd += self.getStringBytes(_k)
-                sqrd += self.getStringBytes(_v)
-        # [15, 0, 20] chunks
+            message.append(
+                [11, 10, text]
+            )
+        if location is not None:
+            locationObj = [
+                [11, 1, location.get(1, 'CHRLINE API')],
+                [11, 2, location.get(2, 'https://github.com/DeachSword/CHRLINE')],
+                [4, 3, location.get(3, 0)],
+                [4, 4, location.get(4, 0)],
+                [11, 6, location.get(6, 'PC0')],
+                [8, 7, location.get(7, 2)],
+            ]
+            message.append(
+                [12, 11, locationObj]
+            )
+        if chunk is not None:
+            message.append(
+                [15, 20, [11, chunk]]
+            )
         if relatedMessageId is not None:
-            sqrd += [11, 0, 21] + self.getStringBytes(relatedMessageId)
-            sqrd += [8, 0, 22] + self.getIntBytes(3)
-            sqrd += [8, 0, 24] + self.getIntBytes(1)
-        # [8, 0, 25] appExtensionType
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
+            message.append(
+                [11, 21, relatedMessageId]
+            )
+            message.append(
+                [8, 22, 3] # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
+
+            )
+            message.append(
+                [8, 24, 1] # relatedMessageServiceCode; 1 for Talk 2 for Square
+            )
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [12, 2, message]
+        ]
+        sqrd = self.generateDummyProtocol('sendMessage', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
 
     def replyMessage(self, msgData: dict, text: str, contentType: int = 0, contentMetadata: dict = {}):
         to = msgData[2]
@@ -81,12 +69,7 @@ class TalkService():
         if toType == 0 and msgData.get('opType', 26) == 26:  # opType for hooks
             to = msgData[1]
         if msgData.get('isE2EE') == True:
-            chunk = self.encryptE2EEMessage(to, text)
-            contentMetadata = self.server.additionalHeaders(contentMetadata, {
-                'e2eeVersion': '2',
-                'contentType': '0',
-            })
-            return self.sendMessageWithChunks(to, chunk, contentType, contentMetadata, relatedMessageId)
+            return self.sendMessageWithE2EE(to, text, contentType, contentMetadata, relatedMessageId)
         return self.sendMessage(to, text, contentType, contentMetadata, relatedMessageId)
 
     def sendContact(self, to, mid):
@@ -100,23 +83,17 @@ class TalkService():
         data = {1: title, 2: subTile, 3: la, 4: lb}
         return self.sendMessage(to, "test", location=data)
 
+    def sendMessageWithE2EE(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None):
+        chunk = self.encryptE2EEMessage(to, text)
+        contentMetadata = self.server.additionalHeaders(contentMetadata, {
+            'e2eeVersion': '2',
+            'contentType': '0',
+            'e2eeMark': '2'
+        })
+        return self.sendMessageWithChunks(to, chunk, contentType, contentMetadata, relatedMessageId)
+
     def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}, relatedMessageId=None):
-        params = [
-            [8, 1, self.getCurrReqId()],
-            [12, 2, [
-                [11, 1, self.mid],
-                [11, 2, to],
-                [8, 3, self.getToType(to)],
-                [8, 15, contentType],
-                [13, 18, [11, 11, contentMetadata]],
-                [15, 20, [11, chunk]],
-                [11, 21, relatedMessageId],
-                [8, 22, 3],
-                [8, 24, 1],
-            ]]
-        ]
-        sqrd = self.generateDummyProtocol('sendMessage', params, 4)
-        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
+        return self.sendMessage(to, None,contentType, contentMetadata, relatedMessageId, chunk=chunk)
 
     def sendCompactMessage(self, to, text):
         sqrd = [2]  # 5 if E2EE, 6 if E2EE location
@@ -1538,7 +1515,7 @@ class TalkService():
             return self.sync(res[2][2] - 1, count)
         return None
 
-    def updateChatRoomAnnouncement(self, gid, announcementId, messageLink, text):
+    def updateChatRoomAnnouncement(self, gid: str, announcementId: int, messageLink: str, text: str, imgLink: str):
         params = [
             [11, 2, gid],
             [10, 3, announcementId],
@@ -1546,7 +1523,7 @@ class TalkService():
                 [8, 1, 5],
                 [11, 2, text],
                 [11, 3, messageLink],
-                [11, 4, 'https://www.deachsword.com/web/img/ex/korone.png']
+                [11, 4, imgLink]
             ]],
         ]
         sqrd = self.generateDummyProtocol(
