@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
+import time
+import os
+import platform
+
+import io
+import qrcode
 
 class Helpers(object):
 
@@ -105,8 +111,59 @@ class Helpers(object):
         return r.json['access_token']
     
     def checkRespIsSuccessWithLpv(self, resp, lpv: int = 1, status_code: int = 200):
-        if resp.status_code != status_code:
-            return False
-        if lpv == 1 and resp.headers["x-lc"] != status_code:
-            return False
+        ckStatusCode = lpv != 1
+        if lpv == 1:
+            if "x-lc" in resp.headers:
+                if resp.headers["x-lc"] != status_code:
+                    return False
+            else:
+                ckStatusCode = True
+        if ckStatusCode:
+            if resp.status_code != status_code:
+                return False
         return True
+    
+    def checkIsVideo(self, filename: str):
+        video_suffix = ['.mp4', '.mkv', '.webm']
+        for _vs in video_suffix:
+            if filename.endswith(_vs):
+                return True
+        return False
+    
+    def getProfileCoverObjIdAndUrl(self, mid: str):
+        detail = self.getProfileCoverDetail(mid)['result']
+        coverObsInfo = detail['coverObsInfo']
+        url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
+        return url, None, coverObsInfo["objectId"], None
+    
+    def checkAndGetValue(self, value, *args):
+        for arg in args:
+            if type(value) == dict:
+                if arg in value:
+                    return value[arg]
+            else:
+                data = getattr(value, str(arg), None)
+                if data is not None:
+                    return data
+        return None
+
+    def genQrcodeImageAndPrint(self, url: str, filename: str=None, output_char: list=['　', '■']):
+        if filename is None:
+            filename = str(time.time())
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.images')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        savePath = savePath + f"/qr_{filename}.png"
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,)
+        qr.add_data(url)
+        qr.make()
+        win_qr_make = lambda x: print(''.join([output_char[1]] + [output_char[0] if y == True else output_char[1] for y in x] + [output_char[1]]))
+        fixed_bored = [False for _b in range(len(qr.modules[0]))] # 如果你問我問啥要加這段, 我可以告訴你fk u line >:( 你可以看到qr外面有一圈, 這是讓line讀到的必要條件(啊明明就可以不用 line的判定有夠爛)
+        for qr_module in [fixed_bored] + qr.modules + [fixed_bored]:
+            win_qr_make(qr_module)
+        img = qr.make_image()
+        img.save(savePath)
+        return savePath

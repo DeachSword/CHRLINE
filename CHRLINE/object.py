@@ -33,43 +33,57 @@ class Object(object):
         }
         if type == 'vp':
             params["cat"] = "vp.mp4" # let server know u have vp.mp4
-        if path[-4:] == '.mp4': # yes
+        is_video = self.checkIsVideo(path)
+        if is_video:
             url = self.LINE_OBS_DOMAIN + f'/r/talk/vp/{self.mid}'
             params = {
                 "name": f"{file_name}.mp4", 
                 "type":"VIDEO",
-                "ver":"2.0",
-                "cat":"vp.mp4"
+                "cat":"vp.mp4",
+                "ver":"2.0"
             }
         talkMeta = b64encode(json.dumps(metaData).encode('utf-8')).decode('utf-8')
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-talk-meta': talkMeta
         })
         r = self.server.postContent(url, headers=hr, data={'params': json.dumps(params)}, files={'file':file})
+        print(r)
         if r.status_code != 201:
             raise Exception(f"updateProfileImage failure. Receive statue code: {r.status_code}")
         return True
     
-    def updateProfileCover(self, path, storyShare=False):
+    def updateProfileCover(self, path, storyShare=False, type='c'):
         hstr = 'DearSakura_%s' % int(time.time() * 1000)
-        objid = hashlib.md5(hstr.encode()).hexdigest()
-        if not objid:
-            hstr = 'DearSakura_%s' % int(time.time()*1000)
-            objid = hashlib.md5(hstr.encode()).hexdigest()
-        url = self.LINE_OBS_DOMAIN + f'/r/myhome/c/{objid}'
+        objId = hashlib.md5(hstr.encode()).hexdigest()
+        url = self.LINE_OBS_DOMAIN + f'/r/myhome/c/{objId}'
         file = {'file': open(path, 'rb')}
         params = {
-            'name': objid,
+            'name': objId,
             'quality': '100',
             'type': 'image',
             'ver': '2.0'
         }
+        if type == 'vc':
+            params["cat"] = "vc.mp4" # let server know u have vc.mp4
+        is_video = self.checkIsVideo(path)
+        if is_video:
+            url = self.LINE_OBS_DOMAIN + f'/r/myhome/vc/{objId}'
+            params = {
+                "name": f"{objId}.mp4", 
+                "type":"VIDEO",
+                "cat":"vc.mp4",
+                "ver":"2.0"
+            }
         data = {'params': json.dumps(params)}
         r = self.server.postContent(url, headers=self.server.timelineHeaders, data=data, files=file)
         if r.status_code != 201:
             raise Exception(f"Upload object home failure. Receive statue code: {r.status_code}")
         objId = r.headers['x-obs-oid']
-        home = self.updateProfileCoverById(objId, storyShare=storyShare)
+        if is_video:
+            _url, _vc_url, _objId, _vc_objId = self.getProfileCoverObjIdAndUrl(self.mid)
+            home = self.updateProfileCoverById(_objId, objId, storyShare=storyShare)
+        else:
+            home = self.updateProfileCoverById(objId, storyShare=storyShare)
         return home
     
     def updateImageToAlbum(self, mid, albumId, path):
@@ -254,6 +268,7 @@ class Object(object):
               }
            }
         }
+        
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             "x-client-channel": "chat_viewer",
             "x-lal": "zh-Hant_TW",
@@ -278,6 +293,25 @@ class Object(object):
         with open(path, 'wb') as f:
             f.write(r.content)
         return r.content
+        
+    def downloadProfileImage(self, mid: str, base_path: str, video: bool=False):
+        url = self.LINE_OBS_DOMAIN + f'/r/talk/p/{mid}'
+        savePath = f"{base_path}/{mid}.jpg"
+        if video:
+            url += '/vp'
+            savePath = f"{base_path}/{mid}.mp4"
+        r = self.server.getContent(url, headers=self.server.timelineHeaders)
+        with open(savePath, 'wb') as f:
+            f.write(r.content)
+        return savePath
+        
+    def downloadProfileCover(self, mid: str, base_path: str, video: bool=False):
+        url, vc_url, objId, vc_objId = self.getProfileCoverObjIdAndUrl(mid)
+        savePath = f"{base_path}/{mid}.jpg"
+        r = self.server.getContent(url, headers=self.server.timelineHeaders)
+        with open(savePath, 'wb') as f:
+            f.write(r.content)
+        return savePath
         
     def downloadObjectMyhome(self, objId, path, objFrom='h'):
         return self.downloadObjectForService(objId, path, objFrom=f'myhome/{objFrom}')

@@ -60,7 +60,7 @@ class TalkService():
             [12, 2, message]
         ]
         sqrd = self.generateDummyProtocol('sendMessage', params, 4)
-        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
+        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5, readWith="TalkService.sendMessage_result")
 
     def replyMessage(self, msgData: dict, text: str, contentType: int = 0, contentMetadata: dict = {}):
         to = msgData[2]
@@ -122,9 +122,9 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
 
     def getProfile(self):
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116,
-                80, 114, 111, 102, 105, 108, 101, 0, 0, 0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
+        params = []
+        sqrd = self.generateDummyProtocol('getProfile', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5", sqrd, 5, readWith="TalkService.getProfile_result")
 
     def getSettings(self):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 103, 101, 116, 83,
@@ -242,15 +242,15 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
 
     def getAllChatMids(self, withMembers=True, withInvitees=True):
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes('getAllChatMids') + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [2, 0, 1, int(withMembers)]
-        sqrd += [2, 0, 2, int(withInvitees)]
-        sqrd += [0]
-        sqrd += [8, 0, 2] + self.getIntBytes(7)
-        sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
+        params = [
+            [12, 1, [
+                [2, 1, withMembers],
+                [2, 2, withInvitees]
+            ]],
+            [8, 2, 7]
+        ]
+        sqrd = self.generateDummyProtocol('getAllChatMids', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5, readWith="TalkService.getAllChatMids_result")
 
     def getCompactGroup(self, mid):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 15, 103, 101, 116, 67, 111, 109, 112, 97,
@@ -635,7 +635,7 @@ class TalkService():
         })
         try:
             data = self.postPackDataAndGetUnpackRespData(
-                "/P5", sqrd, 5, encType=0, headers=hr)
+                "/P5", sqrd, 5, encType=0, headers=hr, readWith="TalkService.fetchOps_result")
             if data is None:
                 return []
             if 'error' not in data:
@@ -1814,7 +1814,7 @@ class TalkService():
     def getCountryWithRequestIp(self):
         params = []
         sqrd = self.generateDummyProtocol('getCountryWithRequestIp', params, 4)
-        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
+        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5, readWith="TalkService.getCountryWithRequestIp_result")
 
     def notifyBuddyOnAir(self):
         """
@@ -2000,12 +2000,10 @@ class TalkService():
             "getInstantNews", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def createQrcodeBase64Image(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("createQrcodeBase64Image is not implemented")
-        params = []
+    def createQrcodeBase64Image(self, url: str):
+        params = [
+            [11, 2, url]
+        ]
         sqrd = self.generateDummyProtocol(
             "createQrcodeBase64Image", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)

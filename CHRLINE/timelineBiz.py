@@ -16,7 +16,7 @@ class TimelineBiz():
         TIMELINE_BIZ_LIFF_ID = "1654109201-MgN2z4Nd"
         self.can_use_timeline_biz = False
         try:
-            self.cmsToken = self.issueLiffView(None, TIMELINE_BIZ_LIFF_ID)[7]
+            self.cmsToken = self.checkAndGetValue(self.issueLiffView(None, TIMELINE_BIZ_LIFF_ID), 7, 'val_7')
             self.cmsSession = self.getCmsSession()
         except Exception as e:
             self.log(f"can't use Timeline Biz: {e}")

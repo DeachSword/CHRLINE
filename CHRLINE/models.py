@@ -1,6 +1,6 @@
-from .exceptions import LineServiceException
 import base64
 import binascii
+import io
 import json
 import os
 import struct
@@ -16,6 +16,17 @@ import xxhash
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
+
+from thrift.transport.TTransport import TMemoryBuffer
+
+from .exceptions import LineServiceException
+from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
+from .services.thrift.ap.TBinaryProtocol import \
+    TBinaryProtocol as testProtocol2
+from .services.thrift.ap.TCompactProtocol import \
+    TCompactProtocol as testProtocol
+    
+from .services.thrift import ttypes, TalkService
 
 
 class Models(object):
@@ -182,7 +193,7 @@ class Models(object):
 
     def decHeaders(self, data):
         headers = {}
-        tbin = self.TBinaryProtocol()
+        tbin = self.TBinaryProtocol(self)
         tbin.data = data
         dataLen = tbin.readI16() + 2
         headerLen = tbin.readI16()
@@ -286,10 +297,19 @@ class Models(object):
         data += self.generateDummyProtocolField(params, type) + [0]
         return data
 
+    def generateDummyProtocol2(self, params: DummyProtocol, type=3, fixSuccessHeaders: bool=False):
+        newParams = []
+        c = lambda a: [a.type, a.id, a.data] if a.type in [2, 5, 8, 10, 11] else [c(a2) for a2 in a.data] if a.id is None else [a.type, a.id, [c(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], a.data]] if a.type == 13 else [a.type, a.id, [a.subType[0], [c(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+        d = params.data
+        newParams.append(c(d))
+        if fixSuccessHeaders:
+            newParams[0][1] = newParams[0][1] - 1
+        return bytes(self.generateDummyProtocolField(newParams, type) + [0])
+
     def generateDummyProtocolField(self, params, type):
         isCompact = False
         data = []
-        tcp = self.TCompactProtocol()
+        tcp = self.TCompactProtocol(self)
         for param in params:
             # [10, 2, revision]
             _type = param[0]
@@ -308,12 +328,12 @@ class Models(object):
 
     def generateDummyProtocolData(self, _data, type, isCompact=False):
         data = []
-        tbp = self.TBinaryProtocol()
-        tcp = self.TCompactProtocol()
+        tbp = self.TBinaryProtocol(self)
+        tcp = self.TCompactProtocol(self)
         ttype = 4 if isCompact else 3
         if type == 2:
             if isCompact:
-                _compact = self.TCompactProtocol()
+                _compact = self.TCompactProtocol(self)
                 a = _compact.getFieldHeader(1 if _data == True else 2, 0)
             else:
                 data += [1] if _data == True else [0]
@@ -359,7 +379,7 @@ class Models(object):
                 f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int=None, headers: dict=None, access_token: str=None, baseException: dict=None):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int=None, headers: dict=None, access_token: str=None, baseException: dict=None, readWith: str=None):
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -422,13 +442,18 @@ class Models(object):
             if ttype == 0:
                 pass
             elif ttype == 3:
-                res = self.TBinaryProtocol(data, baseException=baseException).res
+                res = self.TBinaryProtocol(self, data, baseException=baseException)
             elif ttype == 4:
-                res = self.TCompactProtocol(data).res
+                res = self.TCompactProtocol(self, data, baseException=baseException)
             elif ttype == 5:
-                res = self.TMoreCompactProtocol(data).res
+                tmore = self.TMoreCompactProtocol(self, data, baseException=baseException)
+                res = tmore
             else:
                 raise ValueError(f"Unknown ThriftType: {ttype}")
+            if self.use_thrift:
+                res = self.serializeDummyProtocolToThrift(res.dummyProtocol, baseException, readWith)
+            else:
+                res = res.res
             if type(res) == dict and 'error' in res:
                 if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended')):
                     self.is_login = False
@@ -466,7 +491,7 @@ class Models(object):
     def getIntBytes(self, i, l=4, isCompact=False):
         i = int(i)
         if isCompact:
-            _compact = self.TCompactProtocol()
+            _compact = self.TCompactProtocol(self)
             a = _compact.makeZigZag(i, 32 if l**2 == 16 else 64)
             b = _compact.writeVarint(a)
             return b
@@ -484,7 +509,7 @@ class Models(object):
         else:
             text = str(text).encode()
         if isCompact:
-            _compact = self.TCompactProtocol()
+            _compact = self.TCompactProtocol(self)
             sqrd = _compact.writeVarint(len(text))
         else:
             sqrd = self.getIntBytes(len(text))
@@ -614,322 +639,9 @@ class Models(object):
                 "e2eeVersion": e2eeVersion,
             }
 
-    def tryReadData(self, data, mode=1):
-        _data = {}
-        if mode == 0:
-            data = bytes(4) + data + bytes(4)
-        if data[4] == 128:
-            a = 12 + data[11]
-            b = data[12:a].decode()
-            _data[b] = {}
-            c = data[a + 4]
-            if c == 0:
-                return None
-            id = data[a + 6]
-            if id == 0:
-                if c == 10:
-                    a = int.from_bytes(data[a + 9:a + 15], "big")
-                    _data[b] = a
-                elif c == 11:
-                    d = data[a + 10]
-                    e = data[a + 11:a + 11 + d].decode()
-                    _data[b] = e
-                elif c == 12:
-                    _data[b] = self.readContainerStruct(data[a + 7:])
-                elif c == 13:
-                    _data[b] = self.readContainerStruct(data[a + 4:])
-                elif c == 14 or c == 15:
-                    _data[b] = self.readContainerStruct(
-                        data[a + 4:], stopWithFirst=True)[0]
-                else:
-                    print(f"[tryReadData]不支援Type: {c} => ID: {id}")
-            else:
-                if c != 0:
-                    error = {}
-                    if c == 11:
-                        t_l = data[a + 10]
-                        error = data[a + 11:a + 11 + t_l].decode()
-                    else:
-                        ed = self.readContainerStruct(data[a + 4:])[1]
-                        error = {
-                            'code': ed.get(1),
-                            'message': ed.get(2),
-                            'metadata': ed.get(3),
-                            '_data': ed
-                        }
-                    _data[b] = {
-                        "error": error
-                    }
-            return _data[b]
-        else:
-            if data[6:24] == b"x-line-next-access":
-                a = data[25]
-                b = data[26:26 + a]
-                self.handleNextToken(b.decode())
-                data = bytes([0, 0, 0, 0]) + data[26 + a:]
-                return self.tryReadData(data)
-        return _data
-
-    def readContainerStruct(self, data, get_data_len=False, stopWithFirst=False):
-        _data = {}
-        nextPos = 0
-        if len(data) < 3:
-            return None
-        dataType = data[0]
-        id = data[2]
-        #print(f"{id} -> {dataType}")
-        if data[0] == 2:
-            a = data[3]
-            if a == 1:
-                _data[id] = True
-            else:
-                _data[id] = False
-            nextPos = 4
-        elif data[0] == 3:
-            a = int.from_bytes(data[3:4], "big")
-            _data[id] = a
-            nextPos = 4
-        elif data[0] == 4:
-            a = data[3:11]
-            a = struct.unpack('!d', a)[0]
-            _data[id] = a
-            nextPos = 11
-        elif data[0] == 8:
-            a, = struct.unpack('!i', data[3:7])
-            _data[id] = a
-            nextPos = 7
-        elif data[0] == 10:
-            a, = struct.unpack('!q', data[3:11])
-            _data[id] = a
-            nextPos = 11
-        elif data[0] == 11:
-            a = int.from_bytes(data[5:7], "big")
-            if a == 0:
-                _data[id] = ''
-                nextPos = a + 7
-            else:
-                b = data[7:a+7]
-                try:
-                    _data[id] = b.decode()
-                except:
-                    _data[id] = b
-                nextPos = a + 7
-        elif data[0] == 12:
-            if data[3] == 0:
-                _data[id] = {}
-                nextPos = 4
-            else:
-                a = self.readContainerStruct(data[3:], True)
-                _data[id] = a[0]
-                nextPos = a[1] + 4
-        elif data[0] == 13:
-            # dict
-            # 0D 00 24 0B 0B 00 00 00 02 00 00 00 07
-            kt = data[3]  # key type
-            a = data[4]  # value type
-            b, = struct.unpack('!i', data[5:9])  # count
-            c = 9
-            _d = {}
-            if b != 0:
-                #print(f"ktype: {kt}")
-                #print(f"kvalue: {a}")
-                for d in range(b):
-                    if True:
-                        __key = self.readContainerStruct(
-                            bytes([kt, 0, 0]) + data[c:], get_data_len=True, stopWithFirst=True)
-                        _key = __key[0][0]
-                        vp = c + __key[1] - 3  # value pos
-                        __value = self.readContainerStruct(
-                            bytes([a, 0, 0]) + data[vp:], get_data_len=True, stopWithFirst=True)
-                        _value = __value[0][0]
-                        c = vp + __value[1] - 3
-                    # old code...
-                    elif kt == 8:
-                        # f = c + 1
-                        # g = data[c + 4]
-                        _key = data[c]
-                        _value = self.readContainerStruct(
-                            bytes([a, 0, 0]) + data[f + 1:])[0]
-                        # h = f + 4 + g
-                        # _value = data[f + 4:h].decode()
-                        c += 5
-                    else:
-                        g = int.from_bytes(
-                            data[f + 1:f + 5], "big")  # value len
-                        _key = data[c + 1:f + 1].decode()
-                        h = f + g + 5
-                        if a == 10:
-                            __value = int.from_bytes(data[f+1:f+9], "big")
-                            _value = __value
-                            h = f + 9
-                            c = h + 3
-                        elif a == 12:
-                            __value = self.readContainerStruct(
-                                data[f+1:], True)
-                            _value = __value[0]
-                            h = f + __value[1]
-                            c = h
-                        elif a == 15:
-                            __value = self.readContainerStruct(
-                                data[f+1:], True)
-                            _value = __value[0]
-                            h = f + __value[1]
-                            c = h + 1
-                        else:
-                            _value = data[f + 5:h].decode()
-                            c = h + 3
-                    _d[_key] = _value
-                _data[id] = _d
-                nextPos = c
-                # old code...
-                # if a in [10, 11]:
-                #     nextPos -= 3
-            else:
-                nextPos = 9
-                _data[id] = {}
-        elif data[0] == 14:
-            type = data[3]
-            count = int.from_bytes(data[4:8], "big")
-            _data[id] = []
-            nextPos = 8
-            if count != 0:
-                for i in range(count):
-                    if type == 8:
-                        a = 0
-                        b = self.readContainerStruct(
-                            bytes([type, 0, 0]) + data[nextPos:])[0]
-                    else:
-                        a = int.from_bytes(data[nextPos:nextPos + 4], "big")
-                        b = data[nextPos + 4:nextPos + 4 + a].decode()
-                    _data[id].append(b)
-                    nextPos += 4 + a
-        elif data[0] == 15:
-            type = data[3]
-            d = data[7]
-            _data[id] = []
-            e = 8
-            for _d in range(d):
-                if type == 8:
-                    f = int.from_bytes(data[e:e+4], "big")
-                    _data[id].append(f)
-                    e += 4
-                elif type == 11:
-                    f = data[e+3]
-                    dd = data[e+4:e+4+f]
-                    try:
-                        dd = dd.decode()
-                    except:
-                        pass
-                    _data[id].append(dd)
-                    e += f + 4
-                elif type == 12:
-                    f = self.readContainerStruct(data[e:], True)
-                    _data[id].append(f[0])
-                    if f[2] in [12, 13]:
-                        e += f[1] + 1
-                    else:
-                        e += f[1] + 1
-                else:
-                    print(f"[readContainerStruct_LIST(15)]不支援Type: {type}")
-            nextPos += e
-        elif data[0] != 0:
-            print(f"[readContainerStruct]不支援Type: {data[0]} => ID: {id}")
-        if nextPos > 0 and not stopWithFirst:
-            data = data[nextPos:]
-            if len(data) > 2:
-                c = self.readContainerStruct(data, True)
-                if c[0]:
-                    _data.update(c[0])
-                    nextPos += c[1]  # lol, why i forget it
-                    if c[2] != 0:
-                        dataType = c[2]
-        if get_data_len:
-            return [_data, nextPos, dataType]
-        return _data
-
-    def tryReadTCompactData(self, data):
-        _data = {}
-        data = bytes(4) + data
-        if data[4] == 130:
-            a = 8 + data[7]
-            b = data[8:a].decode()
-            _data[b] = {}
-            _dec = self.TCompactProtocol()
-            (fname, ftype, fid, offset) = _dec.readFieldBegin(data[a:])
-            offset += a + 1
-            if ftype == 12:
-                _data[b] = self.tryReadTCompactContainerStruct(data[a:])
-                if 0 in _data[b]:
-                    _data[b] = _data[b][0]
-                else:
-                    error = {
-                        'code': _data[b][1][1],
-                        'message': _data[b][1].get(2, None),
-                        'metadata': _data[b][1].get(3, None)
-                    }
-                    _data[b] = {
-                        "error": error
-                    }
-            return _data[b]
-        return None
-
-    def tryReadTCompactContainerStruct(self, data, id=0, get_data_len=False):
-        _data = {}
-        _dec = self.TCompactProtocol()
-        (fname, ftype, fid, offset) = _dec.readFieldBegin(data)
-        nextPos = 0
-        fid += id
-        if ftype == 0:
-            pass
-        elif ftype == 1:
-            _data[fid] = _dec.readBool()
-            nextPos = 1
-        elif ftype == 2:
-            _data[fid] = _dec.readBool()
-            nextPos = 1
-        elif ftype == 5:
-            (_data[fid], nextPos) = _dec.readI32(data[offset:], True)
-            nextPos += 1
-        elif ftype == 6:
-            (_data[fid], nextPos) = _dec.readI64(data[offset:], True)
-            #nextPos += -2
-        elif ftype == 8:
-            (_data[fid], nextPos) = _dec.readBinary(data[offset:])
-        elif ftype == 9 or ftype == 10:
-            # todo:
-            #       ftype == 10 == SET
-            (vtype, vsize, vlen) = _dec.readCollectionBegin(data[offset:])
-            offset += vlen
-            _data[fid] = []
-            _nextPos = 0
-            for i in range(vsize):
-                if vtype == 8:
-                    (__data, _nextPos) = _dec.readBinary(data[offset:])
-                    _data[fid].append(__data)
-                    offset += _nextPos - 1
-            nextPos += offset
-        elif ftype == 12:
-            (__data, nextPos) = self.tryReadTCompactContainerStruct(
-                data[offset:], get_data_len=True)
-            nextPos += 2
-            _data[fid] = __data
-        elif ftype != 0:
-            print(
-                f"[tryReadTCompactContainerStruct]不支援Type: {ftype} => ID: {fid}")
-        if nextPos > 0:
-            data = data[nextPos:]
-            c = self.tryReadTCompactContainerStruct(
-                data, id=fid, get_data_len=True)
-            if c[0]:
-                _data.update(c[0])
-                nextPos += c[1]
-        if get_data_len:
-            return [_data, nextPos]
-        return _data
-
     def tryReadThriftContainerStruct(self, data, id=0, get_data_len=False):
         _data = {}
-        _dec = self.TCompactProtocol()
+        _dec = self.TCompactProtocol(self)
         ftype = data[0] & 15
         fid = (data[0] >> 4) + id
         offset = 1
@@ -971,3 +683,31 @@ class Models(object):
         if get_data_len:
             return [_data, nextPos]
         return _data
+
+    def serializeDummyProtocolToThrift(self, data: DummyProtocol, baseException: dict = None, readWith: str = None):
+        if readWith is not None:
+            new1 = self.generateDummyProtocol2(data, 4, fixSuccessHeaders=True)
+            a = eval(readWith)
+            a = a()
+            e = TMemoryBuffer()
+            f = testProtocol(e)
+            e._buffer = io.BytesIO(new1)
+            a.read(f)
+            if a.success:
+                return a.success
+            raise LineServiceException({}, a.e.code, a.e.reason, a.e.parameterMap, a.e)
+        _gen = lambda : DummyThrift()
+        def _genFunc(a, b, f):
+            c = _gen()
+            for d in a.data:
+                f(d, c)
+            setattr(b, f"val_{a.id}", c)
+        a = _gen()
+        b = lambda c, refs: _genFunc(c, refs, b) if type(c.data) == list else setattr(refs, f"val_{c.id}", c.data)
+        b(data.data, a)
+        if self.checkAndGetValue(a, 'val_0') is not None:
+            return a.val_0
+        _ecode = baseException.get('code', 1)
+        _emsg = baseException.get('message', 2)
+        _emeta = baseException.get('metadata', 3)
+        raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
