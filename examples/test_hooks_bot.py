@@ -14,6 +14,10 @@ tracer = HooksTracer(
     # accounts=[cl8] # sub accounts
 )
 
+ADMINS = [] # admin's mids
+for _admin in ADMINS:
+    tracer.addPermission(_admin, 'admin') # add permission to db
+
 class EventHook:
 
     @tracer.Event
