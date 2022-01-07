@@ -1608,7 +1608,7 @@ class TalkService():
             'findAndAddContactsByUserid', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
 
-    def syncContacts(self, luid: str, phones: list = [], emails: list = [], userids: list = []):
+    def syncContacts(self, phones: list = [], emails: list = [], userids: list = []):
         """
         - type
             ADD(0),
@@ -1621,7 +1621,30 @@ class TalkService():
             raise Exception("[syncContacts] emails must be a list")
         if type(userids) != list:
             raise Exception("[syncContacts] userids must be a list")
-        localContacts = [
+        localContacts = []
+        luid = 0
+        for phone in phones:
+            luid += 1
+            localContacts.append([
+                [8, 1, 0],
+                [11, 2, luid],
+                [15, 11, [11, [phone]]],
+            ])
+        for email in emails:
+            luid += 1
+            localContacts.append([
+                [8, 1, 0],
+                [11, 2, luid],
+                [15, 12, [11, [email]]],
+            ])
+        for userid in userids:
+            luid += 1
+            localContacts.append([
+                [8, 1, 0],
+                [11, 2, luid],
+                [15, 13, [11, [userid]]],
+            ])
+        base_localContacts = [
             [8, 1, 0],
             [11, 2, luid],
             [15, 11, [11, phones]],
@@ -1632,9 +1655,7 @@ class TalkService():
         ]
         params = [
             [8, 1, self.getCurrReqId()],
-            [15, 2, [12, [
-                localContacts
-            ]]],
+            [15, 2, [12, localContacts]],
         ]
         sqrd = self.generateDummyProtocol('syncContacts', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
