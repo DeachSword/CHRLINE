@@ -381,6 +381,8 @@ class Thrift(object):
             types = 0
             if size > 0:
                 types = self.__readUByte(data[len:len + 1])
+            else:
+                return 0, 0, 0, 1  # fixed length
             vtype = types & 0x0f
             ktype = types >> 4
             return (ktype, vtype, size, len + 1)
@@ -519,7 +521,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.4 (令和最新版)
+        Version: 1.0.6 (令和最新版)
         """
 
         def __init__(self, a=None, baseException: dict = None):
@@ -635,6 +637,8 @@ class Thrift(object):
                     d = self.y()                                                            # read
                     t1, t2 = self.q(d)                                                      # read
                     for i in range(c):                                                      # 
+                        if i > 0:                                                           #
+                            self.__last_fid += 1                                            # idk why...
                         k = self.g(t1)                                                      # key!
                         v = self.g(t2)                                                      # val!
                         a[k] = v                                                            # dict
