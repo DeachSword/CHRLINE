@@ -637,8 +637,6 @@ class Thrift(object):
                     d = self.y()                                                            # read
                     t1, t2 = self.q(d)                                                      # read
                     for i in range(c):                                                      # 
-                        if i > 0:                                                           #
-                            self.__last_fid += 1                                            # idk why...
                         k = self.g(t1)                                                      # key!
                         v = self.g(t2)                                                      # val!
                         a[k] = v                                                            # dict
