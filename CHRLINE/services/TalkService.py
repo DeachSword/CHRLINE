@@ -95,8 +95,15 @@ class TalkService():
     def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}, relatedMessageId=None):
         return self.sendMessage(to, None,contentType, contentMetadata, relatedMessageId, chunk=chunk)
 
-    def sendCompactMessage(self, to, text):
-        sqrd = [2]  # 5 if E2EE, 6 if E2EE location
+    def sendCompactMessage(self, to: str, text: str, chunks: list = []):
+        cType = -1  # 2 = TEXT, 4 = STICKER, 5 = E2EE_TEXT, 6 = E2EE_LOCATION
+        ep = self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT
+        if text is not None:
+            cType = 2
+        elif chunks:
+            cType = 5
+            ep = self.LINE_COMPACT_E2EE_MESSAGE_ENDPOINT
+        sqrd = [cType]
         midType = to[0]
         if midType == 'u':
             sqrd.append(0)
@@ -107,14 +114,26 @@ class TalkService():
         else:
             raise Exception(f"unknown midType: {midType}")
         _reqId = self.getCurrReqId()
+        self.log(f"[sendCompactMessage] REQ_ID: {_reqId}", True)
         sqrd += self.getIntBytes(_reqId, isCompact=True)
         sqrd += self.getMagicStringBytes(to[1:])
-        sqrd += self.getStringBytes(text, isCompact=True)
-        sqrd.append(2)
+        if cType == 2:
+            sqrd += self.getStringBytes(text, isCompact=True)
+            sqrd.append(2)
+        elif cType == 5:
+            sqrd += [2]
+            for _ck in chunks[:3]:
+                sqrd += self.getStringBytes(_ck, isCompact=True)
+            for _ck in chunks[3:5]:
+                sqrd += list(_ck)
         hr = self.server.additionalHeaders(self.server.Headers, {
             'x-lai': str(_reqId)
         })
-        return self.postPackDataAndGetUnpackRespData(self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT, sqrd, 0, headers=hr)
+        return self.postPackDataAndGetUnpackRespData(ep, sqrd, -7, headers=hr)
+
+    def sendCompactE2EEMessage(self, to, text):
+        chunks = self.encryptE2EEMessage(to, text, isCompact=True)
+        return self.sendCompactMessage(to, None, chunks)
 
     def getEncryptedIdentity(self):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 103, 101, 116, 69, 110, 99, 114, 121,
@@ -122,9 +141,9 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
 
     def getProfile(self):
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 10, 103, 101, 116,
-                80, 114, 111, 102, 105, 108, 101, 0, 0, 0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
+        params = []
+        sqrd = self.generateDummyProtocol('getProfile', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S5", sqrd, 5)
 
     def getSettings(self):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 11, 103, 101, 116, 83,
@@ -242,15 +261,15 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
 
     def getAllChatMids(self, withMembers=True, withInvitees=True):
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes('getAllChatMids') + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [2, 0, 1, int(withMembers)]
-        sqrd += [2, 0, 2, int(withInvitees)]
-        sqrd += [0]
-        sqrd += [8, 0, 2] + self.getIntBytes(7)
-        sqrd += [0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_NORMAL_ENDPOINT, sqrd)
+        params = [
+            [12, 1, [
+                [2, 1, withMembers],
+                [2, 2, withInvitees]
+            ]],
+            [8, 2, 7]
+        ]
+        sqrd = self.generateDummyProtocol('getAllChatMids', params, 4)
+        return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5)
 
     def getCompactGroup(self, mid):
         sqrd = [128, 1, 0, 1, 0, 0, 0, 15, 103, 101, 116, 67, 111, 109, 112, 97,
@@ -644,9 +663,11 @@ class TalkService():
                         if 10 in op:
                             a = op[10].split('\x1e')
                             self.individualRev = a[0]
+                            self.log(f"individualRev: {self.individualRev}", True)
                         if 11 in op:
                             b = op[11].split('\x1e')
                             self.globalRev = b[0]
+                            self.log(f"globalRev: {self.globalRev}", True)
                 return data
             else:
                 raise Exception(data['error'])
@@ -699,30 +720,13 @@ class TalkService():
             return self.fetchOps(revision, count)
         return []
 
-    def fetchOperations(self, deviceId, offsetFrom):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/P3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 102, 101,
-                116, 99, 104, 79, 112, 115, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        deviceId = str(deviceId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(deviceId))
-        for value2 in deviceId:
-            sqrd.append(value2)
-        sqrd += [10, 0, 2] + self.getIntBytes(offsetFrom, 8)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        hr = self.server.additionalHeaders(self.server.Headers, {
-            "x-lst": "180000",
-        })
-        res = self.req_poll.post(self.url, data=data, headers=hr)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+    def fetchOperations(self, localRev, count=100):
+        params = [
+            [10, 2, localRev],
+            [8, 3, count],
+        ]
+        sqrd = self.generateDummyProtocol('fetchOperations', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S4", sqrd, 4)
 
     def sendEchoPush(self, text):
         # for long poll? check conn is alive
@@ -2021,12 +2025,10 @@ class TalkService():
             "getInstantNews", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def createQrcodeBase64Image(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("createQrcodeBase64Image is not implemented")
-        params = []
+    def createQrcodeBase64Image(self, url: str):
+        params = [
+            [11, 2, url]
+        ]
         sqrd = self.generateDummyProtocol(
             "createQrcodeBase64Image", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
