@@ -125,7 +125,7 @@ class E2EE():
         aad += bytes(self.getIntBytes(f))  # content type
         return aad
 
-    def encryptE2EEMessage(self, to, text, specVersion=2, isCompact=False):
+    def encryptE2EEMessage(self, to, text, specVersion=2):
         _from = self.mid
         selfKeyData = self.getE2EESelfKeyData(_from)
         if len(to) == 0 or self.getToType(to) not in [0, 1, 2]:
@@ -150,10 +150,10 @@ class E2EE():
             receiverKeyId = groupK['keyId']
             keyData = self.generateSharedSecret(privK, pubK)
         chunks = self.encryptE2EETextMessage(
-            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
+            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from)
         return chunks
 
-    def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=False):
+    def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from):
         salt = os.urandom(16)
         gcmKey = self.getSHA256Sum(keyData, salt, b'Key')
         aad = self.generateAAD(to, _from, senderKeyId,
@@ -163,17 +163,11 @@ class E2EE():
             'text': text
         }).encode()
         encData = self.encryptE2EEMessageV2(data, gcmKey, sign, aad)
-        bSenderKeyId = bytes(self.getIntBytes(senderKeyId))
-        bReceiverKeyId = bytes(self.getIntBytes(receiverKeyId))
-        if isCompact:
-            compact = self.TCompactProtocol()
-            bSenderKeyId = bytes(compact.writeI32(int(senderKeyId)))
-            bReceiverKeyId = bytes(compact.writeI32(int(receiverKeyId)))
         self.log(
-            f'senderKeyId: {senderKeyId} ({bSenderKeyId})', True)
+            f'senderKeyId: {senderKeyId} ({self.getIntBytes(senderKeyId)})', True)
         self.log(
-            f'receiverKeyId: {receiverKeyId} ({bReceiverKeyId})', True)
-        return [salt, encData, sign, bSenderKeyId, bReceiverKeyId]
+            f'receiverKeyId: {receiverKeyId} ({self.getIntBytes(receiverKeyId)})', True)
+        return [salt, encData, sign, bytes(self.getIntBytes(senderKeyId)), bytes(self.getIntBytes(receiverKeyId))]
 
     def encryptE2EEMessageV2(self, data, gcmKey, nonce, aad):
         aesgcm = AESGCM(gcmKey)

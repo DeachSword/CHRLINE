@@ -54,11 +54,3 @@ class HookUtility(object):
             self.db.saveData(_k, _p)
             return True
         return False
-        
-    def getArgs(self, text: str, splitchar: str=":", defVal=None):
-        args = text.split(splitchar)
-        if len(args) > 1:
-            return args[1:]
-        if defVal is not None:
-            return [defVal]
-        return None

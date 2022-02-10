@@ -32,7 +32,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
-    def __init__(self, forwardedIp=None):
+    def __init__(self):
         self.server = Server()
         self.req = requests.session()
         self.req_h2 = httpx.Client(http2=True)
@@ -50,9 +50,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lal": self.LINE_LANGUAGE,
             "x-lhm": "POST",
+            # "X-Forwarded-For": "20.21.94.53",
         }
-        if forwardedIp is not None:
-            self.server.Headers['X-Forwarded-For'] = forwardedIp
         self.authToken = None
         self.revision = 0
         self.globalRev = 0
@@ -189,10 +188,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr = self.createSession()[1]
         url = self.createQrCode(sqr)[1]
         secret, secretUrl = self.createSqrSecret()
-        url = url + secretUrl
-        imgPath = self.genQrcodeImageAndPrint(url)
-        yield f"URL: {url}"
-        yield f"IMG: {imgPath}"
+        yield f"URL: {url}{secretUrl}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
             isCheck = False
@@ -220,10 +216,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr = self.createSession()[1]
         url = self.createQrCode(sqr)[1]
         secret, secretUrl = self.createSqrSecret()
-        url = url + secretUrl
-        imgPath = self.genQrcodeImageAndPrint(url)
-        yield f"URL: {url}"
-        yield f"IMG: {imgPath}"
+        yield f"URL: {url}{secretUrl}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
             isCheck = False
