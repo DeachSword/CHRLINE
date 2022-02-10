@@ -120,6 +120,28 @@ class NormalCmd(object):
         b = time.time() - a
         cl.replyMessage(msg, f'speed: {b}s')
 
+    @tracer.Command(ignoreCase=True, inpart=True)
+    def mid(self, msg, cl):
+        '''查詢 mid'''
+        mentionees = cl.getMentioneesByMsgData(msg)
+        if not mentionees:
+            cl.replyMessage(msg, msg[1])
+        else:
+            mentions = []
+            reply = ''
+            # TODO: 
+            #   - mentions
+            for mid in mentionees:
+                _reply = f"@chrline_api"
+                mentions.append({
+                    'S': len(reply) if reply == '' else len(reply) + 1,
+                    'L': len(_reply),
+                    'M': mid
+                })
+                _reply += f' {mid}'
+                reply += _reply if reply == '' else f"\n{_reply}"
+            cl.replyMessage(msg, reply, contentMetadata=cl.genMentionData(mentions))
+
     @tracer.Command(permissions=["admin"], ignoreCase=True)
     def checkOp(self, msg, cl):
         '''Admin Only.'''
@@ -134,8 +156,31 @@ class NormalCmd(object):
         cl.replyMessage(msg, reply)
 
     @tracer.Command(ignoreCase=True)
+    def ops(self, msg, cl):
+        '''Admin List.'''
+        al = self.getPermission('admin')
+        reply = ''
+        if al:
+            for am in al:
+                reply += f'- {am[:6]}\n'
+            reply += f"Total: {len(al)}"
+        else:
+            reply = 'No Admin'
+        cl.replyMessage(msg, reply)
+
+    @tracer.Command(ignoreCase=True, toType=[2]) # toType 指定
     def bye(self, msg, cl):
         '''byebye'''
+        
         cl.deleteSelfFromChat(msg[2])
+
+    @tracer.Command(ignoreCase=True, splitchar=":")
+    def pm(self, msg, cl):
+        '''priv msg for test E2EE'''
+        mid = self.getArgs(msg[10], defVal=msg[1])[0]
+        try:
+            cl.sendMessageWithE2EE(mid, 'hello') # or sendCompactE2EEMessage
+        except:
+            cl.sendMessage(mid, 'hello') # or sendCompactMessage
 
 tracer.run()

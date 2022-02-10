@@ -509,6 +509,7 @@ class Thrift(object):
             return data
 
         writeByte = __writeByte
+        writeI32 = __writeI32
         readByte = __readByte
         __readI16 = __readZigZag
         readI16 = __readZigZag

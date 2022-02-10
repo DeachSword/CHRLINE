@@ -32,7 +32,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
-    def __init__(self):
+    def __init__(self, forwardedIp=None):
         self.server = Server()
         self.req = requests.session()
         self.req_h2 = httpx.Client(http2=True)
@@ -50,8 +50,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             "content-type": "application/x-thrift; protocol=TBINARY",
             "x-lal": self.LINE_LANGUAGE,
             "x-lhm": "POST",
-            # "X-Forwarded-For": "20.21.94.53",
         }
+        if forwardedIp is not None:
+            self.server.Headers['X-Forwarded-For'] = forwardedIp
         self.authToken = None
         self.revision = 0
         self.globalRev = 0
@@ -188,7 +189,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr = self.createSession()[1]
         url = self.createQrCode(sqr)[1]
         secret, secretUrl = self.createSqrSecret()
-        yield f"URL: {url}{secretUrl}"
+        url = url + secretUrl
+        imgPath = self.genQrcodeImageAndPrint(url)
+        yield f"URL: {url}"
+        yield f"IMG: {imgPath}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
             isCheck = False
@@ -216,7 +220,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqr = self.createSession()[1]
         url = self.createQrCode(sqr)[1]
         secret, secretUrl = self.createSqrSecret()
-        yield f"URL: {url}{secretUrl}"
+        url = url + secretUrl
+        imgPath = self.genQrcodeImageAndPrint(url)
+        yield f"URL: {url}"
+        yield f"IMG: {imgPath}"
         if self.checkQrCodeVerified(sqr):
             b = self.verifyCertificate(sqr, self.getSqrCert())
             isCheck = False
@@ -295,24 +302,14 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return False
 
     def verifyCertificate(self, qrcode, cert=None):
-        _headers = {
-            "x-lpqs": "/acct/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 118, 101, 114, 105, 102, 121, 67, 101, 114, 116,
-                105, 102, 105, 99, 97, 116, 101, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        if cert is not None:
-            sqrd += [11, 0, 2] + self.getStringBytes(cert)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [12, 1, [
+                [11, 1, qrcode],
+                [11, 2, cert],
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('verifyCertificate', params, 3)
+        return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
 
     def createPinCode(self, qrcode):
         _headers = {
@@ -403,119 +400,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         data = self.decData(res.content)
         return bytes(data)
 
-    def returnTicket(self, searchId, fromEnvInfo, otp):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/S3"  # V3?
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 12, 114, 101, 116, 117,
-                114, 110, 84, 105, 99, 107, 101, 116, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]  # AcquireOACallRouteRequest
-        sqrd += [11, 0, 1, 0, 0, 0, len(searchId)]
-        for value in searchId:
-            sqrd.append(ord(value))
-        # sqrd += [13, 0, 2, 0, 0, 0, len(otp)] #todo?
-        sqrd += [11, 0, 3, 0, 0, 0, len(otp)]
-        for value in otp:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-
-    def wakeUpLongPolling(self, clientRevision):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/P3"  # P3? S3?
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 17, 119, 97, 107, 101, 85, 112,
-                76, 111, 110, 103, 80, 111, 108, 108, 105, 110, 103, 0, 0, 0, 0]
-        sqrd += [10, 0, 2] + self.getIntBytes(clientRevision, 8)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-
-    def getModulesV2(self, etag):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/WALLET3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 12, 103, 101, 116, 77,
-                111, 100, 117, 108, 101, 115, 86, 50, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 1, 0, 0, 0, len(etag)]  # etag
-        for value in etag:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-
-    def inviteFriends(self, friendMids, message, messageMetadata={}, imageObsPath="/r/myhome/c/0f3a02b6f993d3b627eeca97d2095b9b"):
-        """ old ? """
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/PY3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 105, 110, 118, 105,
-                116, 101, 70, 114, 105, 101, 110, 100, 115, 0, 0, 0, 0]
-        sqrd += [15, 0, 1, 11, 0, 0, 0, len(friendMids)]
-        for mid in friendMids:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 2] + self.getStringBytes(message)
-        _keys = messageMetadata.copy().keys()
-        sqrd += [13, 0, 3, 11, 11] + \
-            self.getIntBytes(len(_keys))  # key and val must str
-        for _k in _keys:
-            _v = messageMetadata[_k]
-            sqrd += self.getStringBytes(_k)
-            sqrd += self.getStringBytes(_v)
-        sqrd += [11, 0, 4] + self.getStringBytes(imageObsPath)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        #data = self.decData(res.content)
-        return self.tryReadData(data)
-
-    def getCountrySettingV4(self):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/PY3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes('getCountrySettingV4') + [0, 0, 0, 0]
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
-
     def getRSAKeyInfo(self, provider=1):
         """
         provider:
@@ -524,21 +408,11 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
          - NAVER_KR(2),
          - LINE_PHONE(3)
         """
-        _headers = {
-            'x-lpqs': "/api/v3/TalkService.do"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes('getRSAKeyInfo') + [0, 0, 0, 0]
-        sqrd += [8, 0, 2] + self.getIntBytes(provider)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+        params = [
+            [8, 2, provider],
+        ]
+        sqrd = self.generateDummyProtocol('getRSAKeyInfo', params, 3)
+        return self.postPackDataAndGetUnpackRespData('/api/v3/TalkService.do', sqrd, 3)
 
     def loginV2(self, keynm, encData, secret, deviceName='Chrome', cert=None, verifier=None):
         loginType = 2
@@ -657,8 +531,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         res = self.server.postContent(
             self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        self.tryReadTCompactData(data)
-        return data
+        return self.TCompactProtocol(data).res
 
     def testTMoreCompact(self):
         _headers = {
