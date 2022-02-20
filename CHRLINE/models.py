@@ -18,6 +18,7 @@ from Crypto.Util.Padding import pad, unpad
 
 from .exceptions import LineServiceException
 
+
 class Models(object):
 
     def __init__(self):
@@ -545,6 +546,21 @@ class Models(object):
         if base64Only:
             return [private_key, b64encode(public_key).decode()]
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
+
+    def getE2EESelfKeyData(self, mid):
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{mid}.json"
+        if os.path.exists(savePath + f"/{fn}"):
+            return json.loads(open(savePath + f"/{fn}", "r").read())
+        keys = self.getE2EEPublicKeys()
+        for key in keys:
+            _keyData = self.getE2EESelfKeyDataByKeyId(key[2])
+            if _keyData is not None:
+                return _keyData
+        return None
 
     def getE2EESelfKeyData(self, mid):
         savePath = os.path.join(os.path.dirname(

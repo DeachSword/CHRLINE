@@ -26,6 +26,7 @@ import requests
 import httpx
 import base64
 import binascii
+import json
 
 
 class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService):
@@ -82,38 +83,35 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pwless_code = pwless_code[1]
         print(f'PWLESS SESSION: {pwless_code}')
         cert = self.getCacheData('.pwless', phone)
-        certVerify = self.verifyLoginCertificate(
-            pwless_code, '' if cert is None else cert)
-        if 'error' in certVerify:
+        try:
+            self.verifyLoginCertificate(pwless_code, '' if cert is None else cert)
+        except:
             pwless_pincode = self.requestPinCodeVerif(pwless_code)[1]
             print(f'PWLESS PINCODE: {pwless_pincode}')
-            certVerify = self.checkPwlessPinCodeVerified(pwless_code)
-        if certVerify is not None and 'error' not in certVerify:
-            secret, secretPK = self.createSqrSecret(True)
-            self.putExchangeKey(pwless_code, secretPK)
-            self.requestPaakAuth(pwless_code)
-            print(f'need Paak Auth Confind')
-            pa = self.checkPaakAuthenticated(pwless_code)
-            if pa is not None and 'error' not in pa:
-                ek = self.getE2eeKey(pwless_code)
-                loginInfo = self.pwlessLoginV2(pwless_code)
-                if 'error' not in loginInfo:
-                    cert = loginInfo[2]
-                    tokenInfo = loginInfo[3]
-                    token = tokenInfo[1]
-                    token2 = tokenInfo[2]
-                    mid = loginInfo[5]
-                else:
-                    loginInfo = self.pwlessLogin(pwless_code)
-                    token = loginInfo[1]
-                    cert = loginInfo[2]
-                    mid = loginInfo[4]
-                self.authToken = token
-                print(f'Auth Token: {self.authToken}')
-                self.saveCacheData('.pwless', phone, cert)
-                self.decodeE2EEKeyV1(ek[1], secret, mid)
-                return True
-        raise Exception('login failed.')
+            self.checkPwlessPinCodeVerified(pwless_code)
+        secret, secretPK = self.createSqrSecret(True)
+        self.putExchangeKey(pwless_code, secretPK)
+        self.requestPaakAuth(pwless_code)
+        print(f'need Paak Auth Confind')
+        self.checkPaakAuthenticated(pwless_code)
+        ek = self.getE2eeKey(pwless_code)
+        try:
+            loginInfo = self.pwlessLoginV2(pwless_code)
+            cert = loginInfo[2]
+            tokenInfo = loginInfo[3]
+            token = tokenInfo[1]
+            token2 = tokenInfo[2]
+            mid = loginInfo[5]
+        except:
+            loginInfo = self.pwlessLogin(pwless_code)
+            token = loginInfo[1]
+            cert = loginInfo[2]
+            mid = loginInfo[4]
+        self.authToken = token
+        print(f'Auth Token: {self.authToken}')
+        self.saveCacheData('.pwless', phone, cert)
+        self.decodeE2EEKeyV1(ek[1], secret, mid)
+        return True
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
@@ -127,12 +125,31 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                    chr(len(pw)) + pw).encode('utf-8')
         pub_key = rsa.PublicKey(int(nvalue, 16), int(evalue, 16))
         crypto = binascii.hexlify(rsa.encrypt(message, pub_key)).decode()
-        res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, certificate=certificate)
+        secret, secretPK = self.createSqrSecret(True)
+        pincode = b"202202"
+        _secret = self._encryptAESECB(self.getSHA256Sum(
+            pincode), base64.b64decode(secretPK))
+        res = self.loginV2(keynm, crypto, _secret,
+                           deviceName=self.SYSTEM_NAME,
+                           cert=certificate,
+                           calledName='loginZ')
+        # res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, certificate=certificate)
         if 1 not in res:
-            print(f"Enter Pincode: {res[4]}")
-            verifier = self.checkLoginZPinCode(res[3])['verifier']
-            res = self.loginZ(keynm, crypto, verifier=verifier)
-            self.saveEmailCert(email, res[2])
+            verifier = res[3]
+            print(f"Enter Pincode: {pincode.decode()}")
+            e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
+            try:
+                e2eeKeyInfo = self.decodeE2EEKeyV1(e2eeInfo, secret)
+            except:
+                raise Exception(f"e2eeInfo decode failed, try again")
+            blablabao = self.encryptDeviceSecret(base64.b64decode(
+                e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
+            try:
+                e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
+                res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, verifier=e2eeLogin)
+                self.saveEmailCert(email, res[2])
+            except:
+                raise Exception(f"confirmE2EELogin failed, try again")
         self.authToken = res[1]
         print(f"AuthToken: {self.authToken}")
         return True
@@ -167,16 +184,19 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 raise Exception(f"e2eeInfo decode failed, try again")
             blablabao = self.encryptDeviceSecret(base64.b64decode(
                 e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
-            e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
-            if 'error' not in e2eeLogin:
-                res = self.loginV2(
-                    None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
-                if res.get('error', {}).get('code', -1) == 20:
-                    print(
-                        f"can't login: {res['error']['message']}, try use LoginZ...")
-                    return self.requestEmailLogin(email, pw)
-                self.saveEmailCert(email, res[2])
-            else:
+            try:
+                e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
+                try:
+                    res = self.loginV2(
+                        None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
+                    self.saveEmailCert(email, res[2])
+                except LineServiceException as e:
+                    print(e)
+                    if e.code == 20:
+                        print(
+                            f"can't login: {e.message}, try use LoginZ...")
+                        return self.requestEmailLogin(email, pw)
+            except:
                 raise Exception(f"confirmE2EELogin failed, try again")
         self.authToken = res[9][1]
         refreshToken = res[9][2]
@@ -194,25 +214,20 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         yield f"URL: {url}"
         yield f"IMG: {imgPath}"
         if self.checkQrCodeVerified(sqr):
-            b = self.verifyCertificate(sqr, self.getSqrCert())
-            isCheck = False
-            if b is not None and 'error' in b:
-                c = self.createPinCode(sqr)
+            try:
+                self.verifyCertificate(sqr, self.getSqrCert())
+            except:
+                c =  self.createPinCode(sqr)
+                print(c)
                 yield f"請輸入pincode: {c}"
-                if self.checkPinCodeVerified(sqr):
-                    isCheck = True
+                self.checkPinCodeVerified(sqr)
+            e = self.qrCodeLogin(sqr, secret)
+            if isSelf:
+                self.authToken = e
+                print(f"AuthToken: {self.authToken}")
             else:
-                isCheck = True
-            if isCheck:
-                e = self.qrCodeLogin(sqr, secret)
-                if isSelf:
-                    self.authToken = e
-                    print(f"AuthToken: {self.authToken}")
-                else:
-                    yield e
-                    return
-                yield self.authToken
-                return
+                yield e
+            return
             raise Exception('can not check pin code, try again?')
         raise Exception('can not check qr code, try again?')
 
@@ -225,42 +240,37 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         yield f"URL: {url}"
         yield f"IMG: {imgPath}"
         if self.checkQrCodeVerified(sqr):
-            b = self.verifyCertificate(sqr, self.getSqrCert())
-            isCheck = False
-            if b is not None and 'error' in b:
+            try:
+                self.verifyCertificate(sqr, self.getSqrCert())
+            except:
                 c = self.createPinCode(sqr)
                 yield f"請輸入pincode: {c}"
-                if self.checkPinCodeVerified(sqr):
-                    isCheck = True
-            else:
-                isCheck = True
-            if isCheck:
-                try:
-                    e = self.qrCodeLoginV2(
-                        sqr, self.APP_TYPE, self.SYSTEM_NAME, True)
-                    cert = e[1]
-                    self.saveSqrCert(cert)
-                    tokenV3Info = e[3]
-                    _mid = e[4]
-                    bT = e[9]
-                    metadata = e[10]
-                    e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
-                    authToken = tokenV3Info[1]
-                    refreshToken = tokenV3Info[2]
-                    self.saveCacheData(
-                        '.refreshToken', authToken, refreshToken)
-                    print(f"AuthToken: {authToken}")
-                    print(f"RefreshToken: {refreshToken}")
-                    if isSelf:
-                        self.authToken = authToken
-                    yield authToken
-                    return
-                except LineServiceException as e:
-                    print(e)
-                    yield "try using requestSQR()..."
-                    for _ in self.requestSQR(isSelf):
-                        yield _
-                    return
+                self.checkPinCodeVerified(sqr)
+            try:
+                e = self.qrCodeLoginV2(
+                    sqr, self.APP_TYPE, self.SYSTEM_NAME, True)
+                cert = e[1]
+                self.saveSqrCert(cert)
+                tokenV3Info = e[3]
+                _mid = e[4]
+                bT = e[9]
+                metadata = e[10]
+                e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
+                authToken = tokenV3Info[1]
+                refreshToken = tokenV3Info[2]
+                self.saveCacheData(
+                    '.refreshToken', authToken, refreshToken)
+                print(f"AuthToken: {authToken}")
+                print(f"RefreshToken: {refreshToken}")
+                if isSelf:
+                    self.authToken = authToken
+                yield authToken
+            except LineServiceException as e:
+                print(e)
+                yield "try using requestSQR()..."
+                for _ in self.requestSQR(isSelf):
+                    yield _
+            return
             raise Exception('can not check pin code, try again?')
         raise Exception('can not check qr code, try again?')
 
@@ -414,7 +424,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqrd = self.generateDummyProtocol('getRSAKeyInfo', params, 3)
         return self.postPackDataAndGetUnpackRespData('/api/v3/TalkService.do', sqrd, 3)
 
-    def loginV2(self, keynm, encData, secret, deviceName='Chrome', cert=None, verifier=None):
+    def loginV2(self, keynm, encData, secret, deviceName='Chrome', cert=None, verifier=None, calledName='loginV2'):
         loginType = 2
         if verifier is not None:
             loginType = 1
@@ -434,7 +444,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 [11, 12, "System Product Name"],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('loginV2', params, 3)
+        sqrd = self.generateDummyProtocol(calledName, params, 3)
         return self.postPackDataAndGetUnpackRespData("/api/v3p/rs", sqrd, 3)
 
     def loginZ(self, keynm, encData, systemName='DeachSword-2021', certificate=None, verifier=None):
