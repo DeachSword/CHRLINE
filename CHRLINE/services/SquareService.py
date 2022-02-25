@@ -759,3 +759,13 @@ class SquareService(object):
         sqrd = self.generateDummyProtocol(
             "searchSquareChatMembers", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+
+
+    def getSquareChatFeatureSet(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSquareChatFeatureSet is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol("getSquareChatFeatureSet", params, self.SquareService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.SquareService_API_PATH ,sqrd,  self.SquareService_RES_TYPE)
