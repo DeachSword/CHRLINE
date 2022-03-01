@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json, time, base64
+import json
+import time
+import base64
+
 
 def loggedIn(func):
     def checkLogin(*args, **kwargs):
@@ -9,6 +12,7 @@ def loggedIn(func):
         else:
             raise Exception("can't use Timeline func")
     return checkLogin
+
 
 class Timeline():
 
@@ -57,7 +61,30 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET"
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/hm/api/v1/home/socialprofile/post.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/hm/api/v1/home/socialprofile/post.json', params)
+        r = self.server.postContent(url, headers=hr, data='')
+        return r.json()
+
+    @loggedIn
+    def getSocialProfileMediaDetail(self, mid: str, withSocialHomeInfo: bool = True, postLimit: int = 10, withStory: bool = True, storyVersion: str = 'v7', timelineVersion: str = 'v57', postId: str = None, updatedTime: int = None):
+        params = {
+            'homeId': mid,
+            'withSocialHomeInfo': withSocialHomeInfo,
+            'withStory': withStory,
+            'postLimit': postLimit,
+            'storyVersion': storyVersion,
+            'timelineVersion': timelineVersion
+        }
+        if postId is not None:
+            # post offset
+            params['postId'] = postId
+            params['updatedTime'] = updatedTime
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/hm/api/v1/home/socialprofile/mediapost.json', params)
         r = self.server.postContent(url, headers=hr, data='')
         return r.json()
 
@@ -72,9 +99,11 @@ class Timeline():
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
-            'x-line-global-config': "discover.enable=true; follow.enable=true", #why get follow count with this?
+            # why get follow count with this?
+            'x-line-global-config': "discover.enable=true; follow.enable=true",
         })
-        url = self.server.urlEncode('https://ga2.line.naver.jp/hm', '/api/v1/home/profile.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/hm/api/v1/home/profile.json', params)
         r = self.server.postContent(url, headers=hr, data='')
         return r.json()
 
@@ -94,7 +123,7 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST"
         })
-        url = 'https://ga2.line.naver.jp/hm/api/v1/home/profile'
+        url = self.LINE_HOST_DOMAIN + '/hm/api/v1/home/profile'
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -107,7 +136,8 @@ class Timeline():
             'x-lhm': "GET",
         })
         print(hr)
-        url = self.server.urlEncode('https://ga2.line.naver.jp/hm', '/api/v1/home/cover.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/api/v1/home/cover.json', params)
         r = self.server.postContent(url, headers=hr, data='')
         return r.json()
 
@@ -117,7 +147,7 @@ class Timeline():
             "homeId": self.profile[1],
             "coverObjectId": objid,
             "storyShare": storyShare,
-            "meta":{} # heh
+            "meta": {}  # heh
         }
         if vObjid:
             data['videoCoverObjectId'] = vObjid
@@ -125,7 +155,8 @@ class Timeline():
             'x-lhm': "POST",
             'Content-type': "application/json",
         })
-        r = self.server.postContent('https://ga2.line.naver.jp/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
+        r = self.server.postContent(
+            self.LINE_HOST_DOMAIN + '/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
         return r.json()
 
     @loggedIn
@@ -136,7 +167,8 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v41/home/updateCover.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v41/home/updateCover.json', params)
         r = self.server.getContent(url, headers=hr)
         return r.json()
 
@@ -151,7 +183,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v42/feed/carousel/oa.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v42/feed/carousel/oa.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -167,7 +200,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v57/contacts/block/partly.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/tl/mapi/v57/contacts/block/partly.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -182,7 +216,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/block', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/block', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -198,7 +233,8 @@ class Timeline():
             'x-lhm': "POST",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/hide', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contacts/hide', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -212,7 +248,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contact/autoopen', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/tl/mapi/v41/contact/autoopen', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -226,7 +263,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v24/grouphome/hide/list.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ma/api/v24/grouphome/hide/list.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -240,7 +278,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/mapi/v41/status/newpost', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/mapi/v41/status/newpost', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -254,7 +293,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v24/group/profileimage/list.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v24/group/profileimage/list.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
@@ -268,7 +308,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v1/profile/get.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ma/api/v1/profile/get.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.text
 
@@ -282,7 +323,8 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ma/api/v1/userpopup/getDetail.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ma/api/v1/userpopup/getDetail.json', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.text
 
@@ -297,24 +339,27 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/tl/mapi/v41/home/buddygroup/sync', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/tl/mapi/v41/home/buddygroup/sync', params)
         r = self.server.postContent(url, headers=hr, json=data)
         return r.text
 
     @loggedIn
     def sendContactV2(self, homeId, targetMids):
-        url = 'https://ga2.line.naver.jp/hm/api/v1/home/profile/share'
-        data = {"homeId":homeId,"shareType":"FLEX_OA_HOME_PROFILE_SHARING","targetMids":targetMids}
-        r = self.server.postContent(url, headers=self.server.timelineHeaders, data=json.dumps(data))
-        result =  r.json()
+        url = self.LINE_HOST_DOMAIN + '/hm/api/v1/home/profile/share'
+        data = {"homeId": homeId, "shareType": "FLEX_OA_HOME_PROFILE_SHARING",
+                "targetMids": targetMids}
+        r = self.server.postContent(
+            url, headers=self.server.timelineHeaders, data=json.dumps(data))
+        result = r.json()
         if result['message'] == 'success':
-            return  result['result']
+            return result['result']
         else:
             return False
 
     @loggedIn
     def getTimelintTab(self, postLimit=20, likeLimit=6, commentLimit=10, requestTime=0):
-        url = 'https://ga2.line.naver.jp/tl/api/v57/timeline/tab.json'
+        url = self.LINE_HOST_DOMAIN + '/tl/api/v57/timeline/tab.json'
         data = {
             "feedRequests": {
                 "FEED_LIST": {
@@ -344,35 +389,224 @@ class Timeline():
             'x-lsr': 'TW'
         })
         r = self.server.postContent(url, headers=hr, data=json.dumps(data))
-        result =  r.json()
+        result = r.json()
         if result['message'] == 'success':
-            return  result['result']
+            return result['result']
         else:
             return False
 
+    @loggedIn
+    def updateCmtLike(self, homeId: str, noti: bool = True):
+        """update note notify"""
+        params = {
+            'homeId': homeId,
+        }
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v21/grouphome/notisetting/updateCmtLike.json', params)
+        data = {
+            "notiSet": [{
+                "notiType": "NOTE_CMTLIKE",
+                "noti": noti
+            }]
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getTalkroomStatus(self, userMid: str):
+        """check talkroom has updated"""
+        params = {
+            'userMid': userMid,
+        }
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ma/api/v1/talkroom/get.json', params)
+        data = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def getHomeProfileBridge(self, homeId: str):
+        """update note notify"""
+        params = {
+            'homeId': homeId,
+        }
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v1/home/profileBridge.json', params)
+        data = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
 
     """ POST """
 
     @loggedIn
-    def getPost(self, mid, postId):
+    def createPost(self, homeId: str, text: str = None, sharedPostId: str = None, textSizeMode: str = "NORMAL", backgroundColor: str = "#FFFFFF", textAnimation: str = "NONE", readPermissionType: str = "ALL", readPermissionGids: list = [], holdingTime: int = None, stickerIds: list = [], stickerPackageIds: list = [], locationLatitudes: list = [], locationLongitudes: list = [], locationNames: list = [], mediaObjectIds: list = [], mediaObjectTypes: list = [], sourceType: str = "TIMELINE"):
+        """
+        - readPermissionType:
+            ALL,
+            FRIEND,
+            GROUP,
+            EVENT,
+            NONE;
+        - textSizeMode:
+            AUTO,
+            NORMAL;
+        - textAnimation:
+            NONE,
+            SLIDE,
+            ZOOM,
+            BUZZ,
+            BOUNCE,
+            BLINK;
+        """
         params = {
-            'homeId': mid,
-            'postId': postId,
+            'homeId': homeId,
+            'sourceType': sourceType
+        }
+        postInfo = {
+            "readPermission": {
+                "type": readPermissionType,
+                "gids": readPermissionGids
+            },
+        }
+        stickers = []
+        locations = []
+        medias = []
+        for stickerIndex, stickerId in enumerate(stickerIds):
+            stickers.append({
+                "id": stickerId,
+                "packageId": stickerPackageIds[stickerIndex],
+                "packageVersion": 1,
+                "hasAnimation": True,  # TODO: check it
+                "hasSound": True,  # TODO: check it
+                "stickerResourceType": "ANIMATION"  # TODO: check it
+            })
+        for locatioIndex, locationLatitude in enumerate(locationLatitudes):
+            locations.append({
+                "latitude": locationLatitude,
+                "longitude": locationLongitudes[locatioIndex],
+                "name": locationNames[locatioIndex]
+            })
+        for mediaIndex, mediaObjectId in enumerate(mediaObjectIds):
+            medias.append({
+                "objectId": mediaObjectId,
+                "type": mediaObjectTypes[mediaIndex],
+                # "width": 1016,
+                # "height": 453,
+                # "size": 16022,
+                "obsFace": "[]"
+            })
+        contents = {
+            "contentsStyle": {
+                "textStyle": {
+                    "textSizeMode": textSizeMode,
+                    "backgroundColor": backgroundColor,
+                    "textAnimation": textAnimation
+                },
+                "mediaStyle": {
+                    "displayType": "GRID_1_A"
+                },
+            },
+            "stickers": stickers,
+            "locations": locations,
+            "media": medias
+        }
+        if holdingTime is not None:
+            postInfo["holdingTime"] = holdingTime
+        if text is not None:
+            contents['text'] = text
+        if sharedPostId is not None:
+            contents['sharedPostId'] = sharedPostId
+        data = {
+            "postInfo": postInfo,
+            "contents": contents
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/create.json',
+            params
+        )
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def updatePost(self, homeId: str, postData: dict, sourceType: str = "TIMELINE"):
+        params = {
+            'homeId': homeId,
+            'sourceType': sourceType
+        }
+        data = postData.copy()
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/update.json',
+            params
+        )
+        r = self.server.postContent(url, headers=hr, json=data)
+        return r.json()
+
+    @loggedIn
+    def deletePost(self, homeId: str, postId: str):
+        params = {
+            'homeId': homeId,
+            'postId': postId
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
             'Content-type': "application/json",
-            'x-lpv': '1',
-            'x-lsr':'TW'
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v52/post/list.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/delete.json',
+            params
+        )
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def listPost(self, mid, postId=None, updatedTime=None):
+    def getPost(self, mid: str, postId: str, sourceType: str = "MYHOME"):
         params = {
-            'homeId': mid
+            'homeId': mid,
+            'postId': postId,
+            'sourceType': sourceType
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'Content-type': "application/json",
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/get.json',
+            params
+        )
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def listPost(self, mid: str, postId: str = None, updatedTime: int = None, sourceType: str = "TALKROOM"):
+        """ list posts for chat room. 
+            use postId and updatedTime to fetch next posts """
+        params = {
+            'homeId': mid,
+            'sourceType': sourceType
         }
         if postId is not None:
             params['postId'] = postId
@@ -382,45 +616,66 @@ class Timeline():
             'x-lhm': "GET",
             'Content-type': "application/json",
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/post/get.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/list.json',
+            params
+        )
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def createComment(self, mid, contentId, text):
+    def createComment(self, mid: str, contentId: str, text: str = "", stickerId: int = None, stickerPackageId: int = None, mediaObjectId: str = None, mediaObjectType: str = "PHOTO", mediaObjectFrom: str = "cmt", sourceType: str = "TIMELINE"):
         params = {
-            'homeId': mid
+            'homeId': mid,
+            'sourceType': sourceType
         }
+        contentsList = []
+        if stickerId is not None:
+            contentsList.append({
+                "categoryId": "sticker",
+                "extData": {
+                    "id": stickerId,
+                    "packageId": stickerPackageId,
+                    "packageVersion": 1,
+                    "hasAnimation": True,  # TODO: check it
+                    "hasSound": True,  # TODO: check it
+                    "stickerResourceType": "ANIMATION"  # TODO: check it
+                }
+            })
+        if mediaObjectId is not None:
+            contentsList.append({
+                "categoryId": "media",
+                "extData": {
+                    "objectId": mediaObjectId,
+                    "type": mediaObjectType,
+                    "width": 999999999999999,
+                    "height": 999999999999999,
+                    "size": -1,
+                    "obsNamespace": mediaObjectFrom,
+                    "serviceName": "myhome"
+                }
+            })
         data = {
-           "contentId" : contentId,
-           "commentText" : text,
-           "secret" : False,
-           "contentsList" : [
-              {
-                 "categoryId" : "sticker",
-                 "extData" : {
-                    "id" : 1,
-                    "packageId" : 1,
-                    "packageVersion" : 1
-                 }
-              }
-           ],
-           "commandId" : 16777257,
-           "channelId" : "1341209850",
-           "commandType" : 188208
+            "contentId": contentId,
+            "commentText": text,
+            # "secret": False,  # WTF THIS?
+            "contentsList": contentsList,
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST",
             'Content-type': "application/json",
-            'x-lpv': '1',
-            'x-lsr':'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/comment/create.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/comment/create.json',
+            params
+        )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
     @loggedIn
-    def deleteComment(self, mid, contentId, commentId):
+    def deleteComment(self, mid: str, commentId: str):
         params = {
             'homeId': mid,
             'commentId': commentId
@@ -428,114 +683,123 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
             'Content-type': "application/json",
-            'x-lpv': '1',
-            'x-lsr':'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/comment/delete.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v57/comment/delete.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def listComment(self, mid, contentId):
+    def listComment(self, mid: str, contentId: str, scrollId: str = None):
         params = {
             'homeId': mid,
-            #'actorId': actorId,
+            # 'actorId': actorId,
             'contentId': contentId,
-            #'limit': 10
+            # 'limit': 10
         }
+        if scrollId is not None:
+            params['scrollId'] = scrollId
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
             'Content-type': "application/json",
             'x-lpv': '1',
-            'x-lsr':'TW'
+            'x-lsr': 'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v52/comment/getList.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v57/comment/getList.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def createLike(self, mid, contentId, likeType=1003):
+    def createLike(self, mid: str, contentId: str, likeType: str = "1003", sharable: bool = False, sourceType: str = "TIMELINE"):
         params = {
-            'homeId': mid
+            "sourceType": sourceType
         }
         data = {
-           "contentId" : contentId,
-           "likeType" : str(likeType),
-           "sharable" : False,
-           "commandId" : 16777265,
-           "channelId" : "1341209850",
-           "commandType" : 188210
+            "contentId": contentId,
+            "actorId": mid,
+            "likeType": likeType,
+            "sharable": sharable,
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST",
             'Content-type': "application/json",
-            'x-lpv': '1',
-            'x-lsr':'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v41/like/create.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/like/create.json',
+            params
+        )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
 
     @loggedIn
-    def cancelLike(self, contentId):
+    def cancelLike(self, contentId: str, sourceType: str = "TIMELINE"):
         params = {
-            'contentId': contentId,
+            "contentId": contentId,
+            "sourceType": sourceType
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
             'Content-type': "application/json",
-            'x-lpv': '1',
-            'x-lsr':'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v41/like/cancel.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v41/like/cancel.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def listLike(self, mid, contentId):
+    def listLike(self, mid: str, contentId: str, scrollId: str = None, includes: list = ["ALL", "GROUPED", "STATS"], filterType: str = None):
         params = {
             'homeId': mid,
-            'contentId': contentId
+            'contentId': contentId,
+            'includes': ",".join(includes)
         }
+        if scrollId is not None:
+            params['scrollId'] = scrollId
+        if filterType is not None:
+            params['filterType'] = filterType  # eg. 1003 for GROUPED
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
             'Content-type': "application/json",
             'x-lpv': '1',
-            'x-lsr':'TW'
+            'x-lsr': 'TW'
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp', '/mh/api/v41/like/getList.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v41/like/getList.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
     def searchNote(self, mid, text):
         data = {
-           "query" : text,
-           "queryType" : "TEXT",
-           "homeId" : mid,
-           "postLimit" : 20,
-           "commandId" : 16,
-           "channelId" : "1341209850",
-           "commandType" : 188259
+            "query": text,
+            "queryType": "TEXT",
+            "homeId": mid,
+            "postLimit": 20,
+            "commandId": 16,
+            "channelId": "1341209850",
+            "commandType": 188259
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp/mh',
-            '/api/v46/search/note.json',
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v46/search/note.json',
             {}
         )
-        r = self.server.postContent(url, headers=self.server.timelineHeaders, data=json.dumps(data))
+        r = self.server.postContent(
+            url, headers=self.server.timelineHeaders, data=json.dumps(data))
         res = r.json()
         return res["result"]["feeds"]
 
     @loggedIn
-    def sendPostToTalk(self, postId, receiveMids):
+    def sendPostToTalk(self, postId: str, receiveMids: list):
         data = {
             "postId": postId,
             "receiveMids": receiveMids
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
-            '/mh/api/v56/post/sendPostToTalk.json',
+            self.LINE_HOST_DOMAIN,
+            '/mh/api/v57/post/sendPostToTalk.json',
             {}
         )
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
@@ -549,13 +813,13 @@ class Timeline():
     def getHashtagPosts(self, query, homeId=None, scrollId=None, range=["GROUP"]):
         # range: GROUP or unset
         data = {
-           "query" : query,
-           "homeId" : homeId,
-           "scrollId" : scrollId,
-           "range" : range
+            "query": query,
+            "homeId": homeId,
+            "scrollId": scrollId,
+            "range": range
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
+            self.LINE_HOST_DOMAIN,
             '/mh/api/v52/hashtag/posts.json',
             {}
         )
@@ -570,10 +834,10 @@ class Timeline():
     @loggedIn
     def getHashtagSuggest(self, query):
         data = {
-           "query" : query
+            "query": query
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
+            self.LINE_HOST_DOMAIN,
             '/mh/api/v52/hashtag/suggest.json',
             {}
         )
@@ -588,11 +852,11 @@ class Timeline():
     @loggedIn
     def getHashtagPopular(self, homeId, limit=20):
         data = {
-           "homeId" : homeId,
-           "limit" : limit
+            "homeId": homeId,
+            "limit": limit
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
+            self.LINE_HOST_DOMAIN,
             '/mh/api/v52/hashtag/popular.json',
             {}
         )
@@ -607,10 +871,10 @@ class Timeline():
     @loggedIn
     def getTimelineUrl(self, homeId):
         data = {
-           "homeId" : homeId
+            "homeId": homeId
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
+            self.LINE_HOST_DOMAIN,
             '/mh/api/v55/web/getUrl.json',
             data
         )
@@ -623,11 +887,11 @@ class Timeline():
     @loggedIn
     def getPostShareLink(self, postId):
         data = {
-           "postId" : postId
+            "postId": postId
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
-            '/api/v55/post/getShareLink.json',
+            self.LINE_HOST_DOMAIN,
+            '/api/v57/post/getShareLink.json',
             data
         )
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
@@ -639,11 +903,11 @@ class Timeline():
     @loggedIn
     def getDiscoverRecommendFeeds(self, sourcePostId, contents=["CP", "PI", "PV", "PL", "AD"]):
         data = {
-            "sourcePostId": sourcePostId, 
-            "contents" : contents
+            "sourcePostId": sourcePostId,
+            "contents": contents
         }
         url = self.server.urlEncode(
-            'https://gwz.line.naver.jp',
+            self.LINE_HOST_DOMAIN,
             '/tl/discover/api/v1/recommendFeeds',
             {}
         )
@@ -662,13 +926,14 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "PUT",
             'Content-type': "application/json",
-            'x-lpv': '1', #needless
-            'x-lsr':'TW', #needless
-            'x-u': '' #needless
+            'x-lpv': '1',  # needless
+            'x-lsr': 'TW',  # needless
+            'x-u': ''  # needless
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/album/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/album/%s' % albumId, params)
         r = self.server.postContent(url, data=data, headers=hr)
-        #r.json()['code'] == 0: success
+        # r.json()['code'] == 0: success
         return r.json()
 
     @loggedIn
@@ -677,75 +942,79 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "DELETE",
             'Content-type': "application/json",
-            'x-lpv': '1', #needless
-            'x-lsr':'TW', #needless
-            'x-u': '' #needless
+            'x-lpv': '1',  # needless
+            'x-lsr': 'TW',  # needless
+            'x-u': ''  # needless
         })
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v4/album/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v4/album/%s' % albumId, params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
     def addImageToAlbum(self, mid, albumId, oid):
-        #oid like 6cbff2e4100006b58db80f87ad8666bc.20121408
+        # oid like 6cbff2e4100006b58db80f87ad8666bc.20121408
         params = {'homeId': mid}
-        data = json.dumps({"photos":[{"oid": oid}]})
-        
+        data = json.dumps({"photos": [{"oid": oid}]})
+
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'PUT',
             'content-type': "application/json",
-            'x-album-stats': "e2FsYnVtUGhvdG9BZGRDb3VudD0xfQ==" #change it if you want update many images
+            # change it if you want update many images
+            'x-album-stats': "e2FsYnVtUGhvdG9BZGRDb3VudD0xfQ=="
         })
 
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/photos/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/photos/%s' % albumId, params)
         r = self.server.postContent(url, data=data, headers=hr)
-        
-        #{"code":0,"message":"success","result":true}
-        return r.json()    
+
+        # {"code":0,"message":"success","result":true}
+        return r.json()
 
     @loggedIn
     def getAlbumImages(self, mid, albumId):
         params = {'homeId': mid}
-        
+
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'GET',
             'content-type': "application/json",
         })
 
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/photos/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/photos/%s' % albumId, params)
         r = self.server.postContent(url, headers=hr)
-        
+
         return r.json()
 
     @loggedIn
     def deleteAlbumImages(self, mid, albumId, id):
-        #id 4620693219800810323, not oid
+        # id 4620693219800810323, not oid
         params = {'homeId': mid}
-        data = json.dumps({"photos":[{"id": id}]})
-            
-        
+        data = json.dumps({"photos": [{"id": id}]})
+
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
             'content-type': "application/json"
         })
 
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/photos/delete/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, 'ext/album/api/v3/photos/delete/%s' % albumId, params)
         r = self.server.postContent(url, data=data, headers=hr)
-        #{"code":0,"message":"success","result":true}
+        # {"code":0,"message":"success","result":true}
         return r.json()
 
     @loggedIn
     def getAlbums(self, homeId):
         params = {'homeId': homeId}
         data = {}
-            
-        
+
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'GET',
             'content-type': "application/json"
         })
 
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/albums', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/albums', params)
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
@@ -753,28 +1022,18 @@ class Timeline():
     def getAlbumUsers(self, mid, albumId):
         params = {'homeId': mid}
         data = {}
-            
-        
+
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'GET',
             'content-type': "application/json"
         })
 
-        url = self.server.urlEncode('https://gwz.line.naver.jp/ext/album', '/api/v3/users/%s' % albumId, params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/users/%s' % albumId, params)
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
-
     """ STORY """
-
-    @loggedIn
-    def uploadStoryObject(self, mid, albumId, name):
-        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
-            'x-obs-params': 'eyJuYW1lIjoidGltZWxpbmVfMjAyMTAyMjZfMDQzODExLmpwZyIsIm9pZCI6IjgzNTY2YWVmM2ZhNWRhMjllMGNkNGJkMzFiM2QzM2IxdGZmZmZmZmZmIiwicmFuZ2UiOiJieXRlcyAwLTIxNzEwXC8yMTcxMSIsInF1YWxpdHkiOiI3MCIsInR5cGUiOiJpbWFnZSIsInZlciI6IjEuMCJ9'
-        })
-        url = self.server.urlEncode('https://obs-tw.line-apps.com', '/story/st/upload.nhn')
-        r = self.server.postContent(url, data=data, headers=hr)
-        return r.json()
 
     @loggedIn
     def createStoryContent(self):
@@ -782,7 +1041,8 @@ class Timeline():
             'x-lhm': 'POST',
             'content-type': "application/json"
         })
-        data = {"content":{"sourceType":"USER","contentType":"USER","media":[{"oid":"83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3","service":"story","sid":"st","hash":"0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ","mediaType":"IMAGE"}]},"shareInfo":{"shareType":"FRIEND"}}
+        data = {"content": {"sourceType": "USER", "contentType": "USER", "media": [{"oid": "83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3", "service": "story", "sid": "st",
+                                                                                    "hash": "0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ", "mediaType": "IMAGE"}]}, "shareInfo": {"shareType": "FRIEND"}}
         data = {
             "content": {
                 "sourceType": "USER",
@@ -802,7 +1062,8 @@ class Timeline():
                 "shareType": "ALL"
             }
         }
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v6/story/content/create')
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/st/api/v6/story/content/create')
         r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
 
@@ -816,7 +1077,8 @@ class Timeline():
             "lastRequestTime": lastRequestTime,
             "lastTimelineVisitTime": lastTimelineVisitTime
         }
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v7/story/recentstory/list')
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/st/api/v7/story/recentstory/list')
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
@@ -830,11 +1092,12 @@ class Timeline():
             "to": {
                 "userMid": userMid,
                 "friendType": "",
-                "tsId":""
+                "tsId": ""
             },
             "contentId": contentId,
             "message": message}
-        url = self.server.urlEncode('https://ga2.line.naver.jp', '/st/api/v6/story/message/send')
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/st/api/v6/story/message/send')
         r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
 
@@ -848,7 +1111,8 @@ class Timeline():
             "newStoryTypes": newStoryTypes,
             "lastTimelineVisitTime": 0
         }
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/st/api/v7/story/newstory')
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/st/api/v7/story/newstory')
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
@@ -861,9 +1125,10 @@ class Timeline():
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST",
-            #x-line-channeltoken: 1557852768
+            # x-line-channeltoken: 1557852768
         })
-        url = self.server.urlEncode('https://search.line.me', '/lnexearch', params)
+        url = self.server.urlEncode(
+            'https://search.line.me', '/lnexearch', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
@@ -880,7 +1145,8 @@ class Timeline():
             'x-lhm': "GET",
             'content-type': "application/json"
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/sc/api/v2/pageinfo/get.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/sc/api/v2/pageinfo/get.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
@@ -895,7 +1161,8 @@ class Timeline():
             'x-lhm': "GET",
             'content-type': "application/json"
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/mh/api/v24/otoaccount/sync.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/mh/api/v24/otoaccount/sync.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
@@ -911,7 +1178,8 @@ class Timeline():
             'x-lhm': "GET",
             'content-type': "application/json"
         })
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/sync.json', params)
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/sync.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
@@ -1143,8 +1411,8 @@ class Timeline():
         params = {}
         data = {
             "boardId": boardId,
-            "cardStatus": cardStatus, # NORMAL or HIDDEN
-            "celebratorMid": celebratorMid, # self mid, but why? 🤔
+            "cardStatus": cardStatus,  # NORMAL or HIDDEN
+            "celebratorMid": celebratorMid,  # self mid, but why? 🤔
             "text": text,
             "from": "BOARD",
         }

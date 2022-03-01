@@ -12,6 +12,7 @@ class TalkService():
     def __init__(self):
         self.testPollConn = requests.session()
 
+
     def sendMessage(self, to: str, text: str, contentType: int = 0, contentMetadata: dict = {}, relatedMessageId: str = None, location: dict = None, chunk: list = None):
         message = [
             [11, 2, to],
@@ -50,7 +51,6 @@ class TalkService():
             message.append(
                 # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
                 [8, 22, 3]
-
             )
             message.append(
                 [8, 24, 1]  # relatedMessageServiceCode; 1 for Talk 2 for Square
