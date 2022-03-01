@@ -1,6 +1,4 @@
 ﻿# -*- coding: utf-8 -*-
-import time
-
 import httpx
 import requests
 
@@ -14,7 +12,8 @@ class TalkService():
     def __init__(self):
         self.testPollConn = requests.session()
 
-    def sendMessage(self, to: str, text: str, contentType: int=0, contentMetadata: dict={}, relatedMessageId: str=None, location: dict=None, chunk: list=None):
+
+    def sendMessage(self, to: str, text: str, contentType: int = 0, contentMetadata: dict = {}, relatedMessageId: str = None, location: dict = None, chunk: list = None):
         message = [
             [11, 2, to],
             [10, 5, 0],  # createdTime
@@ -31,7 +30,8 @@ class TalkService():
         if location is not None:
             locationObj = [
                 [11, 1, location.get(1, 'CHRLINE API')],
-                [11, 2, location.get(2, 'https://github.com/DeachSword/CHRLINE')],
+                [11, 2, location.get(
+                    2, 'https://github.com/DeachSword/CHRLINE')],
                 [4, 3, location.get(3, 0)],
                 [4, 4, location.get(4, 0)],
                 [11, 6, location.get(6, 'PC0')],
@@ -49,11 +49,11 @@ class TalkService():
                 [11, 21, relatedMessageId]
             )
             message.append(
-                [8, 22, 3] # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
-
+                # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
+                [8, 22, 3]
             )
             message.append(
-                [8, 24, 1] # relatedMessageServiceCode; 1 for Talk 2 for Square
+                [8, 24, 1]  # relatedMessageServiceCode; 1 for Talk 2 for Square
             )
         params = [
             [8, 1, self.getCurrReqId()],
@@ -93,7 +93,7 @@ class TalkService():
         return self.sendMessageWithChunks(to, chunk, contentType, contentMetadata, relatedMessageId)
 
     def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}, relatedMessageId=None):
-        return self.sendMessage(to, None,contentType, contentMetadata, relatedMessageId, chunk=chunk)
+        return self.sendMessage(to, None, contentType, contentMetadata, relatedMessageId, chunk=chunk)
 
     def sendCompactMessage(self, to: str, text: str, chunks: list = []):
         cType = -1  # 2 = TEXT, 4 = STICKER, 5 = E2EE_TEXT, 6 = E2EE_LOCATION
@@ -663,11 +663,11 @@ class TalkService():
                         if 10 in op:
                             a = op[10].split('\x1e')
                             self.individualRev = a[0]
-                            self.log(f"individualRev: {self.individualRev}", True)
+                            self.log(f"individualRev: {self.individualRev}")
                         if 11 in op:
                             b = op[11].split('\x1e')
                             self.globalRev = b[0]
-                            self.log(f"globalRev: {self.globalRev}", True)
+                            self.log(f"globalRev: {self.globalRev}")
                 return data
             else:
                 raise Exception(data['error'])
@@ -720,30 +720,13 @@ class TalkService():
             return self.fetchOps(revision, count)
         return []
 
-    def fetchOperations(self, deviceId, offsetFrom):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/P3"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 8, 102, 101,
-                116, 99, 104, 79, 112, 115, 0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        deviceId = str(deviceId).encode()
-        sqrd += [11, 0, 1] + self.getIntBytes(len(deviceId))
-        for value2 in deviceId:
-            sqrd.append(value2)
-        sqrd += [10, 0, 2] + self.getIntBytes(offsetFrom, 8)
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        hr = self.server.additionalHeaders(self.server.Headers, {
-            "x-lst": "180000",
-        })
-        res = self.req_poll.post(self.url, data=data, headers=hr)
-        data = self.decData(res.content)
-        return self.tryReadData(data)
+    def fetchOperations(self, localRev, count=100):
+        params = [
+            [10, 2, localRev],
+            [8, 3, count],
+        ]
+        sqrd = self.generateDummyProtocol('fetchOperations', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/S4", sqrd, 4)
 
     def sendEchoPush(self, text):
         # for long poll? check conn is alive
@@ -1937,12 +1920,11 @@ class TalkService():
             "tryFriendRequest", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def generateUserTicket(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("generateUserTicket is not implemented")
-        params = []
+    def generateUserTicket(self, expirationTime: int, maxUseCount: int):
+        params = [
+            [10, 3, expirationTime],
+            [8, 4, maxUseCount]
+        ]
         sqrd = self.generateDummyProtocol(
             "generateUserTicket", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -2042,12 +2024,10 @@ class TalkService():
             "getInstantNews", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def createQrcodeBase64Image(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("createQrcodeBase64Image is not implemented")
-        params = []
+    def createQrcodeBase64Image(self, url: str):
+        params = [
+            [11, 2, url]
+        ]
         sqrd = self.generateDummyProtocol(
             "createQrcodeBase64Image", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -2254,12 +2234,11 @@ class TalkService():
             "inviteIntoGroup", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def removeAllMessages(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("removeAllMessages is not implemented")
-        params = []
+    def removeAllMessages(self, lastMessageId: str):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 1, lastMessageId]
+        ]
         sqrd = self.generateDummyProtocol(
             "removeAllMessages", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -2384,12 +2363,13 @@ class TalkService():
             "reportDeviceState", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def sendChatRemoved(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("sendChatRemoved is not implemented")
-        params = []
+    def sendChatRemoved(self, chatMid: str, lastMessageId: str):
+        params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, chatMid],
+            [11, 3, lastMessageId],
+            # [3, 4, sessionId]
+        ]
         sqrd = self.generateDummyProtocol(
             "sendChatRemoved", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -2738,12 +2718,10 @@ class TalkService():
             "registerDeviceWithIdentityCredential", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def wakeUpLongPolling(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("wakeUpLongPolling is not implemented")
-        params = []
+    def wakeUpLongPolling(self, clientRevision: int):
+        params = [
+            [10, 2, clientRevision]
+        ]
         sqrd = self.generateDummyProtocol(
             "wakeUpLongPolling", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -2947,10 +2925,6 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
     def getRingtone(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getRingtone is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
             "getRingtone", params, self.TalkService_REQ_TYPE)
@@ -2987,10 +2961,6 @@ class TalkService():
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
     def getEncryptedIdentityV2(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getEncryptedIdentityV2 is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
             "getEncryptedIdentityV2", params, self.TalkService_REQ_TYPE)
@@ -3050,12 +3020,25 @@ class TalkService():
             "removeBuddyLocation", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def report(self):
+    def report(self, syncOpRevision: int, category: int, report: str):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        - category:
+            PROFILE(0),
+        SETTINGS(1),
+        OPS(2),
+        CONTACT(3),
+        RECOMMEND(4),
+        BLOCK(5),
+        GROUP(6),
+        ROOM(7),
+        NOTIFICATION(8),
+        ADDRESS_BOOK(9);
         """
-        raise Exception("report is not implemented")
-        params = []
+        params = [
+            [10, 2, syncOpRevision],
+            [8, 3, category],
+            [11, 4, report],
+        ]
         sqrd = self.generateDummyProtocol(
             "report", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -3069,12 +3052,10 @@ class TalkService():
             "registerUserid", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def finishUpdateVerification(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("finishUpdateVerification is not implemented")
-        params = []
+    def finishUpdateVerification(self, sessionId: str):
+        params = [
+            [11, 2, sessionId]
+        ]
         sqrd = self.generateDummyProtocol(
             "finishUpdateVerification", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -3109,12 +3090,10 @@ class TalkService():
             "cancelGroupInvitation", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def clearRingtone(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("clearRingtone is not implemented")
-        params = []
+    def clearRingtone(self, oid: str):
+        params = [
+            [11, 1, oid]
+        ]
         sqrd = self.generateDummyProtocol(
             "clearRingtone", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -3178,11 +3157,16 @@ class TalkService():
             "reportPushRecvReports", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
 
-    def getFriendRequests(self):
+    def getFriendRequests(self, direction: int = 1, lastSeenSeqId: int = None):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        -  direction:
+            INCOMING(1),
+            OUTGOING(2);
         """
-        params = []
+        params = [
+            [8, 1, direction],
+            [10, 2, lastSeenSeqId]
+        ]
         sqrd = self.generateDummyProtocol(
             "getFriendRequests", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
@@ -3232,3 +3216,13 @@ class TalkService():
         sqrd = self.generateDummyProtocol(
             "getFollowBlacklist", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE)
+
+    def determineMediaMessageFlow(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("determineMediaMessageFlow is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol(
+            "determineMediaMessageFlow", params, self.TalkService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd,  self.TalkService_RES_TYPE)

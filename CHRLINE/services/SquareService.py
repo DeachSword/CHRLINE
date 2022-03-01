@@ -99,44 +99,73 @@ class SquareService(object):
         sqrd += [0, 0]
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
-    def fetchMyEvents(self, subscriptionId=0, syncToken='', continuationToken=None, limit=50):
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes("fetchMyEvents") + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [10, 0, 1] + self.getIntBytes(subscriptionId, 8)
-        sqrd += [11, 0, 2] + self.getStringBytes(syncToken)
-        sqrd += [8, 0, 3] + self.getIntBytes(limit)
-        sqrd += [11, 0, 4] + self.getStringBytes(continuationToken)
-        sqrd += [0, 0]
+    def fetchMyEvents(self, subscriptionId: int=0, syncToken: str=None, continuationToken: str=None, limit: int=100):
+        params = [
+            [12, 1, [
+                [10, 1, subscriptionId],
+                [11, 2, syncToken],
+                [8, 3, limit],
+                [11, 4, continuationToken]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('fetchMyEvents', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
-    def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=50):
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes("fetchSquareChatEvents") + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [10, 0, 1] + self.getIntBytes(subscriptionId, 8)
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [11, 0, 3] + self.getStringBytes(syncToken)
-        sqrd += [8, 0, 4] + self.getIntBytes(limit)
-        sqrd += [0, 0]
+    def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=100):
+        params = [
+            [12, 1, [
+                [10, 1, subscriptionId],
+                [11, 2, squareChatMid],
+                # [11, 3, syncToken],
+                [8, 4, limit],
+                [8, 5, 1], # direction
+                [8, 6, 1], # inclusive
+                # [11, 7, continuationToken]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('fetchSquareChatEvents', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
 
-    def sendSquareMessage(self, squareChatMid, text):
-        sqrd = [128, 1, 0, 1] + \
-            self.getStringBytes("sendMessage") + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [8, 0, 1] + self.getIntBytes(0)  # reqSeq
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [12, 0, 3]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [11, 0, 10] + self.getStringBytes(text)
-        sqrd += [8, 0, 15] + self.getIntBytes(0)  # contentType
-        sqrd += [0]
-        sqrd += [8, 0, 3] + self.getIntBytes(4)  # fromType
-        # sqrd += [10, 0, 4] + self.getIntBytes(0, 8) # squareMessageRevision
-        sqrd += [0, 0, 0]
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
+    def sendSquareMessage(self, squareChatMid: str, text: str, contentType: int=0, contentMetadata: dict={}, relatedMessageId: str=None):
+        message = [
+            # [11, 1, _from],
+            [11, 2, squareChatMid],
+            [10, 5, 0],
+            [10, 6, 0],
+            [11, 10, text],
+            [2, 14, False], # hasContent
+            [8, 15, contentType],  # contentType
+            [13, 18, [11, 11, contentMetadata]],
+            [8, 19, 0],
+        ]
+        if relatedMessageId is not None:
+            message.append(
+                [11, 21, relatedMessageId]
+            )
+            message.append(
+                [8, 22, 3] # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
+
+            )
+            message.append(
+                [8, 24, 2] # relatedMessageServiceCode; 1 for Talk 2 for Square
+            )
+        params = [
+            [12, 1, [
+                [8, 1, 0],  # reqSeq
+                [11, 2, squareChatMid],
+                [12, 3, [
+                    [12, 1, message],
+                    [8, 3, 4],  # fromType
+                    # [10, 4, 0],  # squareMessageRevision
+                    # [8, 5, 1]
+                ]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('sendMessage', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
+
+    def sendSquareTextMessage(self, squareChatMid: str, text: str, contentMetadata: dict={}, relatedMessageId: str=None):
+        return self.sendSquareMessage(squareChatMid, text, 0, contentMetadata, relatedMessageId)
 
     def getSquare(self, squareMid):
         params = [
@@ -244,15 +273,25 @@ class SquareService(object):
             "updateSquareFeatureSet", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def joinSquare(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("joinSquare is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "joinSquare", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def joinSquare(self, squareMid, displayName, ableToReceiveMessage: bool=False, passCode: str=None):
+        params = [
+            [12, 1, [
+                [11, 2, squareMid],
+                [12, 3, [
+                    [11, 2, squareMid],
+                    [11, 3, displayName],
+                    [2, 5, ableToReceiveMessage],
+                    [10, 9, 0],
+                ]],
+                [12, 5, [
+                    [12, 2, [
+                        [11, 1, passCode]
+                    ]]
+                ]]
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('joinSquare', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getSquarePopularKeywords(self):
         """
@@ -304,15 +343,14 @@ class SquareService(object):
             "getSquareMemberRelations", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def removeSquareSubscriptions(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("removeSubscriptions is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "removeSubscriptions", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def removeSquareSubscriptions(self, subscriptionIds: list=[]):
+        params = [
+            [12, 1, [
+                [15, 2, [10, subscriptionIds]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('removeSquareSubscriptions', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getSquareMembers(self):
         """
@@ -464,25 +502,35 @@ class SquareService(object):
             "reportSquare", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def getSquareInvitationTicketUrl(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getInvitationTicketUrl is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "getInvitationTicketUrl", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def getSquareInvitationTicketUrl(self, mid: str):
+        params = [
+            [12, 1, [
+                [11, 2, mid],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('getInvitationTicketUrl', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
-    def updateSquareChatMember(self):
+    def updateSquareChatMember(self, squareMemberMid: str, squareChatMid: str, notificationForMessage: bool=True, notificationForNewMember: bool=True, updatedAttrs: list=[6]):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        - SquareChatMemberAttribute:
+            MEMBERSHIP_STATE(4),
+            NOTIFICATION_MESSAGE(6),
+            NOTIFICATION_NEW_MEMBER(7);
         """
-        raise Exception("updateSquareChatMember is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "updateSquareChatMember", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+        params = [
+            [12, 1, [
+                [14, 2, [8, updatedAttrs]],
+                [12, 3, [
+                    [11, 1, squareMemberMid],
+                    [11, 2, squareChatMid],
+                    [2, 5, notificationForMessage],
+                    [2, 6, notificationForNewMember],
+                ]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('updateSquareChatMember', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def updateSquareMember(self):
         """
@@ -564,15 +612,15 @@ class SquareService(object):
             "searchSquareMembers", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def checkSquareJoinCode(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("checkJoinCode is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "checkJoinCode", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def checkSquareJoinCode(self, squareMid: str, code: str):
+        params = [
+            [12, 1, [
+                [11, 2, squareMid],
+                [11, 3, code],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('checkJoinCode', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def createSquareChatAnnouncement(self):
         """
@@ -604,15 +652,14 @@ class SquareService(object):
             "getSquareChat", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def refreshSquareSubscriptions(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("refreshSubscriptions is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "refreshSubscriptions", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def refreshSquareSubscriptions(self, subscriptions: list):
+        params = [
+            [12, 1, [
+                [15, 2, [10, subscriptions]],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('refreshSquareSubscriptions', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getJoinedSquareChats(self):
         """
@@ -654,15 +701,14 @@ class SquareService(object):
             "getSquareMemberRelation", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def getSquareMember(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getSquareMember is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "getSquareMember", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+    def getSquareMember(self, squareMemberMid: str):
+        params = [
+            [12, 1, [
+                [11, 1, squareMemberMid],
+            ]]
+        ]
+        sqrd = self.generateDummyProtocol('getSquareMember', params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def destroySquareMessages(self):
         """
@@ -713,3 +759,13 @@ class SquareService(object):
         sqrd = self.generateDummyProtocol(
             "searchSquareChatMembers", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+
+
+    def getSquareChatFeatureSet(self):
+        """
+        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        """
+        raise Exception("getSquareChatFeatureSet is not implemented")
+        params = []
+        sqrd = self.generateDummyProtocol("getSquareChatFeatureSet", params, self.SquareService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.SquareService_API_PATH ,sqrd,  self.SquareService_RES_TYPE)
