@@ -113,6 +113,8 @@ class Thrift(object):
             return buff
 
         def x(self):
+            if len(self.data) < 4:
+                return None
             name, type, seqid = self.readMessageBegin()
             _, ftype, fid = self.readFieldBegin()
             data = None
@@ -143,7 +145,7 @@ class Thrift(object):
 
         def z(self, ftype: int, fid: int = None):
             data = None
-            dummyProtocol = DummyProtocol()
+            dummyProtocol = DummyProtocol(3)
             dummyProtocolData = None
             subType = None
             if ftype == 0:
@@ -175,9 +177,14 @@ class Thrift(object):
                 ktype, vtype, size = self.readMapBegin()
                 data = {}
                 subType = [ktype, vtype]
+                dummyProtocolData = {}
                 for i in range(size):
-                    _key = self.z(ktype)
-                    _val = self.z(vtype)
+                    _key, _kDPD = self.z(ktype)
+                    _val, _vDPD = self.z(vtype)
+                    if vtype == 12:
+                        dummyProtocolData[_key] = _vDPD.data
+                    else:
+                        dummyProtocolData[_key] = _val
                     data[_key] = _val
             elif ftype == 14 or ftype == 15:
                 etype, size = self.readListBegin()
@@ -375,8 +382,10 @@ class Thrift(object):
             return (name, type, seqid)
 
         def readFieldBegin(self, data):
-            type = data[0]
             offset = 1
+            if len(data) == 0:
+                return (None, 0, 0, 0)
+            type = data[0]
             if type & 0x0f == 0x00:
                 return (None, 0, 0, offset)
             delta = type >> 4
@@ -408,6 +417,8 @@ class Thrift(object):
             types = 0
             if size > 0:
                 types = self.__readUByte(data[len:len + 1])
+            else:
+                return 0, 0, 0, 1 # fixed length
             vtype = types & 0x0f
             ktype = types >> 4
             return (ktype, vtype, size, len + 1)
@@ -466,6 +477,8 @@ class Thrift(object):
                 data, d = self.z(ftype, fid)
             elif fid == 1:
                 error, d = self.z(ftype, fid)
+                if ftype == 8:
+                    raise Exception(error)
                 data = {
                     "error": {
                         "code": error.get(self.baseException['code']),
@@ -529,10 +542,13 @@ class Thrift(object):
                 ktype, vtype, size, len = self.readMapBegin(
                     self.data[self.__last_pos:])
                 self.__last_pos += len
+                dummyProtocolData = []
                 subType = [ktype, vtype]
                 for _i in range(size):
-                    _key, _ = self.z(ktype)
-                    _val, _ = self.z(vtype)
+                    _key, _dummyProtocolData = self.z(ktype)
+                    dummyProtocolData.append(_dummyProtocolData.data)
+                    _val, _dummyProtocolData = self.z(vtype)
+                    dummyProtocolData.append(_dummyProtocolData.data)
                     data[_key] = _val
             elif ftype == 12:
                 data = {}
@@ -555,6 +571,7 @@ class Thrift(object):
             return data, dummyProtocol
 
         writeByte = __writeByte
+        writeI32 = __writeI32
         readByte = __readByte
         __readI16 = __readZigZag
         readI16 = __readZigZag
@@ -567,7 +584,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.5 (令和最新版)
+        Version: 1.0.9 (令和最新版)
         """
 
         def __init__(self, cl, a=None, baseException: dict = None, readWith: str = None):
@@ -584,7 +601,9 @@ class Thrift(object):
             self.__last_sid = 0         # base sid
             self._a()                   # 4th init
             self.res = None             # base res
-            self.baseException = baseException if baseException is not None else Thrift.BASE_EXCEPTION
+            self.baseException = baseException              # init
+            if baseException is None:                       # 
+                self.baseException = Thrift.BASE_EXCEPTION  # base
             self.readWith = readWith    # readWith
             if a is not None:           # not None
                 self.d(a)               # for data
@@ -621,124 +640,57 @@ class Thrift(object):
             return self.t()     # base init?
 
         def e(self):
-            a = None                                                        # base init
-            b = None                                                        # base init
-            c = 0                                                           # base init
-            d = DummyProtocol()                                             # dummy >w<
-            fid = self.y()                                                  # can i del
-            if fid == 0:                                                    #
-                pass                                                        # no data!!
-            elif fid == 1:                                                  #
-                _type = self.w()                                            # read data
-                a, d = self.g2(_type, fid)                                  # read data
-            elif fid == 2:                                                  #
-                _type = self.w()                                            # read data
-                a, d = self.g2(_type, fid)                                  # read data
-                a = {                                                       #
-                    "error": {                                              #
-                        "code": a.get(self.baseException['code']),          #
-                        "message": a.get(self.baseException['message']),    #
-                        "metadata": a.get(self.baseException['metadata']),  #
-                        "_data": a                                          #
-                    }                                                       #
-                }                                                           #
-            elif fid == 6:                                                  #
-                _type = self.w()                                            # read data
-                a, d = self.g2(_type, fid)                                  # exception!
-                raise Exception(a)                                          # raise!
-            else:                                                           #
-                raise EOFError(f"fid {fid} not implemented")                # exception!
-            self.res = a                                                    # write data
-            self.dummyProtocol = d                                          # write data
+            a = None                # base init
+            b = None                # base init
+            c = 0                   # base init
+            d = DummyProtocol()     # dummy >w<
+            _fid = self.b()         # read fid!
+            if _fid != 0:           #
+                fid, = self.n(_fid)             # read
+                if fid == 0:                    # 
+                    _type = self.w()            # read data
+                    a, d = self.g(_type, fid)   # read data
+                elif fid == 1:                  #
+                    _type = self.w()            # read data
+                    a, d = self.g(_type, fid)   # read data
+                    a = {                                                       #
+                        "error": {                                              #
+                            "code": a.get(self.baseException['code']),          #
+                            "message": a.get(self.baseException['message']),    #
+                            "metadata": a.get(self.baseException['metadata']),  #
+                            "_data": a                                          #
+                        }                                                       #
+                    }                                                           #
+                elif fid == 5:                                      #
+                    _type = self.w()                                # read data
+                    a, d = self.g(_type, fid)                       # exception!
+                    raise Exception(a)                              # raise!
+                else:                                               #
+                    raise EOFError(f"fid {fid} not implemented")    # exception!
+            self.res = a            # write data
+            self.dummyProtocol = d  # write data
 
         def f(self, n):
             return (n >> 1) ^ -(n & 1)  # hmm...
 
-        def g(self, t):
-            a = None            # base
-            b = None            # base
-            c = 0               # base
-            subType = []        # base
+        def g(self, t, fid=None):
+            a = None                            # base
+            b = None                            # base
+            c = 0                               # base
+            dummyProtocol = DummyProtocol()     # base
+            dummyProtocolData = None            # base
+            subType = None                      # base
             if t == 2:          #
                 b = self.b()    # read
                 a = bool(b)     # bool
-            elif t == 3:                                        #
-                dec = Thrift.TCompactProtocol(self.cl)          # init
-                a = dec.readByte(self.data[self.__last_pos:])   # byte
-                self.__last_pos += 1                            # fix!
-            elif t == 4:                                            # 
+            elif t == 3:                                            #
+                dec = Thrift.TCompactProtocol(self.cl)              # init
+                a = dec.readByte(self.data[self.__last_pos:])       # byte
+                self.__last_pos += 1                                # fix!
+            elif t == 4:                                            #
                 dec = Thrift.TCompactProtocol(self.cl)              # init
                 a = dec.readDouble(self.data[self.__last_pos:])     # read
                 self.__last_pos += 8                                # fix!
-            elif t == 8:                                    #
-                _a = self.x(self.data[self.__last_pos:])    # read
-                a = self.f(_a)                              # int!
-            elif t == 10:       #
-                _a = self.b()   # read
-                a = self.f(_a)  # int?
-            elif t == 11:       #
-                a = self.s()    # str!
-            elif t == 12:       #
-                a = {}          # base
-                b = self.b()    # read
-                c = self.n(b)   # read
-                for d in c:                     #
-                    a[d], _ = self.g(self.w())  # read!
-            elif t == 13:       #
-                a = {}          # base
-                c = self.b()    # read
-                if c != 0:              #
-                    d = self.y()        # read
-                    t1, t2 = self.q(d)  # read
-                    subType = [t1, t2]  # init
-                    for i in range(c):      #
-                        k, _ = self.g(t1)   # key!
-                        v, _ = self.g(t2)   # val!
-                        a[k] = v            # set!
-            elif t == 14 or t == 15:                    #
-                a = []                                  # base
-                dec = Thrift.TCompactProtocol(self.cl)  # init
-                ftype, count, offset = dec.readCollectionBegin(
-                    self.data[self.__last_pos:])        # read
-                subType.append(ftype)                   # init
-                self.__last_pos += offset               # fix!
-                for i in range(count):                  #
-                    b, _ = self.g(self._d(ftype))       # read
-                    a.append(b)                         # init
-            elif t == 16:                       #
-                b = self.b()                    # read
-                c = -(b & 1) ^ self._e(b, 1)    # wtf?
-                d = c + self.__last_sid         # fix?
-                self.__last_sid = d             # idk.
-                a = str(d)                      # str!
-            elif t == 17:                   #
-                b = self.b()                # read
-                if len(self.__e) > b:       #
-                    a = self.__e[b]         # str?
-                else:                       #
-                    print(f"未知mid: {b}")  # ????
-            else:                                           #
-                raise Exception(f"cAN't rEad TyPE: {t}")    # err!
-            return a, subType   # nice
-
-        def g2(self, t, fid=None):
-            a = None                        # base
-            b = None                        # base
-            c = 0                           # base
-            dummyProtocol = DummyProtocol() # base
-            dummyProtocolData = None        # base
-            subType = None                  # base
-            if t == 2:          #
-                b = self.b()    # read
-                a = bool(b)     # bool
-            elif t == 3:                                        #
-                dec = Thrift.TCompactProtocol(self.cl)          # init
-                a = dec.readByte(self.data[self.__last_pos:])   # byte
-                self.__last_pos += 1                            # fix!
-            elif t == 4:                                        #
-                dec = Thrift.TCompactProtocol(self.cl)          # init
-                a = dec.readDouble(self.data[self.__last_pos:]) # read
-                self.__last_pos += 8                            # fix!
             elif t == 8:                                    #
                 _a = self.x(self.data[self.__last_pos:])    # read
                 a = self.f(_a)                              # int!
@@ -753,31 +705,33 @@ class Thrift(object):
                 c = self.n(b)           # read
                 dummyProtocolData = []  # base
                 for d in c:                                             #
-                    a[d], _dummyProtocolData = self.g2(                 #
+                    a[d], _dummyProtocolData = self.g(                  #
                         self.w(), d)                                    # fld!
                     dummyProtocolData.append(_dummyProtocolData.data)   # init
-            elif t == 13:           #
-                a = {}              # base
-                c = self.b()        # read
-                subType = [0, 0]    # base
+            elif t == 13:               #
+                a = {}                  # base
+                c = self.b()            # read
+                subType = [0, 0]        # base
+                dummyProtocolData = {}  # base
                 if c != 0:              #
                     d = self.y()        # read
                     t1, t2 = self.q(d)  # read
                     subType = [t1, t2]  # init
-                    for i in range(c):      #
-                        k, _ = self.g2(t1)  # key!
-                        v, _ = self.g2(t2)  # val!
-                        a[k] = v            # dict
-            elif t == 14 or t == 15:                             #
-                a = []                                          # base
-                dec = Thrift.TCompactProtocol(self.cl)          # init
-                ftype, count, offset = dec.readCollectionBegin(
-                    self.data[self.__last_pos:])                # read
-                self.__last_pos += offset                       # fix!
-                subType = [self._d(ftype)]                      # init
-                dummyProtocolData = []                          # base
+                    for i in range(c):                                          #
+                        k, _kDPD = self.g(t1)                                   # key!
+                        v, _vDPD = self.g(t2)                                   # val!
+                        dummyProtocolData[k] = _vDPD.data if t2 == 12 else v    #
+                        a[k] = v                                                # dict
+            elif t == 14 or t == 15:                                #
+                a = []                                              # base
+                dec = Thrift.TCompactProtocol(self.cl)              # init
+                ftype, count, offset = dec.readCollectionBegin(     #
+                    self.data[self.__last_pos:])                    # read
+                self.__last_pos += offset                           # fix!
+                subType = [self._d(ftype)]                          # init
+                dummyProtocolData = []                              # base
                 for i in range(count):                                  #
-                    b, _dummyProtocolData = self.g2(                    #
+                    b, _dummyProtocolData = self.g(                     #
                         self._d(ftype))                                 # read
                     a.append(b)                                         # list
                     dummyProtocolData.append(_dummyProtocolData.data)   # init
@@ -787,30 +741,34 @@ class Thrift(object):
                 d = c + self.__last_sid         # fix?
                 self.__last_sid = d             # idk.
                 a = str(d)                      # str!
+                t = 11                          # fix.
             elif t == 17:               #
                 b = self.b()            # read
-                if len(self.__e) > b:   #
-                    a = self.__e[b]     # str?
-                    t = 11              # fix.
-                else:                       #
-                    print(f"未知mid: {b}")  # no way
+                if len(self.__e) > b:               #
+                    a = self.__e[b]                 # str?
+                    t = 11                          # fix.
+                else:                               #
+                    print(f"mid not found: {b}")    # no way
             else:                                           #
                 raise Exception(f"cAN't rEad TyPE: {t}")    # err!
-            if dummyProtocolData is None:           # 
-                dummyProtocolData = a               # base
-            dummyProtocol.data = DummyProtocolData( #
-                fid, t, dummyProtocolData, subType) # good
-            return a, dummyProtocol                 # nice
+            if dummyProtocolData is None:                   # 
+                dummyProtocolData = a                       # base
+            dummyProtocol.data = DummyProtocolData(         #
+                fid, t, dummyProtocolData, subType)         # good
+            return a, dummyProtocol                         # nice
+
+        def h(self, n):
+            return (n << 1) ^ (n >> 31)     # hmm...
 
         def m(self):
-            a = self.b()                                # get count
-            for _a in range(a):                         #
-                bArr = [self.data[self.__last_pos]]     # coooooool
-                bArr += self.__h(self.data[self.__last_pos +
-                                 1:self.__last_pos+17]) # not magic
-                self.__e.append(bytes(bArr).decode())   # wow magic
-                self.__last_pos += 17                   # real pos?
-            self.e()                                    # base init
+            a = self.b()                                                    # get count
+            for _a in range(a):                                             #
+                bArr = [self.data[self.__last_pos]]                         # coooooool
+                bArr += self.__h(                                           #
+                    self.data[self.__last_pos + 1:self.__last_pos + 17])    # not magic
+                self.__e.append(bytes(bArr).decode())                       # wow magic
+                self.__last_pos += 17                                       # real pos?
+            self.e()                                                        # base init
 
         def n(self, d):
             a = []                  # base init
@@ -838,37 +796,37 @@ class Thrift(object):
             return b                # - break! -
 
         def t(self):
-            self.__last_pos = 3                                     # fixed pos
-            if len(self.data) == 4:                                 #
-                raise Exception(                                    #
-                    f"無效Data: {self.data} (code: 20)")            # raise 
-            a = self.b()                                            # first data
-            b = self.c(self.__last_pos, a)                          # 2nd data!!
-            self.__d = list(bytes(a << 1))                          # 3rd? no!!!
-            d = 0                                                   # base init
-            e = 0                                                   # base init
-            f = 0                                                   # base init
-            g = 0                                                   # base init
-            for h in b:                                             #
-                _a = 0                                              # base value!
-                _b = 128                                            # base value?
-                while _a < 8:                                       #
-                    if h & _b == 0:                                 #
-                        d = (g << 1) + 1                            # + 1
-                    else:                                           #
-                        d = (g << 1) + 2                            # + 2
-                    if self.__a[d] != 0:                            #
-                        if f >= len(self.__d):                      #
-                            self.__d += [len(self.__d)] * 4         # x 4
-                        self.__d[f] = self.__a[d]                   # set
-                        f += 1                                      # + 1
-                        g = 0                                       # = 0
-                    else:                                           #
-                        g = d                                       # set!
-                    _b >>= 1                                        # move
-                    _a += 1                                         # + 1!
-            self.__last_pos += a                                    # fixed pos
-            self.m()                                                # base init
+            self.__last_pos = 3                                 # fixed pos
+            if len(self.data) == 4:                             #
+                raise Exception(                                #
+                    f"Invalid data: {self.data} (code: 20)")    # raise 
+            a = self.b()                    # first data
+            b = self.c(self.__last_pos, a)  # 2nd data!!
+            self.__d = list(bytes(a << 1))  # 3rd? no!!!
+            d = 0                           # base init
+            e = 0                           # base init
+            f = 0                           # base init
+            g = 0                           # base init
+            for h in b:                                         #
+                _a = 0                                          # base value!
+                _b = 128                                        # base value?
+                while _a < 8:                                   #
+                    if h & _b == 0:                             #
+                        d = (g << 1) + 1                        # + 1
+                    else:                                       #
+                        d = (g << 1) + 2                        # + 2
+                    if self.__a[d] != 0:                        #
+                        if f >= len(self.__d):                  #
+                            self.__d += [len(self.__d)] * 4     # x 4
+                        self.__d[f] = self.__a[d]               # set
+                        f += 1                                  # + 1
+                        g = 0                                   # = 0
+                    else:                                       #
+                        g = d                                   # set!
+                    _b >>= 1                                    # move
+                    _a += 1                                     # + 1!
+            self.__last_pos += a                                # fixed pos
+            self.m()                                            # base init
 
         def w(self):
             a = self.__d[self.__last_fid]   # read!
@@ -931,31 +889,31 @@ class Thrift(object):
             return binascii.b2a_hex(val)  # magic right?
 
         def _d(self, val):
-            if val == 0:                        #
-                return 0                        # break
-            if val == 1 or val == 2:            #
-                return 2                        # break
-            if val == 3:                        #
-                return 3                        # break
-            if val == 4:                        #
-                return 6                        # break
-            if val == 5:                        #
-                return 8                        # break
-            if val == 6:                        #
-                return 10                       # break
-            if val == 7:                        #
-                return 4                        # break
-            if val == 8:                        #
-                return 11                       # break
-            if val == 9:                        #
-                return 15                       # break
-            if val == 10:                       #
-                return 14                       # break
-            if val == 11:                       #
-                return 13                       # break
-            if val == 12:                       #
-                return 12                       # break
-            raise Exception(f'未知type: {val}')  # erroe
+            if val == 0:        #
+                return 0        # break
+            if val in [1, 2]:   #
+                return 2        # break
+            if val == 3:        #
+                return 3        # break
+            if val == 4:        #
+                return 6        # break
+            if val == 5:        #
+                return 8        # break
+            if val == 6:        #
+                return 10       # break
+            if val == 7:        #
+                return 4        # break
+            if val == 8:        #
+                return 11       # break
+            if val == 9:        #
+                return 15       # break
+            if val == 10:       #
+                return 14       # break
+            if val == 11:       #
+                return 13       # break
+            if val == 12:       #
+                return 12       # break
+            raise Exception(f'Invalid type: {val}') # error
 
         def _e(self, val, n):
             if val >= 0:                                    #
