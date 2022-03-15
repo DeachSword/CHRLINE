@@ -106,7 +106,11 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         except:
             pass
         self.revision = -1
-        self.groups = self.checkAndGetValue(self.getAllChatMids(), 'memberChatMids', 1)
+        try:
+            self.groups = self.checkAndGetValue(self.getAllChatMids(), 'memberChatMids', 1)
+        except Exception as e:
+            self.log(f"[getAllChatMids] {e}")
+            self.groups = []
 
         E2EE.__init__(self)
         Timeline.__init__(self)

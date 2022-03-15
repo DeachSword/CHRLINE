@@ -160,7 +160,7 @@ class Models(object):
             self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZAAoZNRwIlLUXaUgrgYi8bAYq\nQeFVtXvCNIEm+F4/jAyTU3YoDwmoLaKQ6itGOonykGtwy2k/3BeWefL/q5eUGjVG\nBEa1vBeUNEb4IFU8n9WK3N/GIIPuD6ZiusB+U1FPg/NaEiVX8ldmEQJgmuG1hykk\n2dU3oy7O1M+Kwl1lJQIDAQAB\n-----END PUBLIC KEY-----'
         elif ver == 4:
             self.lcsStart = "0004"
-            self.le = "3"  # LegyEncHelper.cpp::decryptStream -> legy xle value
+            self.le = "7"  # LegyEncHelper.cpp::decryptStream -> legy xle value
             self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwpAwTVluR1Z++tVzxtOD\nr7XxSv6oqrwvj/8c8SkfFsS8zM7CvIT8j+x+6Qs1JjNRDtYjAwPKO3tO+qOAdA+8\n7FHpx0THDJIi4VYxSZ2uDh0U8Luxh02whwM8gPbPQNN3sEd5++kJ3cCh5eeAIiUd\nDrwPhHzxO8swpBRdxJB/pzibEqpG2U2764JlPscN9D896qmBN6CBRKpXk/MmUDAI\n4xg+uQk/ykn3SNXJSgQwI1UD9KuiR+X9tbJlKRMN5JpUrSuEwRPQQDMaWpSIdCJM\noFqJLNwt9b1RR/JEB01Eup+3QCub20/CObCmHZY6G26KTDHLoTRZ1xzymdYhdJ43\nCwIDAQAB\n-----END PUBLIC KEY-----"
         elif ver == 6:
             self.lcsStart = "0007"
@@ -175,7 +175,6 @@ class Models(object):
                         128, 18, 123, 158, 251, 92, 45, 51])
         self.encryptKey = b"DearSakura+2021/"
         self.encEncKey()
-        print(self._encryptKey)
 
     def encHeaders(self, headers):
         t = headers.keys()
@@ -215,7 +214,7 @@ class Models(object):
         _data = AES.new(self.encryptKey, AES.MODE_CBC,
                         iv=self.IV).encrypt(pad(data, AES.block_size))
         debug = []
-        return _data + self.XQqwlHlXKK(self.encryptKey, _data)
+        return _data
 
     def decData(self, data):
         data = pad(data, AES.block_size)
@@ -299,11 +298,10 @@ class Models(object):
 
     def generateDummyProtocol2(self, params: DummyProtocol, type=3, fixSuccessHeaders: bool=False):
         newParams = []
-        c = lambda a: [a.type, a.id, a.data] if a.type in [2, 5, 8, 10, 11] else [c(a2) for a2 in a.data] if a.id is None else [a.type, a.id, [c(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], a.data]] if a.type == 13 else [a.type, a.id, [a.subType[0], [c(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+        
         d = params.data
-        newParams.append(c(d))
-        if fixSuccessHeaders:
-            newParams[0][1] = newParams[0][1] - 1
+        if d is not None:
+            newParams.append(thrift2dummy(d))
         return bytes(self.generateDummyProtocolField(newParams, type) + [0])
 
     def generateDummyProtocolField(self, params, type):
@@ -349,6 +347,8 @@ class Models(object):
         elif type == 11:
             data += self.getStringBytes(_data, isCompact=isCompact)
         elif type == 12:
+            if isinstance(_data, DummyProtocolData):
+                _data = thrift2dummy(_data)
             data += self.generateDummyProtocolField(_data, ttype) + [0]
         elif type == 13:
             _ktype = _data[0]
@@ -416,17 +416,29 @@ class Models(object):
             b = bdata
             c = a + b
             _data = bytes(c)
-            data = self.encData(_data)
-            headers['x-cl'] = str(len(data))
+            fix_bytes = False
+            if ((int(self.le) & 4) == 4):
+                _data = bytes([int(self.le)]) + _data
+                fix_bytes = True
+            if ((int(self.le) & 2) != 2):
+                data = self.encData(_data)
+            else:
+                data = self.encData(_data)
+                data += self.XQqwlHlXKK(self.encryptKey, data)
+            #headers['x-cl'] = str(len(data))
+            #headers['Transfer-Encoding'] = 'chunked'
+            headers['x-ae'] = 'gzip, deflate'
             res = self.req.post(
                 self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=headers)
             data = self.decData(res.content)
+            if fix_bytes:
+                data = data[1:]
         else:
             raise Exception(f"Unknown encType: {encType}")
         self.log(f"<--  {res.status_code}", True)
         self.log(f"{data}", True)
         if res.status_code == 200:
-            if res.headers['x-lc'] not in ['200', '410']:
+            if res.headers.get('x-lc') is not None and res.headers['x-lc'] not in ['200', '410']:
                 raise Exception(
                     f'Invalid response code: {res.headers["x-lc"]}')
             if encType == 1:
@@ -439,8 +451,27 @@ class Models(object):
                 print(respHeaders)
                 self.handleNextToken(respHeaders['x-line-next-access'])
             res = None
-            if ttype == 0:
-                pass
+            if ttype == -7:
+                # COMPACT
+                # TODO: ADD DECODER
+                compact = self.TCompactProtocol(self)
+                _type = compact.readByte(data)
+                data = data[1:]
+                if _type == 1:
+                    _seq, _offset = compact.readI32(data, True)
+                    data = data[_offset:]
+                    _msgId, _offset = compact.readI32(data, True)
+                    data = data[_offset:]
+                    _ts, _offset = compact.readI32(data, True)
+                    data = data[_offset:]
+                    compact.res = {
+                        '_seq': _seq,
+                        'messageId': _msgId,
+                        'time': _ts
+                    }
+                    res = compact
+                elif _type == 2:
+                    raise LineServiceException({'code': compact.readI32(data)})
             elif ttype == 3:
                 res = self.TBinaryProtocol(self, data, baseException=baseException)
             elif ttype == 4:
@@ -450,7 +481,7 @@ class Models(object):
                 res = tmore
             else:
                 raise ValueError(f"Unknown ThriftType: {ttype}")
-            if self.use_thrift:
+            if self.use_thrift and getattr(res, 'dummyProtocol', None) is not None:
                 res = self.serializeDummyProtocolToThrift(res.dummyProtocol, baseException, readWith)
             else:
                 res = res.res
@@ -557,12 +588,15 @@ class Models(object):
         fn = f"{mid}.json"
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
+        print(savePath + f"/{fn}")
         keys = self.getE2EEPublicKeys()
         for key in keys:
-            _keyData = self.getE2EESelfKeyDataByKeyId(key[2])
+            keyId = self.checkAndGetValue(key, 'keyId', 2)
+            _keyData = self.getE2EESelfKeyDataByKeyId(keyId)
             if _keyData is not None:
                 return _keyData
-        return None
+        raise Exception(
+            'E2EE Key has not been saved, try register or use SQR Login')
 
     def getE2EESelfKeyDataByKeyId(self, keyId):
         savePath = os.path.join(os.path.dirname(
@@ -591,8 +625,19 @@ class Models(object):
             open(savePath + f"/{fn}", "w").write(data)
         open(savePath + f"/{fn2}", "w").write(data)
         return True
+    
+    def registerE2EESelfKey(self, privK: bytes = None):
+        if privK is None:
+            privK = curve.generatePrivateKey(os.urandom(32))
+        if len(privK) != 32:
+            raise ValueError("Invalid private key.")
+        pubK = curve.generatePublicKey(privK)
+        EPK = self.registerE2EEPublicKey(1, None, pubK, 0)
+        keyId = self.checkAndGetValue(EPK, 'keyId', 2)
+        return self.saveE2EESelfKeyData(self.mid, pubK, privK, keyId, 1)
 
-    def getCacheData(self, cT, cN, needHash=True):
+
+    def getCacheData(self, cT, cN, needHash=True, pathOnly=False):
         savePath = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), cT)
         if not os.path.exists(savePath):
@@ -600,6 +645,8 @@ class Models(object):
         fn = f"{cN}"
         if needHash:
             fn = md5(cN.encode()).hexdigest()
+        if pathOnly:
+            return savePath + f"/{fn}"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
         return None
@@ -685,29 +732,70 @@ class Models(object):
         return _data
 
     def serializeDummyProtocolToThrift(self, data: DummyProtocol, baseException: dict = None, readWith: str = None):
+        if baseException is None:
+            baseException = {}
         if readWith is not None:
             new1 = self.generateDummyProtocol2(data, 4, fixSuccessHeaders=True)
-            a = eval(readWith)
-            a = a()
-            e = TMemoryBuffer()
-            f = testProtocol(e)
-            e._buffer = io.BytesIO(new1)
-            a.read(f)
-            if a.success:
-                return a.success
-            raise LineServiceException({}, a.e.code, a.e.reason, a.e.parameterMap, a.e)
+            try:
+                a = eval(f'{readWith}_result')
+                a = a()
+            except AttributeError:
+                a = None
+            if a is not None:
+                e = TMemoryBuffer()
+                f = testProtocol(e)
+                e._buffer = io.BytesIO(new1)
+                a.read(f)
+                if getattr(a, 'success', None) is not None:
+                    return a.success
+                if getattr(a, 'e', None) is not None:
+                    code = getattr(a.e, 'code', None)
+                    reason = getattr(a.e, 'reason', None)
+                    parameterMap = getattr(a.e, 'parameterMap', None)
+                    raise LineServiceException({}, code, reason, parameterMap, a.e)
+                return None
         _gen = lambda : DummyThrift()
-        def _genFunc(a, b, f):
-            c = _gen()
-            for d in a.data:
-                f(d, c)
+        def _genFunc(a: DummyProtocolData, b, f):
+            def __gen(a: DummyProtocolData, b):
+                c = _gen()
+                for d in a.data:
+                    b(d, c)
+                return c
+            def __cek(a: DummyProtocolData, f):
+                if a.type == 12:
+                    c = __gen(a, f)
+                elif a.type == 13:
+                    c = {}
+                    d = a.data
+                    for e in d:
+                        g = d[e]
+                        if isinstance(g, DummyProtocolData):
+                            g = __gen(g, f)
+                        c[e] = g
+                elif a.type in (14, 15):
+                    c = []
+                    for d in a.data:
+                        e = d
+                        if isinstance(d, DummyProtocolData):
+                            e = __cek(d, f)
+                        c.append(e)
+                else:
+                    c = a.data
+                return c
+            c = __cek(a, f)
             setattr(b, f"val_{a.id}", c)
         a = _gen()
-        b = lambda c, refs: _genFunc(c, refs, b) if type(c.data) == list else setattr(refs, f"val_{c.id}", c.data)
-        b(data.data, a)
+        b = lambda c, refs: _genFunc(c, refs, b) if type(c.data) in [list, dict] else setattr(refs, f"val_{c.id}", c.data)
+        if data.data is not None:
+            b(data.data, a)
         if self.checkAndGetValue(a, 'val_0') is not None:
             return a.val_0
         _ecode = baseException.get('code', 1)
         _emsg = baseException.get('message', 2)
         _emeta = baseException.get('metadata', 3)
-        raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
+        if self.checkAndGetValue(a, 'val_1') is not None:
+            raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
+        print(a)
+        return None
+
+thrift2dummy = lambda a: [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else [thrift2dummy(a2) for a2 in a.data] if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], a.data]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))

@@ -13,10 +13,13 @@ class HookTypes(object):
             @wraps(func)
             def __check(self, *args):
                 op = args[0]
-                if op[3] in [25, 26]:
-                    op[20]['opType'] = op[3]
-                    op[20]['isE2EE'] = False
-                if op[3] == type:
+                opType = self.cl.checkAndGetValue(op, 'type', 3)
+                if opType in [25, 26]:
+                    message = self.cl.checkAndGetValue(op, 'message', 20)
+                    message = self.cl.checkAndSetValue(message, 'opType', opType)
+                    message = self.cl.checkAndSetValue(message, 'isE2EE', False)
+                    op = self.cl.checkAndSetValue(op, 'message', 20, message)
+                if opType == type:
                     func(self, args[0], args[1])
                     return True
                 return False
@@ -28,38 +31,64 @@ class HookTypes(object):
             @wraps(func)
             def __check(self, *args):
                 op = args[0]
-                if op[15] == type:
+                contentType = self.cl.checkAndGetValue(op, 'contentType', 15)
+                if contentType == type:
                     func(self, args[0], args[1])
                     return True
                 return False
             self.contFuncs.append(__check)
         return __wrapper
 
-    def Command(self, permissions: list = [], alt: list = [], toType: list=[0, 1, 2], ignoreCase: bool = False, inpart: bool = False, prefixes: bool = True):
+    def Command(self, permissions: list = [], alt: list = [], toType: list=[0, 1, 2], ignoreCase: bool = False, inpart: bool = False, prefixes: bool = True, splitchar: str=None):
+        """
+        - permissions:
+            List of permission's name.
+            eg. ['admin']
+        - alt:
+            Sub cmds.
+            eg: Command name is "GetOps", and use alt=["ops"], so u can use "GetOps" and "ops" to run the command.
+        - toType:
+            Only run when receives the command with the specific toType 
+        - ignoreCase:
+            *As the name suggests*
+        - inpart:
+            If False, match the command that same style.
+            If True, match any command that starts with command name.
+        - prefixes:
+            Match the prefixs.
+        - splitchar:
+            If not None, match the first value after the command is split by this value
+        """
         def __wrapper(func):
             func.prefixes = prefixes
             @wraps(func)
             def __check(self, *args):
                 _fname = lambda _name = None: func.__name__ if _name is None else _name
                 msg = args[0]
-                sender = msg[1]
-                if sender != self.cl.mid and not self.checkPermissions(sender, permissions):
+                sender = self.cl.checkAndGetValue(msg, '_from', 1)
+                receiver = self.cl.checkAndGetValue(msg, 'to', 2)
+                cl = args[1]
+                if sender != cl.mid and not self.checkPermissions(sender, permissions):
                     return False
-                msgToType = msg[3]
-                msgType = msg[15]
+                msgToType = self.cl.checkAndGetValue(msg, 'toType', 3)
+                msgType = self.cl.checkAndGetValue(msg, 'contentType', 15)
+                isInpart = inpart
                 if msgToType in toType:
                     if msgType == 0:
-                        text = msg.get(10)
+                        text = self.cl.checkAndGetValue(msg, 'text', 10)
                         for __name in [None] + alt:
                             fname = _fname(__name)
                             if text is None:
                                 # TODO: E2EE Message
-                                msg['isE2EE'] = True
-                                text = self.cl.decryptE2EETextMessage(msg, msg.get('opType', 26) == 25)
-                                msg[10] = text # maybe fixed in Operation__check?
+                                msg = self.cl.checkAndSetValue(msg, 'isE2EE', True)
+                                text = cl.decryptE2EETextMessage(msg, self.cl.checkAndGetValue(msg, 'opType') == 25)
+                                msg = self.cl.checkAndSetValue(msg, 'text', 10, text)  # maybe fixed in Operation__check?
                             if ignoreCase:
                                 text = text.lower()
                                 fname = fname.lower()
+                            if splitchar is not None:
+                                text = text.split(splitchar)[0]
+                                isInpart = False # force
                             isUsePrefixes = not prefixes
                             if prefixes and len(self.prefixes) > 0:
                                 for _prefix in self.prefixes:
@@ -69,7 +98,7 @@ class HookTypes(object):
                                         break
                                 if not isUsePrefixes:
                                     return False
-                            if text == fname or inpart and text.startswith(fname):
+                            if text == fname or isInpart and text.startswith(fname):
                                 func(self, args[0], args[1])
                                 return True
                     else:

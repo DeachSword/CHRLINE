@@ -125,24 +125,23 @@ class E2EE():
         aad += bytes(self.getIntBytes(f))  # content type
         return aad
 
-    def encryptE2EEMessage(self, to, text, specVersion=2):
+    def encryptE2EEMessage(self, to, text, specVersion=2, isCompact=False):
         _from = self.mid
         selfKeyData = self.getE2EESelfKeyData(_from)
         if len(to) == 0 or self.getToType(to) not in [0, 1, 2]:
             raise Exception('Invalid mid')
-        if selfKeyData is None:
-            raise Exception(
-                'E2EE Key has not been saved, try register or use SQR Login')
         senderKeyId = selfKeyData['keyId']
         if self.getToType(to) == 0:
             private_key = base64.b64decode(selfKeyData['privKey'])
             receiver_key_data = self.negotiateE2EEPublicKey(to)
-            if receiver_key_data[3] == -1:
+            specVersion = self.checkAndGetValue(receiver_key_data, 'specVersion', 3)
+            if specVersion == -1:
                 raise Exception(f'Not support E2EE on {to}')
-            receiverKeyId = receiver_key_data[2][2]
+            publicKey = self.checkAndGetValue(receiver_key_data, 'publicKey', 2)
+            receiverKeyId = self.checkAndGetValue(publicKey, 'keyId', 2)
+            receiverKeyData = self.checkAndGetValue(publicKey, 'keyData', 4)
             keyData = self.generateSharedSecret(
-                bytes(private_key), receiver_key_data[2][4])
-            specVersion = receiver_key_data[3]
+                bytes(private_key), receiverKeyData)
         else:
             groupK = self.getE2EELocalPublicKey(to, None)
             privK = base64.b64decode(groupK['privKey'])
@@ -150,10 +149,10 @@ class E2EE():
             receiverKeyId = groupK['keyId']
             keyData = self.generateSharedSecret(privK, pubK)
         chunks = self.encryptE2EETextMessage(
-            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from)
+            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
         return chunks
 
-    def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from):
+    def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=False):
         salt = os.urandom(16)
         gcmKey = self.getSHA256Sum(keyData, salt, b'Key')
         aad = self.generateAAD(to, _from, senderKeyId,
@@ -163,24 +162,30 @@ class E2EE():
             'text': text
         }).encode()
         encData = self.encryptE2EEMessageV2(data, gcmKey, sign, aad)
+        bSenderKeyId = bytes(self.getIntBytes(senderKeyId))
+        bReceiverKeyId = bytes(self.getIntBytes(receiverKeyId))
+        if isCompact:
+            compact = self.TCompactProtocol(self)
+            bSenderKeyId = bytes(compact.writeI32(int(senderKeyId)))
+            bReceiverKeyId = bytes(compact.writeI32(int(receiverKeyId)))
         self.log(
-            f'senderKeyId: {senderKeyId} ({self.getIntBytes(senderKeyId)})', True)
+            f'senderKeyId: {senderKeyId} ({bSenderKeyId})', True)
         self.log(
-            f'receiverKeyId: {receiverKeyId} ({self.getIntBytes(receiverKeyId)})', True)
-        return [salt, encData, sign, bytes(self.getIntBytes(senderKeyId)), bytes(self.getIntBytes(receiverKeyId))]
+            f'receiverKeyId: {receiverKeyId} ({bReceiverKeyId})', True)
+        return [salt, encData, sign, bSenderKeyId, bReceiverKeyId]
 
     def encryptE2EEMessageV2(self, data, gcmKey, nonce, aad):
         aesgcm = AESGCM(gcmKey)
         return aesgcm.encrypt(nonce, data, aad)
 
     def decryptE2EETextMessage(self, messageObj, isSelf=True):
-        _from = messageObj[1]
-        to = messageObj[2]
-        toType = messageObj[3]
-        metadata = messageObj[18]
+        _from = self.checkAndGetValue(messageObj, '_from', 1)
+        to = self.checkAndGetValue(messageObj, 'to', 2)
+        toType = self.checkAndGetValue(messageObj, 'toType', 3)
+        metadata = self.checkAndGetValue(messageObj, 'contentMetadata', 18)
         specVersion = metadata.get('e2eeVersion', '2')
         contentType = metadata.get('contentType', '0')
-        chunks = messageObj[20]
+        chunks = self.checkAndGetValue(messageObj, 'chunks', 20)
         for i in range(len(chunks)):
             if isinstance(chunks[i], str):
                 chunks[i] = chunks[i].encode()

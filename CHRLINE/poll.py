@@ -11,9 +11,9 @@ class Poll(object):
         if 'error' in ops:
             raise Exception(ops['error'])
         for op in ops:
-            opType = op[3]
+            opType = self.checkAndGetValue(op, 'type', 3)
             if opType != -1:
-                self.setRevision(op[1])
+                self.setRevision(self.checkAndGetValue(op, 'revision', 1))
             yield op
 
     def __execute(self, op, func):
@@ -28,7 +28,8 @@ class Poll(object):
     def trace(self, func, isThreading=True):
         while self.is_login:
             for op in self.__fetchOps():
-                if op[3] != 0 and op[3] != -1:
+                opType = self.checkAndGetValue(op, 'type', 'val_3', 3)
+                if opType != 0 and opType != -1:
                     if isThreading:
                         _td = threading.Thread(target=self.__execute, args=(op, func))
                         _td.daemon = True

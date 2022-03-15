@@ -2,15 +2,14 @@
 import json
 import time
 import os
-import platform
-
-import io
 import qrcode
+
+from .exceptions import LineServiceException
 
 class Helpers(object):
 
     def __init__(self):
-        pass
+        self.liff_token_cache = {}
     
     def squareMemberIdIsMe(self, squareMemberId):
         if self.can_use_square:
@@ -21,16 +20,25 @@ class Helpers(object):
         else:
             raise Exception('Not support Square')
     
-    def sendLiff(self, to, messages, tryConsent=True):
-        liff = self.issueLiffView(to)
-        token = liff.get(3)
-        if not token:
-            error = liff.get('error', {})
-            print(f"[sendLiff]{error}")
-            if error.get('code') == 3 and tryConsent:
-                if self.tryConsentLiff(error['metadata'][3][1]):
-                    return self.sendLiff(to, messages, tryConsent=False)
-            return error
+    def sendLiff(self, to, messages, tryConsent=True, forceIssue=False):
+        cache_key = f"{to}"
+        use_cache = False
+        if cache_key not in self.liff_token_cache or forceIssue:
+            try:
+                liff = self.issueLiffView(to)
+            except LineServiceException as e:
+                self.log(f'[sendLiff] issueLiffView error: {e}')
+                if e.code == 3 and tryConsent:
+                    if self.tryConsentLiff(e.metadata[3][1]):
+                        return self.sendLiff(to, messages, tryConsent=False)
+            except Exception as e:
+                return e
+            token = liff[3]
+            self.log(f'[sendLiff] issue new token for {cache_key}...')
+        else:
+            token = self.liff_token_cache[cache_key]
+            use_cache = True
+            self.log(f'[sendLiff] using cache token for {cache_key}', True)
         liff_headers = {
             'Accept' : 'application/json, text/plain, */*',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 4.4.2; G730-U00 Build/JLS36C) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36 Line/9.8.0',
@@ -44,6 +52,10 @@ class Helpers(object):
         else:
             messages = {"messages":[messages]}
         resp = self.server.postContent("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
+        if resp.status_code == 200:
+            self.liff_token_cache[cache_key] = token
+        elif use_cache:
+            return self.sendLiff(to, messages, tryConsent=False, forceIssue=True)
         return resp.text
     
     def tryConsentLiff(self, channelId, on=["P", "CM"], referer=None):
@@ -129,13 +141,13 @@ class Helpers(object):
             if filename.endswith(_vs):
                 return True
         return False
-    
+
     def getProfileCoverObjIdAndUrl(self, mid: str):
         detail = self.getProfileCoverDetail(mid)['result']
         coverObsInfo = detail['coverObsInfo']
         url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
         return url, None, coverObsInfo["objectId"], None
-    
+
     def checkAndGetValue(self, value, *args):
         for arg in args:
             if type(value) == dict:
@@ -145,7 +157,23 @@ class Helpers(object):
                 data = getattr(value, str(arg), None)
                 if data is not None:
                     return data
+                if isinstance(arg, int):
+                    data = getattr(value, f"val_{arg}", None)
+                    if data is not None:
+                        return data
         return None
+
+    def checkAndSetValue(self, value, *args):
+        set = args[-1]
+        args = args[:-1]
+        if not args:
+            raise ValueError(f"Invalid arguments: {args}")
+        for arg in args:
+            if type(value) == dict:
+                value[arg] = set
+            else:
+                setattr(value, str(arg), set)
+        return value
 
     def genQrcodeImageAndPrint(self, url: str, filename: str=None, output_char: list=['　', '■']):
         if filename is None:
@@ -167,3 +195,36 @@ class Helpers(object):
         img = qr.make_image()
         img.save(savePath)
         return savePath
+    
+    def getMentioneesByMsgData(self, msg: dict):
+        a = []
+        b = self.checkAndGetValue(msg, 18)
+        if b is not None:
+            if 'MENTION' in b:
+                c = json.loads(b['MENTION'])
+                print(c)
+                for _m in c['MENTIONEES']:
+                    print(_m['M'])
+                    a.append(_m['M'])
+        return a
+    
+    def genMentionData(self, mentions: dict):
+        """
+        - mentions:
+            - S: index
+            - L: len
+            - M: mid
+        """
+        a = []
+        for b in mentions:
+            a.append({
+                'S': str(b['S']),
+                'E': str(b['S'] + b['L']),
+                'M': str(b['M']),
+            })
+        a = {
+            'MENTIONEES': a
+        }
+        return {
+            'MENTION': json.dumps(a)
+        }
