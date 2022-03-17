@@ -198,7 +198,7 @@ class Helpers(object):
     
     def getMentioneesByMsgData(self, msg: dict):
         a = []
-        b = self.checkAndGetValue(msg, 18)
+        b = self.checkAndGetValue(msg, 'contentMetadata', 18)
         if b is not None:
             if 'MENTION' in b:
                 c = json.loads(b['MENTION'])
@@ -215,6 +215,8 @@ class Helpers(object):
             - L: len
             - M: mid
         """
+        if mentions is None or len(mentions) == 0:
+            return None
         a = []
         for b in mentions:
             a.append({
