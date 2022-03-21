@@ -1033,6 +1033,16 @@ class Timeline():
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
+    @loggedIn
+    def createGroupAlbum(self, mid, name):
+        data = json.dumps({'title': name, 'type': 'image'})
+        params = {'homeId': mid,'count': '1','auto': '1'}
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ext/album/api/v3/album', params)
+        r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
+        if r.status_code != 201:
+            print(r.text)
+        return r.json()
+
     """ STORY """
 
     @loggedIn

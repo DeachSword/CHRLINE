@@ -73,8 +73,29 @@ class Object(object):
         return home
     
     def updateImageToAlbum(self, mid, albumId, path):
-        pass
-        #privie
+        """
+        2021/01/08: CHRLINE PRIVATE API
+        """
+        file = open(path, 'rb').read()
+        f_name = hashlib.md5(str(time.time()).encode('utf8')).hexdigest()
+        params = {
+            'name': f_name + '.20' + time.strftime('%m%d',time.localtime(int(round(time.time())))) + '08' + '.jpg',
+            'quality': '100',
+            'ver': '2.0',
+            'type': 'image'
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'Content-Type': 'image/jpeg',
+            'X-Line-Mid': mid,
+            'X-Line-Album': albumId,
+            'X-Line-Access': self.acquireEncryptedAccessToken()[7:],
+            'x-obs-params': self.genOBSParams(params,'b64')
+        })
+        r = self.server.postContent(self.LINE_OBS_DOMAIN + '/r/album/a/' + f_name + '.20' + time.strftime('%m%d',time.localtime(int(round(time.time())))) + '08', data=file, headers=hr)
+
+        if r.status_code != 201:
+            raise Exception('Add image to album failure.')
+        return f_name + '.20' + time.strftime('%m%d',time.localtime(int(round(time.time())))) + '08'
     
     def uploadObjHome(self, path, type='image', objId=None):
         if type not in ['image','video','audio']:
