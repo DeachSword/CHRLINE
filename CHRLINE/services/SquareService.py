@@ -109,7 +109,7 @@ class SquareService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('fetchMyEvents', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, baseException=SquareService.SQUARE_EXCEPTION)
 
     def fetchSquareChatEvents(self, squareChatMid, syncToken='', subscriptionId=0, limit=100):
         params = [
@@ -124,7 +124,7 @@ class SquareService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol('fetchSquareChatEvents', params, 4)
-        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, baseException=SquareService.SQUARE_EXCEPTION)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, baseException=SquareService.SQUARE_EXCEPTION)
 
     def sendSquareMessage(self, squareChatMid: str, text: str, contentType: int=0, contentMetadata: dict={}, relatedMessageId: str=None):
         message = [
