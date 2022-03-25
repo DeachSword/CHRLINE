@@ -10,6 +10,7 @@ from base64 import b64decode, b64encode
 from datetime import datetime
 from hashlib import md5, sha1
 
+import httpx
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
 import xxhash
@@ -26,7 +27,7 @@ from .services.thrift.ap.TBinaryProtocol import \
 from .services.thrift.ap.TCompactProtocol import \
     TCompactProtocol as testProtocol
     
-from .services.thrift import ttypes, TalkService
+from .services.thrift import *
 
 
 class Models(object):
@@ -298,7 +299,6 @@ class Models(object):
 
     def generateDummyProtocol2(self, params: DummyProtocol, type=3, fixSuccessHeaders: bool=False):
         newParams = []
-        
         d = params.data
         if d is not None:
             newParams.append(thrift2dummy(d))
@@ -315,6 +315,12 @@ class Models(object):
             _data = param[2]
             if _data is None:
                 continue
+            if _type == 13:
+                if _data[2] is None:
+                    continue
+            elif _type in [14, 15]:
+                if _data[1] is None:
+                    continue
             if type == 3:
                 data += [_type, 0, _id]
                 isCompact = False
@@ -340,6 +346,8 @@ class Models(object):
                 data += tcp.writeByte(_data)
             else:
                 data += tbp.writeByte(_data)
+        elif type == 4:
+            data = self.getFloatBytes(_data, isCompact=isCompact)
         elif type == 8:
             data += self.getIntBytes(_data, isCompact=isCompact)
         elif type == 10:
@@ -399,8 +407,10 @@ class Models(object):
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
-            res = self.req_h2.post(
-                self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, timeout=180)
+            res = doLoopReq(
+                self.req_h2.post,
+                self.LINE_GW_HOST_DOMAIN + path, 
+                data=data, headers=headers, timeout=180)
             data = res.content
         elif encType == 1:
             if access_token is not None:
@@ -428,8 +438,9 @@ class Models(object):
             #headers['x-cl'] = str(len(data))
             #headers['Transfer-Encoding'] = 'chunked'
             headers['x-ae'] = 'gzip, deflate'
-            res = self.req.post(
-                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, data=data, headers=headers)
+            res = doLoopReq(self.req.post,
+                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, 
+                data=data, headers=headers)
             data = self.decData(res.content)
             if fix_bytes:
                 data = data[1:]
@@ -494,12 +505,12 @@ class Models(object):
                         '.refreshToken', self.authToken)
                     print(f'try to refresh access token... {refreshToken}')
                     if refreshToken is not None:
-                        newToken = self.refreshAccessToken(refreshToken)[1]
-                        if 'error' not in newToken:
-                            self.handleNextToken(newToken)
-                            return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
-                        else:
-                            print(f"refresh access token failed. : {newToken}")
+                        RATR = self.refreshAccessToken(refreshToken)
+                        token = self.checkAndGetValue(RATR, 'accessToken', 1)
+                        # refreshToken = self.checkAndGetValue(RATR, 'refreshToken', 5)
+                        self.handleNextToken(token)
+                        self.saveCacheData('.refreshToken', token, refreshToken)
+                        return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
                     self.log(f"LOGIN OUT: {res['error']['message']}")
                 raise LineServiceException(res['error'])
             return res
@@ -548,9 +559,12 @@ class Models(object):
             sqrd.append(value)
         return sqrd
 
-    def getFloatBytes(self, val):
+    def getFloatBytes(self, val, isCompact=False):
         res = []
-        for value in struct.pack('!d', val):
+        _t = "!d"
+        if isCompact:
+            _t = "<d"
+        for value in struct.pack(_t, val):
             res.append(value)
         return res
 
@@ -649,6 +663,7 @@ class Models(object):
             return savePath + f"/{fn}"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
+        self.log(savePath + f"/{fn}" + " not found.")
         return None
 
     def saveCacheData(self, cT, cN, cD, needHash=True):
@@ -798,4 +813,11 @@ class Models(object):
         print(a)
         return None
 
-thrift2dummy = lambda a: [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else [thrift2dummy(a2) for a2 in a.data] if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], a.data]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+thrift2dummy = lambda a: a if not isinstance(a, DummyProtocolData) else ([a.subType[0], thrift2dummy(a.data)] if a.type in [14, 15] else [a.subType[0], a.subType[1], thrift2dummy(a.data)] if a.type == 13 else [thrift2dummy(a2) for a2 in a.data] if a.type == 12 else a.data) if a.id is None else [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type == 12 else [a.type, a.id, [a.subType[0], a.subType[1], dict([(thrift2dummy(a2), thrift2dummy(a.data[a2])) for a2 in a.data])]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+def doLoopReq(req, url, data, headers, timeout=None, round=0, delay=8, max_round=20):
+    try:
+        return req(url, data=data, headers=headers, timeout=timeout)
+    except httpx.ReadError as e:
+        print(f"[ REQUEST ERROR ] {e}")
+    time.sleep(delay)
+    return doLoopReq(req, url, data, headers, timeout, round + 1, delay, max_round)

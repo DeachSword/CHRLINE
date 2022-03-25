@@ -42,6 +42,8 @@ class Server(object):
 
     def additionalHeaders(self, source, newSource):
         headerList = {}
+        if source is None:
+            source = {}
         headerList.update(source)
         headerList.update(newSource)
         return headerList
