@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 from CHRLINE import *
 
-cl = CHRLINE('pt', device="ANDROID
+cl = CHRLINE(TOKEN, device="ANDROID")
 
 pks = cl.getE2EEPublicKeys()
 for pk in pks:
