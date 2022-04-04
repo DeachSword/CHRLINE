@@ -10,7 +10,6 @@ from base64 import b64decode, b64encode
 from datetime import datetime
 from hashlib import md5, sha1
 
-import httpx
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
 import xxhash
@@ -26,7 +25,7 @@ from .services.thrift.ap.TBinaryProtocol import \
     TBinaryProtocol as testProtocol2
 from .services.thrift.ap.TCompactProtocol import \
     TCompactProtocol as testProtocol
-    
+
 from .services.thrift import *
 
 
@@ -297,7 +296,7 @@ class Models(object):
         data += self.generateDummyProtocolField(params, type) + [0]
         return data
 
-    def generateDummyProtocol2(self, params: DummyProtocol, type=3, fixSuccessHeaders: bool=False):
+    def generateDummyProtocol2(self, params: DummyProtocol, type: int = 3, fixSuccessHeaders: bool = False):
         newParams = []
         d = params.data
         if d is not None:
@@ -387,32 +386,35 @@ class Models(object):
                 f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int=None, headers: dict=None, access_token: str=None, baseException: dict=None, readWith: str=None):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200]):
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
             access_token = self.authToken
         ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
-        headers["content-type"] = "application/x-thrift; protocol=" + ptype
+        if ttype in [1, 2, 3, 4, 5]:
+            headers["content-type"] = "application/x-thrift; protocol=" + ptype
+            headers["accept"] = "application/x-thrift"
         headers["x-lal"] = self.LINE_LANGUAGE
-        headers["accept"] = "application/x-thrift"
         if encType is None:
             encType = self.encType
         self.log(
             f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
         if encType == 0:
-            data = bytes(bdata)
+            if conn is None:
+                conn = self.req_h2
+            data = bytes(bdata) if isinstance(bdata, list) else bdata
             if "x-le" in headers:
                 del headers['x-le']
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
-            res = doLoopReq(
-                self.req_h2.post,
-                self.LINE_GW_HOST_DOMAIN + path, 
-                data=data, headers=headers, timeout=180)
+            res = conn.post(
+                self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, files=files, timeout=180)
             data = res.content
         elif encType == 1:
+            if conn is None:
+                conn = self.req
             if access_token is not None:
                 _headers = {
                     'x-lt': access_token,
@@ -435,21 +437,22 @@ class Models(object):
             else:
                 data = self.encData(_data)
                 data += self.XQqwlHlXKK(self.encryptKey, data)
-            #headers['x-cl'] = str(len(data))
-            #headers['Transfer-Encoding'] = 'chunked'
-            headers['x-ae'] = 'gzip, deflate'
-            res = doLoopReq(self.req.post,
-                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT, 
-                data=data, headers=headers)
-            data = self.decData(res.content)
+            headers['accept-encoding'] = 'gzip, deflate'
+            res = conn.post(
+                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
+                data=data, files=files, headers=headers)
+            if res.content:
+                data = self.decData(res.content)
+            else:
+                data = res.content
             if fix_bytes:
                 data = data[1:]
         else:
             raise Exception(f"Unknown encType: {encType}")
         self.log(f"<--  {res.status_code}", True)
         self.log(f"{data}", True)
-        if res.status_code == 200:
-            if res.headers.get('x-lc') is not None and res.headers['x-lc'] not in ['200', '410']:
+        if res.status_code in expectedRespCode:
+            if res.headers.get('x-lc') is not None and int(res.headers['x-lc']) not in expectedRespCode:
                 raise Exception(
                     f'Invalid response code: {res.headers["x-lc"]}')
             if encType == 1:
@@ -461,6 +464,7 @@ class Models(object):
             if 'x-line-next-access' in respHeaders:
                 print(respHeaders)
                 self.handleNextToken(respHeaders['x-line-next-access'])
+            conn_res = res
             res = None
             if ttype == -7:
                 # COMPACT
@@ -483,17 +487,27 @@ class Models(object):
                     res = compact
                 elif _type == 2:
                     raise LineServiceException({'code': compact.readI32(data)})
+            elif ttype == -3:
+                # JSON RAW
+                return json.loads(data)
+            elif ttype == 0:
+                # RESP
+                return conn_res
             elif ttype == 3:
-                res = self.TBinaryProtocol(self, data, baseException=baseException)
+                res = self.TBinaryProtocol(
+                    self, data, baseException=baseException)
             elif ttype == 4:
-                res = self.TCompactProtocol(self, data, baseException=baseException)
+                res = self.TCompactProtocol(
+                    self, data, baseException=baseException)
             elif ttype == 5:
-                tmore = self.TMoreCompactProtocol(self, data, baseException=baseException)
+                tmore = self.TMoreCompactProtocol(
+                    self, data, baseException=baseException)
                 res = tmore
             else:
                 raise ValueError(f"Unknown ThriftType: {ttype}")
             if self.use_thrift and getattr(res, 'dummyProtocol', None) is not None:
-                res = self.serializeDummyProtocolToThrift(res.dummyProtocol, baseException, readWith)
+                res = self.serializeDummyProtocolToThrift(
+                    res.dummyProtocol, baseException, readWith)
             else:
                 res = res.res
             if type(res) == dict and 'error' in res:
@@ -509,17 +523,15 @@ class Models(object):
                         token = self.checkAndGetValue(RATR, 'accessToken', 1)
                         # refreshToken = self.checkAndGetValue(RATR, 'refreshToken', 5)
                         self.handleNextToken(token)
-                        self.saveCacheData('.refreshToken', token, refreshToken)
+                        self.saveCacheData(
+                            '.refreshToken', token, refreshToken)
                         return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
                     self.log(f"LOGIN OUT: {res['error']['message']}")
                 raise LineServiceException(res['error'])
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
-            raise Exception(f'Invalid response status code: {res.status_code}')
-        else:
-            print(f"get resp failed: {res.status_code}")
-            return None
+        raise Exception(f'Invalid response status code: {res.status_code}')
 
     def getCurrReqId(self):
         self._msgSeq = 0
@@ -639,7 +651,7 @@ class Models(object):
             open(savePath + f"/{fn}", "w").write(data)
         open(savePath + f"/{fn2}", "w").write(data)
         return True
-    
+
     def registerE2EESelfKey(self, privK: bytes = None):
         if privK is None:
             privK = curve.generatePrivateKey(os.urandom(32))
@@ -649,7 +661,6 @@ class Models(object):
         EPK = self.registerE2EEPublicKey(1, None, pubK, 0)
         keyId = self.checkAndGetValue(EPK, 'keyId', 2)
         return self.saveE2EESelfKeyData(self.mid, pubK, privK, keyId, 1)
-
 
     def getCacheData(self, cT, cN, needHash=True, pathOnly=False):
         savePath = os.path.join(os.path.dirname(
@@ -663,7 +674,6 @@ class Models(object):
             return savePath + f"/{fn}"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
-        self.log(savePath + f"/{fn}" + " not found.")
         return None
 
     def saveCacheData(self, cT, cN, cD, needHash=True):
@@ -767,15 +777,19 @@ class Models(object):
                     code = getattr(a.e, 'code', None)
                     reason = getattr(a.e, 'reason', None)
                     parameterMap = getattr(a.e, 'parameterMap', None)
-                    raise LineServiceException({}, code, reason, parameterMap, a.e)
+                    raise LineServiceException(
+                        {}, code, reason, parameterMap, a.e)
                 return None
-        _gen = lambda : DummyThrift()
+
+        def _gen(): return DummyThrift()
+
         def _genFunc(a: DummyProtocolData, b, f):
             def __gen(a: DummyProtocolData, b):
                 c = _gen()
                 for d in a.data:
                     b(d, c)
                 return c
+
             def __cek(a: DummyProtocolData, f):
                 if a.type == 12:
                     c = __gen(a, f)
@@ -800,7 +814,9 @@ class Models(object):
             c = __cek(a, f)
             setattr(b, f"val_{a.id}", c)
         a = _gen()
-        b = lambda c, refs: _genFunc(c, refs, b) if type(c.data) in [list, dict] else setattr(refs, f"val_{c.id}", c.data)
+
+        def b(c, refs): return _genFunc(c, refs, b) if type(c.data) in [
+            list, dict] else setattr(refs, f"val_{c.id}", c.data)
         if data.data is not None:
             b(data.data, a)
         if self.checkAndGetValue(a, 'val_0') is not None:
@@ -809,15 +825,37 @@ class Models(object):
         _emsg = baseException.get('message', 2)
         _emeta = baseException.get('metadata', 3)
         if self.checkAndGetValue(a, 'val_1') is not None:
-            raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
+            raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(
+                a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
         print(a)
         return None
 
-thrift2dummy = lambda a: a if not isinstance(a, DummyProtocolData) else ([a.subType[0], thrift2dummy(a.data)] if a.type in [14, 15] else [a.subType[0], a.subType[1], thrift2dummy(a.data)] if a.type == 13 else [thrift2dummy(a2) for a2 in a.data] if a.type == 12 else a.data) if a.id is None else [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type == 12 else [a.type, a.id, [a.subType[0], a.subType[1], dict([(thrift2dummy(a2), thrift2dummy(a.data[a2])) for a2 in a.data])]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
-def doLoopReq(req, url, data, headers, timeout=None, round=0, delay=8, max_round=20):
-    try:
-        return req(url, data=data, headers=headers, timeout=timeout)
-    except httpx.ReadError as e:
-        print(f"[ REQUEST ERROR ] {e}")
-    time.sleep(delay)
-    return doLoopReq(req, url, data, headers, timeout, round + 1, delay, max_round)
+
+def thrift2dummy(a):
+    if type(a) == dict:
+        b = {}
+        for k, v in a.items():
+            b[k] = thrift2dummy(v)
+        return b
+    elif type(a) == list:
+        return [thrift2dummy(a2) for a2 in a]
+    elif isinstance(a, DummyProtocolData):
+        b = None
+        c = []
+        if a.type in [2, 3, 4, 6, 8, 10, 11]:
+            b = a.data
+        elif a.type == 12:
+            b = [thrift2dummy(a2) for a2 in a.data]
+        elif a.type == 13:
+            b = [a.subType[0], a.subType[1], thrift2dummy(a.data)]
+        elif a.type in [14, 15]:
+            b = [a.subType[0], thrift2dummy(a.data)]
+        else:
+            raise ValueError(f"Not supported type: {a.type}")
+        if a.id is not None:
+            return [a.type, a.id, b]
+        return b
+        return [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else (a.subType + [[thrift2dummy(a2) for a2 in a.data]] if a.subType else [thrift2dummy(a2) for a2 in a.data]) if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+    else:
+        return a
+        # raise ValueError(f"不支持 `{type(a)}`: {a}")

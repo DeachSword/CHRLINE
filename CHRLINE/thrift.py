@@ -584,7 +584,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.9 (令和最新版)
+        Version: 1.0.11 (令和最新版)
         """
 
         def __init__(self, cl, a=None, baseException: dict = None, readWith: str = None):
@@ -645,7 +645,9 @@ class Thrift(object):
             c = 0                   # base init
             d = DummyProtocol()     # dummy >w<
             _fid = self.b()         # read fid!
-            if _fid != 0:           #
+            if _fid == 0:           #
+                pass                #
+            elif _fid in [1, 2]:                #
                 fid, = self.n(_fid)             # read
                 if fid == 0:                    # 
                     _type = self.w()            # read data
@@ -667,6 +669,11 @@ class Thrift(object):
                     raise Exception(a)                              # raise!
                 else:                                               #
                     raise EOFError(f"fid {fid} not implemented")    # exception!
+            else:                                                           # 
+                _type = self.w()                                            # read data
+                a, d = self.g(_type)                                        # read data
+                raise EOFError(                                             #
+                    f"recv fid `{_fid}`, expected `1`, message: `{a}`")     # err
             self.res = a            # write data
             self.dummyProtocol = d  # write data
 
@@ -717,11 +724,11 @@ class Thrift(object):
                     d = self.y()        # read
                     t1, t2 = self.q(d)  # read
                     subType = [t1, t2]  # init
-                    for i in range(c):                                          #
-                        k, _kDPD = self.g(t1)                                   # key!
-                        v, _vDPD = self.g(t2)                                   # val!
-                        dummyProtocolData[k] = _vDPD.data if t2 == 12 else v    #
-                        a[k] = v                                                # dict
+                    for i in range(c):                      #
+                        k, _kDPD = self.g(t1)               # key!
+                        v, _vDPD = self.g(t2)               # val!
+                        dummyProtocolData[k] = _vDPD.data   #
+                        a[k] = v                            # dict
             elif t == 14 or t == 15:                                #
                 a = []                                              # base
                 dec = Thrift.TCompactProtocol(self.cl)              # init
