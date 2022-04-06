@@ -199,7 +199,7 @@ class Helpers(object):
     def sendMention(self, to, text="", mids=[]):
         arrData = ""
         arr = []
-        mention = "@PrankBots "
+        mention = "@chrline "
         if mids == []:
             raise Exception("Invalid mids")
         if "@!" in text:
