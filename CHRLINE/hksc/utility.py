@@ -29,10 +29,13 @@ class HookUtility(object):
         if len(permissions) == 0:
             return True
         for permission in permissions:
-            _p = self.db.getData(str(permission).lower(), [])
+            _p = self.getPermission(permission)
             if mid in _p:
                 return True
         return False
+
+    def getPermission(self, permission: str):
+        return self.db.getData(str(permission).lower(), [])
 
     def addPermission(self, mid: str, permission: str):
         _k = str(permission).lower()
@@ -51,3 +54,11 @@ class HookUtility(object):
             self.db.saveData(_k, _p)
             return True
         return False
+        
+    def getArgs(self, text: str, splitchar: str=":", defVal: any=None, maxSplit: int=-1):
+        args = text.split(splitchar, maxSplit)
+        if len(args) > 1:
+            return args[1:]
+        if defVal is not None:
+            return [defVal]
+        return None

@@ -6,14 +6,7 @@ import uuid
 class PrimaryAccountInitService(object):
 
     def __init__(self):
-        self.register_headers  = {
-            "x-line-application": "ANDROID\t11.14.0\tAndroid OS\t10.0.1",
-            "x-le": self.le,
-            "x-lcs": self._encryptKey,
-            "User-Agent": "Line/11.14.0",
-            "content-type": "application/x-thrift; protocol=TBINARY",
-            "x-lpv": "1",
-        }
+        self.register_headers  = self.server.Headers
         self.uuid = uuid.uuid4().hex
     
     def setPrimaryUuid(self, uuid):

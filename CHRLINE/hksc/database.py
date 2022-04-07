@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-# import sqlite
+import sqlite3
 
 class BaseDatabase:
 
@@ -10,13 +10,60 @@ class BaseDatabase:
             db_name = self.cl.mid
         self.db_name = db_name
         print("Initialize database...")
+        self._ezLocker = False
         self.loadDatabase()
 
 class SqliteDatabase(BaseDatabase):
 
     def loadDatabase(self):
         print(f"Loading db_{self.db_name} with Sqli")
-        raise Exception("Not implemented yet.")
+        _data = self.cl.getCacheData(".database", f"{self.db_name}.db", pathOnly=True)
+        self._sqlite = sqlite3.connect(_data)
+        if self._sqlite:
+            self._init()
+        else:
+            raise Exception('can not load database.')
+        
+    def getData(self, _key, _defVal=None):
+        SQLITE3_SELECT_CMD = f""" SELECT * FROM [CHRLINE] WHERE [key]=?; """
+        cursor = self._sqlite.cursor()
+        cursor.execute(SQLITE3_SELECT_CMD, (_key, ))
+        rows = cursor.fetchone()
+        return _defVal if not rows else self._val2obj(rows[2])
+
+    def saveData(self, _key, _val):
+        SQLITE3_SAVE_DATA_CMD = """
+            INSERT OR REPLACE INTO [CHRLINE] ([key], [val]) values (?, ?); 
+        """
+        cursor = self._sqlite.cursor()
+        cursor.execute(SQLITE3_SAVE_DATA_CMD, (_key, self._obj2val(_val)))
+        self.saveDatabase()
+
+    def saveDatabase(self):
+        self._sqlite.commit()
+    
+    def _obj2val(self, obj):
+        a = type(obj)
+        if a in [list, dict]:
+            return json.dumps(obj)
+        elif a in [str, int]:
+            return str(obj)
+        raise ValueError(f'can not conv data type to string: {a} -> {obj}')
+    
+    def _val2obj(self, val):
+        # TODO: check and reload with json.loads if it is json data
+        return eval(val)
+        
+    def _init(self):
+        SQLITE3_CHRLINE_UNIT_TABLE_CMD = """
+            CREATE TABLE IF NOT EXISTS CHRLINE (
+                id integer PRIMARY KEY,
+                key text NOT NULL UNIQUE,
+                val text
+            );
+        """
+        cursor = self._sqlite.cursor()
+        cursor.execute(SQLITE3_CHRLINE_UNIT_TABLE_CMD)
 
 class JsonDatabase(BaseDatabase):
 

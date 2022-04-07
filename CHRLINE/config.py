@@ -66,6 +66,7 @@ class Config(object):
     LINE_CANCEL_LONGPOLLING_ENDPOINT     = '/CP4'
     LINE_CHANNEL_ENDPOINT                = '/CH3'
     LINE_CHANNEL_ENDPOINT_V4             = '/CH4'
+    LINE_PERSONAL_ENDPOINT_V4             = '/PS4'
     LINE_CHAT_APP_ENDPOINT               = '/CAPP1'
     LINE_COIN_ENDPOINT                   = '/COIN4'
     LINE_COMPACT_E2EE_MESSAGE_ENDPOINT   = '/ECA5'
@@ -105,101 +106,88 @@ class Config(object):
     LINE_SERVICE_REGION = 'TW'
 
     APP_TYPE    = "CHROMEOS"
-    APP_VER     = '8.7.0'
+    APP_VER     = '11.19.2'
     SYSTEM_NAME = 'DeachSword'
     SYSTEM_VER  = '12.1.4'
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
+    
+    LOGIN_V2_SUPPORT = ["DESKTOPWIN"] # only desktop_win?
 
     def __init__(self, type="CHROME"):
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "7.1.0.2585"
+            self.APP_VER = "7.7.0.2698"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER  = '10.0.0-NT-x64'
         elif type == "DESKTOPMAC":
-            self.APP_VER = "5.13.0"
-            self.SYSTEM_NAME = "DESKTOPMAC"
+            self.APP_VER = "7.7.0.2698"
+            self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
-            self.APP_VER = "2.4.1"
+            self.APP_VER = "2.4.9"
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
-        elif type == "ANDROIDLITE":
-            self.APP_VER = "2.17.1"
-            self.SYSTEM_NAME = "Android OS"
-            self.isSecondary = True
-        elif type == "ANDROID":
-            self.APP_VER = "11.13.2"
+        # elif type == "ANDROIDLITE":
+            # self.APP_VER = "2.17.1"
+            # self.SYSTEM_NAME = "Android OS"
+            # self.isSecondary = True
+        elif type in ["ANDROID", "ANDROIDSECONDARY"]:
+            self.APP_VER = "12.2.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "11.16.0"
+            self.APP_VER = "11.19.2"
             self.SYSTEM_NAME = "iOS"
             self.SYSTEM_NAME = "12.1.2"
         elif type == "IOSIPAD":
-            self.APP_VER = "11.16.0"
+            self.APP_VER = "11.19.2"
             self.SYSTEM_NAME = "iOS"
         elif type == "WATCHOS":
-            self.APP_VER = "11.16.0"
+            self.APP_VER = "11.19.2"
             self.SYSTEM_NAME = "Watch OS"
+        elif type == "WEAROS":
+            self.APP_VER = "11.19.2"
+            self.SYSTEM_NAME = "Wear OS"
         elif type == "OPENCHAT_PLUS":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "CHANNELGW":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "CHANNELCP":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "CLOVAFRIENDS":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "BOT":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "WAP":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "WEB":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "BIZWEB":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "DUMMYPRIMARY":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "SQUARE":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "FIREFOXOS":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "TIZEN":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "VIRTUAL":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "CHRONO":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "WINMETRO":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "S40":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "WINPHONE":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "BLACKBERRY":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         elif type == "INTERNAL":
-            self.APP_VER = "11.13.2"
-            self.SYSTEM_NAME = "Android OS"
+            pass
         else:
             raise Exception(f"未知的Device , 請至 config.py 新增")
+        self.APP_TYPE = type
         self.USER_AGENT = 'Line/%s' % self.APP_VER
     
     def initAppConfig(self, app_type, app_version, os_name, os_version):

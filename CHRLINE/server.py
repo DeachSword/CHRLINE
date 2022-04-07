@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-import json, requests, urllib
+import json
+import requests
+import urllib
 import httpx
+
 
 class Server(object):
 
@@ -9,7 +12,7 @@ class Server(object):
         self.timelineHeaders = {}
         self.channelHeaders = {}
         self._session = requests.session()
-        self._sessionH2 = httpx.Client(http2=True, timeout=300) # for h2
+        self._sessionH2 = httpx.Client(http2=True, timeout=300)  # for h2
 
     def parseUrl(self, path):
         return self.LINE_HOST_DOMAIN + path
@@ -38,14 +41,16 @@ class Server(object):
         self.timelineHeaders[argument] = value
 
     def additionalHeaders(self, source, newSource):
-        headerList={}
+        headerList = {}
+        if source is None:
+            source = {}
         headerList.update(source)
         headerList.update(newSource)
         return headerList
 
     def optionsContent(self, url, data=None, headers=None):
         if headers is None:
-            headers=self.Headers
+            headers = self.Headers
         return self._session.options(url, headers=headers, data=data)
 
     def postContent(self, url, data=None, files=None, headers=None, json=None):
@@ -59,15 +64,15 @@ class Server(object):
 
     def getContent(self, url, headers=None):
         if headers is None:
-            headers=self.Headers
+            headers = self.Headers
         return self._session.get(url, headers=headers, stream=True)
 
     def deleteContent(self, url, data=None, headers=None):
         if headers is None:
-            headers=self.Headers
+            headers = self.Headers
         return self._session.delete(url, headers=headers, data=data)
 
     def putContent(self, url, data=None, headers=None):
         if headers is None:
-            headers=self.Headers
+            headers = self.Headers
         return self._session.put(url, headers=headers, data=data)
