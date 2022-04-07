@@ -178,10 +178,6 @@ class AuthService(object):
         return self.postPackDataAndGetUnpackRespData("/api/v3p/rs", sqrd, 3)
 
     def logoutZ(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("logoutZ is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
             "logoutZ", params, AuthService_REQ_TYPE)
@@ -197,52 +193,71 @@ class AuthService(object):
             "issueTokenForAccountMigration", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def updatePassword(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("updatePassword is not implemented")
-        params = []
+    def updatePassword(self, authSessionId: str, identityProvider: int, cipherKeyId: str, cipherText: str, metaData: dict = {}):
+        confirmationRequest = [
+            [13, 1, [11, 11, {}]],  # metaData
+            [2, 2, True],  #forceRegistration
+            [11, 3, '']  # verificationCode
+        ]
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [13, 1, [11, 11, metaData]],
+                [8, 2, identityProvider],
+                [11, 3, cipherKeyId],
+                [11, 4, cipherText],
+                # [12, 5, confirmationRequest]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "updatePassword", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def respondE2EELoginRequest(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("respondE2EELoginRequest is not implemented")
-        params = []
+    def respondE2EELoginRequest(self, verifier, keyId, keyData, createdTime, encryptedKeyChain, hashKeyChain):
+        params = [
+            [11, 1, verifier],
+            [12, 2, [
+                [8, 1, 1],  # version
+                [8, 2, keyId],
+                [11, 4, keyData],
+                [10, 5, createdTime]
+            ]],
+            [11, 3, encryptedKeyChain],
+            [11, 4, hashKeyChain],
+            [8, 5, 95],  # errorCode
+        ]
         sqrd = self.generateDummyProtocol(
             "respondE2EELoginRequest", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
     def logoutV2(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("logoutV2 is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
             "logoutV2", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def establishE2EESession(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("establishE2EESession is not implemented")
-        params = []
+    def establishE2EESession(self, clientPublicKey: str):
+        params = [
+            [12, 1, [
+                [11, 1, clientPublicKey]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "establishE2EESession", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def releaseLockScreen(self):
+    def releaseLockScreen(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        TODO: 2022/02/25
         """
-        raise Exception("releaseLockScreen is not implemented")
-        params = []
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [13, 1, [11, 11, {}]],
+                [11, 2, cipherKeyId],
+                [11, 3, cipherText],
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "releaseLockScreen", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
@@ -257,33 +272,43 @@ class AuthService(object):
             "normalizePhoneNumber", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def exchangeKey(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("exchangeKey is not implemented")
-        params = []
+    def exchangeKey(self, authSessionId: str, authKeyVersion: int, publicKey: str, nonce: str):
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [8, 1, authKeyVersion],
+                [11, 2, publicKey],
+                [11, 3, nonce],
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "exchangeKey", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def setIdentifierAndPassword(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("setIdentifierAndPassword is not implemented")
-        params = []
+    def setIdentifierAndPassword(self, authSessionId: str, identityProvider: int, cipherKeyId: str, cipherText: str, metaData: dict = {}):
+        confirmationRequest = [
+            [13, 1, [11, 11, {}]],  # metaData
+            [2, 2, True],  #forceRegistration
+            [11, 3, '']  # verificationCode
+        ]
+        params = [
+            [11, 2, authSessionId],
+            [12, 3, [
+                [13, 1, [11, 11, metaData]],
+                [8, 2, identityProvider],
+                [11, 3, cipherKeyId],
+                [11, 4, cipherText],
+                # [12, 5, confirmationRequest]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "setIdentifierAndPassword", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
 
-    def issueTokenForAccountMigrationSettings(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception(
-            "issueTokenForAccountMigrationSettings is not implemented")
-        params = []
+    def issueTokenForAccountMigrationSettings(self, enforce: bool):
+        params = [
+            [2, 2, enforce]
+        ]
         sqrd = self.generateDummyProtocol(
             "issueTokenForAccountMigrationSettings", params, AuthService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)

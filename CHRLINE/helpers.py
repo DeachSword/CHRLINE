@@ -195,7 +195,7 @@ class Helpers(object):
         img = qr.make_image()
         img.save(savePath)
         return savePath
-    
+      
     def sendMention(self, to, text="", mids=[]):
         arrData = ""
         arr = []
