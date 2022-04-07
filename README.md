@@ -2,6 +2,10 @@
 
 ![logo](/examples/assets/logo.png)
 
+```
+pip install CHRLINE
+```
+
 >What is CHRLINE?\
 >It is LINE Chrome API, just for debug
 
@@ -27,7 +31,7 @@ Its purpose is to effectively compress mid (32 bytes) to 16 bytes
 
 
 ####  Example
-```
+```python
 from CHRLINE import *
 
 cl = CHRLINE() # login
@@ -48,7 +52,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
 ####  Requirement
 - Python 3.6
     - pycrypto
-    - pycryptodemo
+    - pycryptodome
     - xxhash
     - httpx[http2]
     - gevent
@@ -178,7 +182,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - blockRecommendation
         - unblockRecommendation
         - getRecommendationIds
-        - sync (DIED)
+        - sync (for IOS)
         - reissueTrackingTicket
         - updateChatRoomAnnouncement
         - getExtendedProfile
@@ -203,6 +207,20 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - reportAbuseEx
             - reportAbuseExWithMessage
             - reportAbuseExWithLineMeeting
+        - getCountryWithRequestIp
+        - updateProfileAttributes
+        - updateNotificationToken
+        - getRecentFriendRequests
+        - notifyRegistrationComplete
+        - noop
+        - getAnalyticsInfo
+        - isUseridAvailable
+        - registerUserid
+        - notifyUpdated
+        - reportPushRecvReports
+        - addToFollowBlacklist
+        - removeFromFollowBlacklist
+        - getFollowBlacklist
     - AccessTokenRefreshService
         - refreshAccessToken
         - reportRefreshedAccessToken
@@ -232,6 +250,11 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - notifyChatAdEntry
     - BuddyService
         - getPromotedBuddyContacts
+        - getBuddyDetailWithPersonal
+        - getBuddyContacts
+        - getBuddyTopView
+        - getBuddyNewsView
+        - getBuddyDetail
     - CallService
         - acquireCallRoute
         - acquireOACallRoute
@@ -322,6 +345,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - resetSetting
         - searchSettings
         - contextAgnosticSearchSettings
+        - bulkGetSetting
+        - bulkSetSetting
     - ShopAuthService
         - establishE2EESession
     - ShopService
@@ -330,6 +355,34 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - getStudentInformation
         - canReceivePresent
         - getOwnedProductSummaries
+        - getShowcaseV3
+        - getProductV2
+        - getProductByVersion
+        - placePurchaseOrderForFreeProduct
+        - placePurchaseOrderWithLineCoin
+        - placePurchaseOrderWithIAP
+        - getOwnedProducts
+        - getPurchasedProducts
+        - getReceivedPresents
+        - getSentPresents
+        - notifyProductEvent
+        - getProductValidationScheme
+        - validateProduct
+        - getProductsByBillingItemId
+        - getUpdates
+        - searchProductsV2
+        - getAggregatedHomeV2
+        - getAggregatedHomeNative
+        - getDynamicHomeNative
+        - getAggregatedPremiumHome
+        - getAggregatedShowcaseV4
+        - getRecommendationForUser
+        - getRecommendationList
+        - getCategories
+        - getResourceFile
+        - getAutoSuggestionShowcase
+        - getOldSticonMapping
+        - getSuggestResourcesV2
     - SquareService
         - inviteIntoSquareChat
         - inviteToSquare
@@ -342,6 +395,8 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
         - fetchSquareChatEvents
         - getSquare
         - getJoinableSquareChats
+        - createSquare
+        - getSquareChatAnnouncements
     - SquareBotService
         - getSquareBot
     - ObsService
@@ -359,7 +414,16 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - sendContactV2
             - getProfileDetail
             - getTimelintTab
+            - getSocialProfileDetail
+            - getSocialProfileMediaDetail
+            - updateProfileDetail
+            - updateCmtLike
+            - getTalkroomStatus
+            - getHomeProfileBridge
         - Post
+            - createPost
+            - updatePost
+            - deletePost
             - getPost
             - createComment
             - deleteComment
@@ -400,6 +464,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
             - createStoryContent (WIP)
             - getRecentstoryStory
             - sendMessageForStoryAuthor
+            - getNewStory
         - Search
             - Search
         - Keep

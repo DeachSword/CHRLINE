@@ -14,7 +14,7 @@ class LineCube():
         self.can_use_cube = False
         try:
             self.CWA_Headers = {
-                'X-Line-CWA-Token': self.approveChannelAndIssueChannelToken('1570623124')[1]
+                'X-Line-CWA-Token': self.checkAndGetValue(self.approveChannelAndIssueChannelToken('1570623124'), 1, 'val_1')
             }
             self.can_use_cube = True
         except:

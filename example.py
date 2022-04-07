@@ -1,5 +1,5 @@
 from CHRLINE import *
-from CHRLINE_hook.hooks import HooksTracer
+from CHRLINE.hooks import HooksTracer
 
 cl = CHRLINE()
 #cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")#with IOSIPAD
