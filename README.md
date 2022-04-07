@@ -15,7 +15,7 @@ Welcome join our [Discord](https://discord.gg/vQrMbjA)
 ## About Project
 This project is for debug only, because it does not use thrift
 
-So I don’t recommend you to use this to run the bot, even if it has many functions
+So I don't recommend you to use this to run the bot, even if it has many functions
 
 ## What can it do?
 If you have a certain degree of understanding of Line thrift, then you must have heard of **TMoreCompact** \
