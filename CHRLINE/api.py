@@ -19,6 +19,7 @@ from .services.AuthService import AuthService
 from .services.AccountAuthFactorEapConnectService import \
     AccountAuthFactorEapConnectService
 from .services.AccessTokenRefreshService import AccessTokenRefreshService
+from .services.HomeSafetyCheckService import HomeSafetyCheckService
 from .server import Server
 from .exceptions import LineServiceException
 import rsa
@@ -29,7 +30,7 @@ import binascii
 import json
 
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
@@ -77,16 +78,16 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         E2EEKeyBackupService.__init__(self)
         SquareBotService.__init__(self)
         TestService.__init__(self)
+        HomeSafetyCheckService.__init__(self)
 
     def requestPwlessLogin(self, phone, pw):
-        pwless_code = self.createPwlessSession(phone)
-        pwless_code = pwless_code[1]
+        pwless_code = self.checkAndGetValue(self.createPwlessSession(phone), 1, 'val_1')
         print(f'PWLESS SESSION: {pwless_code}')
         cert = self.getCacheData('.pwless', phone)
         try:
             self.verifyLoginCertificate(pwless_code, '' if cert is None else cert)
         except:
-            pwless_pincode = self.requestPinCodeVerif(pwless_code)[1]
+            pwless_pincode = self.checkAndGetValue(self.requestPinCodeVerif(pwless_code), 1, 'val_1')
             print(f'PWLESS PINCODE: {pwless_pincode}')
             self.checkPwlessPinCodeVerified(pwless_code)
         secret, secretPK = self.createSqrSecret(True)
@@ -97,28 +98,28 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         ek = self.getE2eeKey(pwless_code)
         try:
             loginInfo = self.pwlessLoginV2(pwless_code)
-            cert = loginInfo[2]
-            tokenInfo = loginInfo[3]
-            token = tokenInfo[1]
-            token2 = tokenInfo[2]
-            mid = loginInfo[5]
+            cert = self.checkAndGetValue(loginInfo, 2, 'val_2')
+            tokenInfo = self.checkAndGetValue(loginInfo, 3, 'val_3')
+            token = self.checkAndGetValue(tokenInfo, 1, 'val_1')
+            token2 = self.checkAndGetValue(tokenInfo, 2, 'val_2')
+            mid = self.checkAndGetValue(loginInfo, 5, 'val_5')
         except:
             loginInfo = self.pwlessLogin(pwless_code)
-            token = loginInfo[1]
-            cert = loginInfo[2]
-            mid = loginInfo[4]
+            token = self.checkAndGetValue(loginInfo, 1, 'val_1')
+            cert = self.checkAndGetValue(loginInfo, 2, 'val_2')
+            mid = self.checkAndGetValue(loginInfo, 4, 'val_4')
         self.authToken = token
         print(f'Auth Token: {self.authToken}')
         self.saveCacheData('.pwless', phone, cert)
-        self.decodeE2EEKeyV1(ek[1], secret, mid)
+        self.decodeE2EEKeyV1(self.checkAndGetValue(ek, 1, 'val_1'), secret, mid)
         return True
 
     def requestEmailLogin(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
-        keynm = rsaKey[1]
-        nvalue = rsaKey[2]
-        evalue = rsaKey[3]
-        sessionKey = rsaKey[4]
+        keynm = self.checkAndGetValue(rsaKey, 1, 'val_1')
+        nvalue = self.checkAndGetValue(rsaKey, 2, 'val_2')
+        evalue = self.checkAndGetValue(rsaKey, 3, 'val_3')
+        sessionKey = self.checkAndGetValue(rsaKey, 4, 'val_4')
         certificate = self.getEmailCert(email)
         message = (chr(len(sessionKey)) + sessionKey +
                    chr(len(email)) + email +
@@ -134,12 +135,13 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                            cert=certificate,
                            calledName='loginZ')
         # res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, certificate=certificate)
-        if 1 not in res:
-            verifier = res[3]
+        ### TODO: NO E2EE STEP.
+        if self.checkAndGetValue(res, 1, 'val_1') is None:
+            verifier = self.checkAndGetValue(res, 3, 'val_3')
             print(f"Enter Pincode: {pincode.decode()}")
             e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
             try:
-                e2eeKeyInfo = self.decodeE2EEKeyV1(e2eeInfo, secret)
+                self.decodeE2EEKeyV1(e2eeInfo, secret)
             except:
                 raise Exception(f"e2eeInfo decode failed, try again")
             blablabao = self.encryptDeviceSecret(base64.b64decode(
@@ -147,7 +149,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             try:
                 e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
                 res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, verifier=e2eeLogin)
-                self.saveEmailCert(email, res[2])
+                self.saveEmailCert(email, self.checkAndGetValue(res, 2, 'val_2'))
             except:
                 raise Exception(f"confirmE2EELogin failed, try again")
         self.authToken = res[1]
@@ -156,10 +158,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
 
     def requestEmailLoginV2(self, email, pw):
         rsaKey = self.getRSAKeyInfo()
-        keynm = rsaKey[1]
-        nvalue = rsaKey[2]
-        evalue = rsaKey[3]
-        sessionKey = rsaKey[4]
+        keynm = self.checkAndGetValue(rsaKey, 1, 'val_1')
+        nvalue = self.checkAndGetValue(rsaKey, 2, 'val_2')
+        evalue = self.checkAndGetValue(rsaKey, 3, 'val_3')
+        sessionKey = self.checkAndGetValue(rsaKey, 4, 'val_4')
         certificate = self.getEmailCert(email)
         message = (chr(len(sessionKey)) + sessionKey +
                    chr(len(email)) + email +
@@ -172,9 +174,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             pincode), base64.b64decode(secretPK))
         res = self.loginV2(keynm, crypto, _secret,
                            deviceName=self.SYSTEM_NAME, cert=certificate)
-        if 9 not in res:
-            verifier = res[3]
-            if res[5] == 3:
+        if self.checkAndGetValue(res, 9, 'val_9') is None:
+            verifier = self.checkAndGetValue(res, 3, 'val_3')
+            if self.checkAndGetValue(res, 5, 'val_5') == 3:
                 print(f'need device confirm')
             print(f"Enter Pincode: {pincode.decode()}")
             e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
@@ -184,30 +186,28 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 raise Exception(f"e2eeInfo decode failed, try again")
             blablabao = self.encryptDeviceSecret(base64.b64decode(
                 e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
+            e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
             try:
-                e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
-                try:
-                    res = self.loginV2(
-                        None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
-                    self.saveEmailCert(email, res[2])
-                except LineServiceException as e:
-                    print(e)
-                    if e.code == 20:
-                        print(
-                            f"can't login: {e.message}, try use LoginZ...")
-                        return self.requestEmailLogin(email, pw)
-            except:
-                raise Exception(f"confirmE2EELogin failed, try again")
-        self.authToken = res[9][1]
-        refreshToken = res[9][2]
+                res = self.loginV2(
+                    None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
+            except LineServiceException as e:
+                print(e)
+                if e.code == 20:
+                    print(
+                        f"can't login: {e.message}, try use LoginZ...")
+                    return self.requestEmailLogin(email, pw)
+            self.saveEmailCert(email, self.checkAndGetValue(res, 2, 'val_2'))
+        loginInfo = self.checkAndGetValue(res, 9, 'val_9')
+        self.authToken = self.checkAndGetValue(loginInfo, 1, 'val_1')
+        refreshToken = self.checkAndGetValue(loginInfo, 2, 'val_2')
         self.saveCacheData('.refreshToken', self.authToken, refreshToken)
         print(f"AuthToken: {self.authToken}")
         print(f"RefreshToken: {refreshToken}")
         return True
 
     def requestSQR(self, isSelf=True):
-        sqr = self.createSession()[1]
-        url = self.createQrCode(sqr)[1]
+        sqr = self.checkAndGetValue(self.createSession(), 1, 'val_1')
+        url = self.checkAndGetValue(self.createQrCode(sqr), 1, 'val_1')
         secret, secretUrl = self.createSqrSecret()
         url = url + secretUrl
         imgPath = self.genQrcodeImageAndPrint(url)
@@ -217,8 +217,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             try:
                 self.verifyCertificate(sqr, self.getSqrCert())
             except:
-                c =  self.createPinCode(sqr)
-                print(c)
+                c =  self.checkAndGetValue(self.createPinCode(sqr), 1, 'val_1')
                 yield f"請輸入pincode: {c}"
                 self.checkPinCodeVerified(sqr)
             e = self.qrCodeLogin(sqr, secret)
@@ -232,8 +231,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         raise Exception('can not check qr code, try again?')
 
     def requestSQR2(self, isSelf=True):
-        sqr = self.createSession()[1]
-        url = self.createQrCode(sqr)[1]
+        sqr = self.checkAndGetValue(self.createSession(), 1, 'val_1')
+        url = self.checkAndGetValue(self.createQrCode(sqr), 1, 'val_1')
         secret, secretUrl = self.createSqrSecret()
         url = url + secretUrl
         imgPath = self.genQrcodeImageAndPrint(url)
@@ -322,22 +321,13 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
 
     def createPinCode(self, qrcode):
-        _headers = {
-            "x-lpqs": "/acct/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 13, 99, 114, 101, 97, 116, 101, 80, 105,
-                110, 67, 111, 100, 101, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return data[39:43].decode()
+        params = [
+            [12, 1, [
+                [11, 1, qrcode],
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('createPinCode', params, 3)
+        return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
 
     def checkPinCodeVerified(self, qrcode):
         _headers = {
@@ -374,13 +364,14 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         sqrd = self.generateDummyProtocol('qrCodeLogin', params, 3)
         data = self.postPackDataAndGetUnpackRespData(
             "/acct/lgn/sq/v1", sqrd, 3)
-        pem = data[1]
+        pem = self.checkAndGetValue(data, 1, 'val_1')
         self.saveSqrCert(pem)
         print("證書: ", pem)
-        _mid = data[5]
-        if data.get(4) is not None:
-            self.decodeE2EEKeyV1(data[4], secret, _mid)
-        _token = data[2]
+        _token = self.checkAndGetValue(data, 2, 'val_2')
+        e2eeInfo = self.checkAndGetValue(data, 4, 'val_4')
+        _mid = self.checkAndGetValue(data, 5, 'val_5')
+        if e2eeInfo is not None:
+            self.decodeE2EEKeyV1(e2eeInfo, secret, _mid)
         return _token
 
     def qrCodeLoginV2(self, authSessionId, modelName="彥彥好睡", systemName="鴻鴻好暈", autoLoginIsRequired=True):
@@ -396,20 +387,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData("/acct/lgn/sq/v1", sqrd, 3)
 
     def CPF(self):
-        _headers = {
-            'X-Line-Access': self.authToken,
-            'x-lpqs': "/CPF"
-        }
-        a = self.encHeaders(_headers)
         sqrd = []
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        res = self.server.postContent(
-            self.url, data=data, headers=self.server.Headers)
-        data = self.decData(res.content)
-        return bytes(data)
-
+        return self.postPackDataAndGetUnpackRespData('/CPF', sqrd)
+        
     def getRSAKeyInfo(self, provider=1):
         """
         provider:
@@ -541,7 +521,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         res = self.server.postContent(
             self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        return self.TCompactProtocol(data).res
+        tmore = self.TCompactProtocol(self, data)
+        data = tmore.res
+        return data
 
     def testTMoreCompact(self):
         _headers = {
@@ -557,6 +539,6 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         res = self.server.postContent(
             self.url, data=data, headers=self.server.Headers)
         data = self.decData(res.content)
-        tmore = self.TMoreCompactProtocol(data)
+        tmore = self.TMoreCompactProtocol(self, data)
         data = tmore.res
         return data

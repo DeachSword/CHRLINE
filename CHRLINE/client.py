@@ -47,7 +47,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         forwardedIp: `str`
             Fake ip used to spoof the server.
             ** not necessarily work **
-        useThrift: `bool` **dev version only**
+        useThrift: `bool`
             Set whether to use line thrift.
             If true, you must place line thrifts in services\thrift.
         """
@@ -60,6 +60,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         API.__init__(self, forwardedIp)
         Thrift.__init__(self)
         self.is_login = False
+        self.use_thrift = useThrift
         if region is not None:
             self.LINE_SERVICE_REGION = region
             
@@ -85,22 +86,31 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
     def initAll(self):
         self.checkNextToken()
         self.profile = self.getProfile()
-        if 'error' in self.profile:
-            self.log(f"登入失敗... {self.profile['error']}")
+        __profile_err = self.checkAndGetValue(self.profile, 'error')
+        if __profile_err is not None:
+            self.log(f"登入失敗... {__profile_err}")
             try:
                 for b in self.requestSQR(False):
                     print(b)
             except:
-                raise Exception(f"登入失敗... {self.profile['error']}")
+                raise Exception(f"登入失敗... {__profile_err}")
             self.handleNextToken(b)
             return self.initAll()
-        self.log(f"[{self.profile[20]}] 登入成功 ({self.profile[1]})")
-        self.mid = self.profile[1]
+        self.mid = self.checkAndGetValue(self.profile, 'mid', 1)
+        __displayName = self.checkAndGetValue(self.profile, 'displayName', 20)
+        self.log(f"[{__displayName}] 登入成功 ({self.mid})")
         if self.customDataId is None:
             self.customDataId = self.mid
-        system(f"title CHRLINE - {self.profile[20]}")
+        try:
+            system(f"title CHRLINE - {__displayName}")
+        except:
+            pass
         self.revision = -1
-        self.groups = self.getAllChatMids()[1]
+        try:
+            self.groups = self.checkAndGetValue(self.getAllChatMids(), 'memberChatMids', 1)
+        except Exception as e:
+            self.log(f"[getAllChatMids] {e}")
+            self.groups = []
 
         E2EE.__init__(self)
         Timeline.__init__(self)

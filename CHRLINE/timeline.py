@@ -25,9 +25,9 @@ class Timeline():
             self.server.timelineHeaders = {
                 'x-line-application': self.server.Headers['x-line-application'],
                 'User-Agent': self.server.Headers['User-Agent'],
-                'X-Line-Mid': self.profile[1],
+                'X-Line-Mid': self.mid,
                 'X-Line-Access': self.authToken,
-                'X-Line-ChannelToken': self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID)[5],
+                'X-Line-ChannelToken': self.checkAndGetValue(self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID), 5, 'val_5'),
                 'x-lal': self.LINE_LANGUAGE,
                 "X-LAP": "5",
                 "X-LPV": "1",
@@ -135,20 +135,22 @@ class Timeline():
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "GET",
         })
-        print(hr)
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, '/api/v1/home/cover.json', params)
-        r = self.server.postContent(url, headers=hr, data='')
+            self.LINE_HOST_DOMAIN, '/hm/api/v1/home/cover.json', params)
+        r = self.server.postContent(url, headers=hr)
         return r.json()
 
     @loggedIn
-    def updateProfileCoverById(self, objid, vObjid=None, storyShare=False):
+    def updateProfileCoverById(self, objid: str = None, vObjid: str = None, storyShare: bool = False):
         data = {
             "homeId": self.profile[1],
-            "coverObjectId": objid,
             "storyShare": storyShare,
             "meta": {}  # heh
         }
+        if objid is None and vObjid is None:
+            raise ValueError("objid is None")
+        if objid:
+            data['coverObjectId'] = objid
         if vObjid:
             data['videoCoverObjectId'] = vObjid
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
@@ -157,6 +159,8 @@ class Timeline():
         })
         r = self.server.postContent(
             self.LINE_HOST_DOMAIN + '/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
+        print(r)
+        print(r.text)
         return r.json()
 
     @loggedIn
@@ -1296,6 +1300,29 @@ class Timeline():
             '/api/playlists',
             params
         )
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    """ Share List Service """
+
+    @loggedIn
+    def createShareList(
+            self, ownerMid: str, members: list):
+        params = {}
+        data = {
+            "ownerMid": ownerMid,
+            "name": "????",
+            "members": members,
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+        })
+        url = self.LINE_HOST_DOMAIN + '/ext/timeline/tlgw/sl/api/v2/sharelist/create'
         r = self.server.postContent(
             url,
             headers=hr,

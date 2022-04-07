@@ -28,5 +28,6 @@ setuptools.setup(
     'h2>=3.2.0',
     'gevent',
     'cryptography',
+    'qrcode',
   ]
 )

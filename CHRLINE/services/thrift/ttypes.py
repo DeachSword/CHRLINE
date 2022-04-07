@@ -13627,7 +13627,7 @@ class GetPreviousMessagesV2Request(object):
 
     def validate(self):
         return
-
+      
     def __repr__(self):
         L = ['%s=%r' % (key, value)
              for key, value in self.__dict__.items()]
@@ -13691,6 +13691,7 @@ class ChannelToken(object):
             elif fid == 5:
                 if ftype == TType.STRING:
                     self.channelAccessToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+
                 else:
                     iprot.skip(ftype)
             else:
@@ -13930,6 +13931,7 @@ PointException.thrift_spec = (
 )
 all_structs.append(E2EEKeyBackupException)
 E2EEKeyBackupException.thrift_spec = (
+
     None,  # 0
     (1, TType.I32, 'code', None, None, ),  # 1
     (2, TType.STRING, 'reason', 'UTF8', None, ),  # 2

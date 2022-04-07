@@ -148,6 +148,33 @@ class Helpers(object):
         url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
         return url, None, coverObsInfo["objectId"], None
 
+    def checkAndGetValue(self, value, *args):
+        for arg in args:
+            if type(value) == dict:
+                if arg in value:
+                    return value[arg]
+            else:
+                data = getattr(value, str(arg), None)
+                if data is not None:
+                    return data
+                if isinstance(arg, int):
+                    data = getattr(value, f"val_{arg}", None)
+                    if data is not None:
+                        return data
+        return None
+
+    def checkAndSetValue(self, value, *args):
+        set = args[-1]
+        args = args[:-1]
+        if not args:
+            raise ValueError(f"Invalid arguments: {args}")
+        for arg in args:
+            if type(value) == dict:
+                value[arg] = set
+            else:
+                setattr(value, str(arg), set)
+        return value
+
     def genQrcodeImageAndPrint(self, url: str, filename: str=None, output_char: list=['　', '■']):
         if filename is None:
             filename = str(time.time())
@@ -168,10 +195,38 @@ class Helpers(object):
         img = qr.make_image()
         img.save(savePath)
         return savePath
+      
+    def sendMention(self, to, text="", mids=[]):
+        arrData = ""
+        arr = []
+        mention = "@chrline "
+        if mids == []:
+            raise Exception("Invalid mids")
+        if "@!" in text:
+            if text.count("@!") != len(mids):
+                raise Exception("Invalid mids")
+            texts = text.split("@!")
+            textx = ""
+            for mid in mids:
+                textx += str(texts[mids.index(mid)])
+                slen = len(textx)
+                elen = len(textx) + 15
+                arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                arr.append(arrData)
+                textx += mention
+            textx += str(texts[len(mids)])
+        else:
+            textx = ""
+            slen = len(textx)
+            elen = len(textx) + 15
+            arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
+            arr.append(arrData)
+            textx += mention + str(text)
+        return self.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
     
     def getMentioneesByMsgData(self, msg: dict):
         a = []
-        b = mag[18]
+        b = self.checkAndGetValue(msg, 'contentMetadata', 18)
         if b is not None:
             if 'MENTION' in b:
                 c = json.loads(b['MENTION'])
@@ -188,6 +243,8 @@ class Helpers(object):
             - L: len
             - M: mid
         """
+        if mentions is None or len(mentions) == 0:
+            return None
         a = []
         for b in mentions:
             a.append({

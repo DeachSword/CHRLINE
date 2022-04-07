@@ -66,6 +66,7 @@ class Config(object):
     LINE_CANCEL_LONGPOLLING_ENDPOINT     = '/CP4'
     LINE_CHANNEL_ENDPOINT                = '/CH3'
     LINE_CHANNEL_ENDPOINT_V4             = '/CH4'
+    LINE_PERSONAL_ENDPOINT_V4             = '/PS4'
     LINE_CHAT_APP_ENDPOINT               = '/CAPP1'
     LINE_COIN_ENDPOINT                   = '/COIN4'
     LINE_COMPACT_E2EE_MESSAGE_ENDPOINT   = '/ECA5'
@@ -116,22 +117,22 @@ class Config(object):
     def __init__(self, type="CHROME"):
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "7.4.0.2647"
+            self.APP_VER = "7.7.0.2698"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER  = '10.0.0-NT-x64'
         elif type == "DESKTOPMAC":
-            self.APP_VER = "7.4.0.2647"
+            self.APP_VER = "7.7.0.2698"
             self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
             self.APP_VER = "2.4.9"
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
-        elif type == "ANDROIDLITE":
-            self.APP_VER = "2.17.1"
-            self.SYSTEM_NAME = "Android OS"
-            self.isSecondary = True
-        elif type == "ANDROID":
-            self.APP_VER = "11.19.1"
+        # elif type == "ANDROIDLITE":
+            # self.APP_VER = "2.17.1"
+            # self.SYSTEM_NAME = "Android OS"
+            # self.isSecondary = True
+        elif type in ["ANDROID", "ANDROIDSECONDARY"]:
+            self.APP_VER = "12.2.2"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
             self.APP_VER = "11.19.2"
@@ -143,6 +144,9 @@ class Config(object):
         elif type == "WATCHOS":
             self.APP_VER = "11.19.2"
             self.SYSTEM_NAME = "Watch OS"
+        elif type == "WEAROS":
+            self.APP_VER = "11.19.2"
+            self.SYSTEM_NAME = "Wear OS"
         elif type == "OPENCHAT_PLUS":
             pass
         elif type == "CHANNELGW":
