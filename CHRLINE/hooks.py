@@ -2,7 +2,7 @@
 from .hksc.types import HookTypes
 from .hksc.events import HookEvents
 from .hksc.utility import HookUtility
-from .hksc.database import JsonDatabase
+from .hksc.database import SqliteDatabase, JsonDatabase
 import threading
 
 class HooksTracer(HookTypes, HookUtility):
@@ -13,9 +13,15 @@ class HooksTracer(HookTypes, HookUtility):
         'Command': 2
     }
 
-    def __init__(self, cl, db=None, prefixes=["!"], accounts=[]):
+    def __init__(self, cl, db=None, prefixes=["!"], accounts=[], db_type=3):
         self.cl = cl
-        self.db = JsonDatabase(cl, db)
+        self.db = None
+        if db_type == 2:
+            self.db = SqliteDatabase(cl, db)
+        elif db_type == 3:
+            self.db = JsonDatabase(cl, db)
+        else:
+            raise NotImplementedError()
         self.prefixes = prefixes
         self.opFuncs = []
         self.contFuncs = []

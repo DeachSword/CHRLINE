@@ -13,10 +13,14 @@ class HookTypes(object):
             @wraps(func)
             def __check(self, *args):
                 op = args[0]
-                if op[3] in [25, 26]:
-                    op[20]['opType'] = op[3]
-                    op[20]['isE2EE'] = False
-                if op[3] == type:
+                opType = self.cl.checkAndGetValue(op, 'type', 3)
+                if opType in [25, 26]:
+                    message = self.cl.checkAndGetValue(op, 'message', 20)
+                    message = self.cl.checkAndSetValue(message, 'opType', opType)
+                    isE2EE = bool(self.cl.checkAndGetValue(message, 'chunks', 20))
+                    message = self.cl.checkAndSetValue(message, 'isE2EE', isE2EE)
+                    op = self.cl.checkAndSetValue(op, 'message', 20, message)
+                if opType == type:
                     func(self, args[0], args[1])
                     return True
                 return False
@@ -28,7 +32,8 @@ class HookTypes(object):
             @wraps(func)
             def __check(self, *args):
                 op = args[0]
-                if op[15] == type:
+                contentType = self.cl.checkAndGetValue(op, 'contentType', 15)
+                if contentType == type:
                     func(self, args[0], args[1])
                     return True
                 return False
@@ -57,28 +62,30 @@ class HookTypes(object):
         """
         def __wrapper(func):
             func.prefixes = prefixes
+            func.permissions = permissions
+            func.toType = toType
             @wraps(func)
             def __check(self, *args):
                 _fname = lambda _name = None: func.__name__ if _name is None else _name
                 msg = args[0]
-                sender = msg[1]
-                receiver = msg[2]
+                sender = self.cl.checkAndGetValue(msg, '_from', 1)
+                receiver = self.cl.checkAndGetValue(msg, 'to', 2)
                 cl = args[1]
                 if sender != cl.mid and not self.checkPermissions(sender, permissions):
                     return False
-                msgToType = msg[3]
-                msgType = msg[15]
+                msgToType = self.cl.checkAndGetValue(msg, 'toType', 3)
+                msgType = self.cl.checkAndGetValue(msg, 'contentType', 15)
                 isInpart = inpart
                 if msgToType in toType:
                     if msgType == 0:
-                        text = msg.get(10)
+                        text = self.cl.checkAndGetValue(msg, 'text', 10)
                         for __name in [None] + alt:
                             fname = _fname(__name)
                             if text is None:
                                 # TODO: E2EE Message
-                                msg['isE2EE'] = True
-                                text = cl.decryptE2EETextMessage(msg, msg.get('opType', 26) == 25)
-                                msg[10] = text # maybe fixed in Operation__check?
+                                msg = self.cl.checkAndSetValue(msg, 'isE2EE', True)
+                                text = cl.decryptE2EETextMessage(msg, self.cl.checkAndGetValue(msg, 'opType') == 25)
+                                msg = self.cl.checkAndSetValue(msg, 'text', 10, text)  # maybe fixed in Operation__check?
                             if ignoreCase:
                                 text = text.lower()
                                 fname = fname.lower()
