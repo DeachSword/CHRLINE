@@ -35,7 +35,7 @@ DISPLAY_NAME = "yinmo"
 
 
 
-cl = CHRLINE(noLogin=True)
+cl = CHRLINE(device="ANDROID", noLogin=True)
 session = cl.openPrimarySession()
 
 private_key = Curve25519.generatePrivateKey(os.urandom(32))

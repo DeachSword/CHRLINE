@@ -17,7 +17,8 @@ class HookTypes(object):
                 if opType in [25, 26]:
                     message = self.cl.checkAndGetValue(op, 'message', 20)
                     message = self.cl.checkAndSetValue(message, 'opType', opType)
-                    message = self.cl.checkAndSetValue(message, 'isE2EE', False)
+                    isE2EE = bool(self.cl.checkAndGetValue(message, 'chunks', 20))
+                    message = self.cl.checkAndSetValue(message, 'isE2EE', isE2EE)
                     op = self.cl.checkAndSetValue(op, 'message', 20, message)
                 if opType == type:
                     func(self, args[0], args[1])
@@ -61,6 +62,8 @@ class HookTypes(object):
         """
         def __wrapper(func):
             func.prefixes = prefixes
+            func.permissions = permissions
+            func.toType = toType
             @wraps(func)
             def __check(self, *args):
                 _fname = lambda _name = None: func.__name__ if _name is None else _name

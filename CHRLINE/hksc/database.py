@@ -2,6 +2,14 @@
 import json
 import sqlite3
 
+def ezLocker(func):
+    def check(*args, **kwargs):
+        if args[0]._checkLock():
+            return func(*args, **kwargs)
+        else:
+            raise Exception("can't use Timeline func")
+    return check
+
 class BaseDatabase:
 
     def __init__(self, cl, db_name):
@@ -12,6 +20,17 @@ class BaseDatabase:
         print("Initialize database...")
         self._ezLocker = False
         self.loadDatabase()
+    
+    def _lock(self):
+        self._ezLocker = True
+    
+    def _lockRrelease(self):
+        self._ezLocker = False
+    
+    def _checkLock(self):
+        while self._ezLocker:
+            time.sleep(1 / 1000)
+        return True
 
 class SqliteDatabase(BaseDatabase):
 
@@ -24,6 +43,7 @@ class SqliteDatabase(BaseDatabase):
         else:
             raise Exception('can not load database.')
         
+    @ezLocker
     def getData(self, _key, _defVal=None):
         SQLITE3_SELECT_CMD = f""" SELECT * FROM [CHRLINE] WHERE [key]=?; """
         cursor = self._sqlite.cursor()
@@ -52,7 +72,11 @@ class SqliteDatabase(BaseDatabase):
     
     def _val2obj(self, val):
         # TODO: check and reload with json.loads if it is json data
-        return eval(val)
+        try:
+            val = json.loads(val)
+        except:
+            print(f"[_val2obj] cant conv data for json: {val}")
+        return val
         
     def _init(self):
         SQLITE3_CHRLINE_UNIT_TABLE_CMD = """

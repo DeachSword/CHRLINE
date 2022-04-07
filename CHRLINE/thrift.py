@@ -418,7 +418,7 @@ class Thrift(object):
             if size > 0:
                 types = self.__readUByte(data[len:len + 1])
             else:
-                return 0, 0, 0, 1 # fixed length
+                return 0, 0, 0, 1  # fixed length
             vtype = types & 0x0f
             ktype = types >> 4
             return (ktype, vtype, size, len + 1)
