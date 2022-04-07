@@ -196,6 +196,34 @@ class Helpers(object):
         img.save(savePath)
         return savePath
     
+    def sendMention(self, to, text="", mids=[]):
+        arrData = ""
+        arr = []
+        mention = "@chrline "
+        if mids == []:
+            raise Exception("Invalid mids")
+        if "@!" in text:
+            if text.count("@!") != len(mids):
+                raise Exception("Invalid mids")
+            texts = text.split("@!")
+            textx = ""
+            for mid in mids:
+                textx += str(texts[mids.index(mid)])
+                slen = len(textx)
+                elen = len(textx) + 15
+                arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                arr.append(arrData)
+                textx += mention
+            textx += str(texts[len(mids)])
+        else:
+            textx = ""
+            slen = len(textx)
+            elen = len(textx) + 15
+            arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
+            arr.append(arrData)
+            textx += mention + str(text)
+        return self.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+    
     def getMentioneesByMsgData(self, msg: dict):
         a = []
         b = self.checkAndGetValue(msg, 'contentMetadata', 18)

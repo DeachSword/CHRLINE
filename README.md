@@ -52,7 +52,7 @@ If you want to write TMoreCompact, only need to sniff results and reverse engine
 ####  Requirement
 - Python 3.6
     - pycrypto
-    - pycryptodemo
+    - pycryptodome
     - xxhash
     - httpx[http2]
     - gevent
