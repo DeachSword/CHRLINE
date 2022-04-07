@@ -1,7 +1,7 @@
 from CHRLINE import *
 from CHRLINE.hooks import HooksTracer
 
-cl = CHRLINE()
+cl = CHRLINE(useThrift=True)
 #cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")#with IOSIPAD
 #cl = CHRLINE("your email", "your password") #with Email
 #cl = CHRLINE(phone="your phone number(0911....)", region="your phone region(TW ,JP, ID..)") #with phone number
@@ -28,14 +28,14 @@ class OpHook(object):
 
     @tracer.Operation(26)
     def recvMessage(self, op, cl):
-        msg = op[20]
+        msg = op.message
         self.trace(msg, self.HooksType["Content"], cl)
 
 class ContentHook(object):
 
     @tracer.Content(0)
     def TextMessage(self, msg, cl):
-        text = msg.get(10)
+        text = msg.text
         self.trace(msg, self.HooksType['Command'], cl)
 
 class NormalCmd(object):
