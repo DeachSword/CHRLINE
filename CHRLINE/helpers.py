@@ -203,7 +203,7 @@ class Helpers(object):
         if type(mids) != list or mids == []:
             raise Exception("Invalid mids")
         if str_tag not in text:
-            message = text if not prefix else ""
+            message = text if prefix else ""
             for mid in mids:
                 slen = len(message)
                 elen = len(message) + len(tag)
