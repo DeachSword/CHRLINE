@@ -114,7 +114,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         self.decodeE2EEKeyV1(self.checkAndGetValue(ek, 1, 'val_1'), secret, mid)
         return True
 
-    def requestEmailLogin(self, email, pw):
+    def requestEmailLogin(self, email, pw, e2ee=True):
         rsaKey = self.getRSAKeyInfo()
         keynm = self.checkAndGetValue(rsaKey, 1, 'val_1')
         nvalue = self.checkAndGetValue(rsaKey, 2, 'val_2')
@@ -130,29 +130,52 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pincode = b"202202"
         _secret = self._encryptAESECB(self.getSHA256Sum(
             pincode), base64.b64decode(secretPK))
-        res = self.loginV2(keynm, crypto, _secret,
-                           deviceName=self.SYSTEM_NAME,
-                           cert=certificate,
-                           calledName='loginZ')
-        # res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, certificate=certificate)
-        ### TODO: NO E2EE STEP.
+        _req = {
+                "keynm": keynm, 
+                "encData": crypto, 
+                "secret": _secret,
+                "deviceName": self.SYSTEM_NAME,
+                "calledName": "loginV2"
+        }
+        if not e2ee:
+            _req = {
+                "keynm": keynm, 
+                "encData": crypto, 
+                "secret": None,
+                "deviceName": self.SYSTEM_NAME,
+                "calledName":"loginZ"
+            }
+        try:
+            res = self.loginV2(**_req,
+                               cert=None)
+        except LineServiceException as e:
+            if e.code == 89:
+                if not e2ee:
+                    raise e
+                return self.requestEmailLogin(email, pw, False)
         if self.checkAndGetValue(res, 1, 'val_1') is None:
             verifier = self.checkAndGetValue(res, 3, 'val_3')
+            if not e2ee:
+                pincode = self.checkAndGetValue(res, 4).encode()
             print(f"Enter Pincode: {pincode.decode()}")
-            e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
-            try:
-                self.decodeE2EEKeyV1(e2eeInfo, secret)
-            except:
-                raise Exception(f"e2eeInfo decode failed, try again")
-            blablabao = self.encryptDeviceSecret(base64.b64decode(
+            if e2ee:
+                e2eeInfo = self.checkLoginV2PinCode(verifier)['metadata']
+                try:
+                    self.decodeE2EEKeyV1(e2eeInfo, secret)
+                except:
+                    raise Exception(f"e2eeInfo decode failed, try again")
+                blablabao = self.encryptDeviceSecret(base64.b64decode(
                 e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
-            try:
                 e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
-                res = self.loginZ(keynm, crypto, self.SYSTEM_NAME, verifier=e2eeLogin)
+            else:
+                e2eeLogin = self.checkLoginZPinCode(verifier)['verifier']
+            try:
+                res = self.loginV2(**_req,
+                                   verifier=e2eeLogin)
                 self.saveEmailCert(email, self.checkAndGetValue(res, 2, 'val_2'))
             except:
                 raise Exception(f"confirmE2EELogin failed, try again")
-        self.authToken = res[1]
+        self.authToken = self.checkAndGetValue(res, 1)
         print(f"AuthToken: {self.authToken}")
         return True
 
@@ -192,7 +215,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                     None, None, None, deviceName=self.SYSTEM_NAME, verifier=e2eeLogin)
             except LineServiceException as e:
                 print(e)
-                if e.code == 20:
+                if e.code in [20, 89]:
                     print(
                         f"can't login: {e.message}, try use LoginZ...")
                     return self.requestEmailLogin(email, pw)
@@ -288,27 +311,25 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
 
     def checkQrCodeVerified(self, qrcode):
-        _headers = {
-            "X-Line-Access": qrcode,
-            "x-lpqs": "/acct/lp/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 19, 99, 104, 101, 99, 107, 81, 114, 67, 111, 100, 101,
-                86, 101, 114, 105, 102, 105, 101, 100, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
+        params = [
+            [12, 1, [
+                [11, 1, qrcode],
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('checkQrCodeVerified', params, 3)
         headers = self.server.additionalHeaders(self.server.Headers, {
             'x-lst': '150000'  # timeout
         })
-        res = self.server.postContent(
-            self.url, data=data, headers=headers)
-        if res.status_code == 200:
-            return True
-        return False
+        try:
+            self.postPackDataAndGetUnpackRespData(
+                "/acct/lp/lgn/sq/v1", sqrd, 3,
+                headers=headers, 
+                access_token=qrcode,
+                conn=requests.session())
+        except Exception as e:
+            print(f"[checkQrCodeVerified] {e}")
+            return False
+        return True
 
     def verifyCertificate(self, qrcode, cert=None):
         params = [
@@ -318,7 +339,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             ]],
         ]
         sqrd = self.generateDummyProtocol('verifyCertificate', params, 3)
-        return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
+        return self.postPackDataAndGetUnpackRespData(
+            self.LINE_SECONDARY_QR_LOGIN_ENDPOINT, sqrd, 3)
 
     def createPinCode(self, qrcode):
         params = [
@@ -330,27 +352,25 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData('/acct/lgn/sq/v1', sqrd, 3)
 
     def checkPinCodeVerified(self, qrcode):
-        _headers = {
-            "X-Line-Access": qrcode,
-            "x-lpqs": "/acct/lp/lgn/sq/v1"
-        }
-        a = self.encHeaders(_headers)
-        sqrd = [128, 1, 0, 1, 0, 0, 0, 20, 99, 104, 101, 99, 107, 80, 105, 110, 67, 111, 100,
-                101, 86, 101, 114, 105, 102, 105, 101, 100, 0, 0, 0, 0, 12, 0, 1, 11, 0, 1, 0, 0, 0, 66]
-        for qr in qrcode:
-            sqrd.append(ord(qr))
-        sqrd += [0, 0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
+        params = [
+            [12, 1, [
+                [11, 1, qrcode],
+            ]],
+        ]
+        sqrd = self.generateDummyProtocol('checkPinCodeVerified', params, 3)
         headers = self.server.additionalHeaders(self.server.Headers, {
             'x-lst': '150000'  # timeout
         })
-        res = self.server.postContent(
-            self.url, data=data, headers=headers)
-        if res.status_code == 200:
-            return True
-        return False
+        try:
+            self.postPackDataAndGetUnpackRespData(
+                "/acct/lp/lgn/sq/v1", sqrd, 3,
+                headers=headers, 
+                access_token=qrcode,
+                conn=requests.session())
+        except Exception as e:
+            print(f"[checkPinCodeVerified] {e}")
+            return False
+        return True
 
     def qrCodeLogin(self, authSessionId: str, secret: str, autoLoginIsRequired: bool = True):
 
@@ -406,6 +426,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
 
     def loginV2(self, keynm, encData, secret, deviceName='Chrome', cert=None, verifier=None, calledName='loginV2'):
         loginType = 2
+        if secret is None:
+            loginType = 0
         if verifier is not None:
             loginType = 1
         params = [
@@ -449,40 +471,24 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)
 
     def checkLoginZPinCode(self, accessSession):
-        _headers = {
-            'X-Line-Access': accessSession,
-            'x-lpqs': "/Q"  # LF1
-        }
-        a = self.encHeaders(_headers)
-        sqr_rd = a
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
         hr = self.server.additionalHeaders(self.server.Headers, {
             'x-lhm': 'GET'
         })
-        res = self.server.postContent(self.url, data=data, headers=hr)
-        if res.status_code != 200:
-            raise Exception("checkLoginZPinCode failed")
-        data = self.decData(res.content)
-        return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
+        return self.postPackDataAndGetUnpackRespData(
+            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN ,[], -3,
+            headers = hr,
+            access_token=accessSession,
+            conn=requests.session())['result']
 
     def checkLoginV2PinCode(self, accessSession):
-        _headers = {
-            'X-Line-Access': accessSession,
-            'x-lpqs': self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE
-        }
-        a = self.encHeaders(_headers)
-        sqr_rd = a
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
         hr = self.server.additionalHeaders(self.server.Headers, {
             'x-lhm': 'GET'
         })
-        res = self.server.postContent(self.url, data=data, headers=hr)
-        if res.status_code != 200:
-            raise Exception("checkLoginV2PinCode failed")
-        data = self.decData(res.content)
-        return json.loads(data[4:].split(b'\n', 1)[0].decode())['result']
+        return self.postPackDataAndGetUnpackRespData(
+            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE ,[], -3,
+            headers = hr,
+            access_token=accessSession,
+            conn=requests.session())['result']
 
     def testTBinary(self):
         _headers = {

@@ -3046,6 +3046,39 @@ class BuddyBotActiveStatus(object):
     }
 
 
+class GroupCallMediaType(object):
+    AUDIO = 1
+    VIDEO = 2
+    LIVE = 3
+
+    _VALUES_TO_NAMES = {
+        1: "AUDIO",
+        2: "VIDEO",
+        3: "LIVE",
+    }
+
+    _NAMES_TO_VALUES = {
+        "AUDIO": 1,
+        "VIDEO": 2,
+        "LIVE": 3,
+    }
+
+
+class GroupCallProtocol(object):
+    STANDARD = 1
+    CONSTELLA = 2
+
+    _VALUES_TO_NAMES = {
+        1: "STANDARD",
+        2: "CONSTELLA",
+    }
+
+    _NAMES_TO_VALUES = {
+        "STANDARD": 1,
+        "CONSTELLA": 2,
+    }
+
+
 class TalkException(TException):
     """
     Attributes:
@@ -13627,7 +13660,7 @@ class GetPreviousMessagesV2Request(object):
 
     def validate(self):
         return
-      
+
     def __repr__(self):
         L = ['%s=%r' % (key, value)
              for key, value in self.__dict__.items()]
@@ -13691,7 +13724,6 @@ class ChannelToken(object):
             elif fid == 5:
                 if ftype == TType.STRING:
                     self.channelAccessToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
-
                 else:
                     iprot.skip(ftype)
             else:
@@ -13723,6 +13755,137 @@ class ChannelToken(object):
         if self.channelAccessToken is not None:
             oprot.writeFieldBegin('channelAccessToken', TType.STRING, 5)
             oprot.writeString(self.channelAccessToken.encode('utf-8') if sys.version_info[0] == 2 else self.channelAccessToken)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GroupCall(object):
+    """
+    Attributes:
+     - online
+     - chatMid
+     - hostMids
+     - memberMids
+     - started
+     - mediaType
+     - protocol
+
+    """
+
+
+    def __init__(self, online=None, chatMid=None, hostMids=None, memberMids=None, started=None, mediaType=None, protocol=None,):
+        self.online = online
+        self.chatMid = chatMid
+        self.hostMids = hostMids
+        self.memberMids = memberMids
+        self.started = started
+        self.mediaType = mediaType
+        self.protocol = protocol
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.online = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.chatMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.hostMids = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.memberMids = []
+                    (_etype396, _size393) = iprot.readListBegin()
+                    for _i397 in range(_size393):
+                        _elem398 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.memberMids.append(_elem398)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I64:
+                    self.started = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.I32:
+                    self.mediaType = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.I32:
+                    self.protocol = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GroupCall')
+        if self.online is not None:
+            oprot.writeFieldBegin('online', TType.BOOL, 1)
+            oprot.writeBool(self.online)
+            oprot.writeFieldEnd()
+        if self.chatMid is not None:
+            oprot.writeFieldBegin('chatMid', TType.STRING, 2)
+            oprot.writeString(self.chatMid.encode('utf-8') if sys.version_info[0] == 2 else self.chatMid)
+            oprot.writeFieldEnd()
+        if self.hostMids is not None:
+            oprot.writeFieldBegin('hostMids', TType.STRING, 3)
+            oprot.writeString(self.hostMids.encode('utf-8') if sys.version_info[0] == 2 else self.hostMids)
+            oprot.writeFieldEnd()
+        if self.memberMids is not None:
+            oprot.writeFieldBegin('memberMids', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRING, len(self.memberMids))
+            for iter399 in self.memberMids:
+                oprot.writeString(iter399.encode('utf-8') if sys.version_info[0] == 2 else iter399)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.started is not None:
+            oprot.writeFieldBegin('started', TType.I64, 5)
+            oprot.writeI64(self.started)
+            oprot.writeFieldEnd()
+        if self.mediaType is not None:
+            oprot.writeFieldBegin('mediaType', TType.I32, 6)
+            oprot.writeI32(self.mediaType)
+            oprot.writeFieldEnd()
+        if self.protocol is not None:
+            oprot.writeFieldBegin('protocol', TType.I32, 7)
+            oprot.writeI32(self.protocol)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -13931,7 +14094,6 @@ PointException.thrift_spec = (
 )
 all_structs.append(E2EEKeyBackupException)
 E2EEKeyBackupException.thrift_spec = (
-
     None,  # 0
     (1, TType.I32, 'code', None, None, ),  # 1
     (2, TType.STRING, 'reason', 'UTF8', None, ),  # 2
@@ -14771,6 +14933,17 @@ ChannelToken.thrift_spec = (
     (3, TType.I64, 'expiration', None, None, ),  # 3
     (4, TType.STRING, 'refreshToken', 'UTF8', None, ),  # 4
     (5, TType.STRING, 'channelAccessToken', 'UTF8', None, ),  # 5
+)
+all_structs.append(GroupCall)
+GroupCall.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'online', None, None, ),  # 1
+    (2, TType.STRING, 'chatMid', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'hostMids', 'UTF8', None, ),  # 3
+    (4, TType.LIST, 'memberMids', (TType.STRING, 'UTF8', False), None, ),  # 4
+    (5, TType.I64, 'started', None, None, ),  # 5
+    (6, TType.I32, 'mediaType', None, None, ),  # 6
+    (7, TType.I32, 'protocol', None, None, ),  # 7
 )
 fix_spec(all_structs)
 del all_structs

@@ -27,7 +27,7 @@ class Timeline():
                 'User-Agent': self.server.Headers['User-Agent'],
                 'X-Line-Mid': self.mid,
                 'X-Line-Access': self.authToken,
-                'X-Line-ChannelToken': self.checkAndGetValue(self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID), 5, 'val_5'),
+                'X-Line-ChannelToken': self.checkAndGetValue(self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID), 'channelAccessToken', 5),
                 'x-lal': self.LINE_LANGUAGE,
                 "X-LAP": "5",
                 "X-LPV": "1",
@@ -38,8 +38,8 @@ class Timeline():
                 # "X-Line-StoryShare": "true"
             }
             self.can_use_timeline = True
-        except:
-            self.log("can't use Timeline")
+        except Exception as e:
+            self.log(f"can't use Timeline: {e}")
 
     """ TIMELINE """
 
@@ -143,7 +143,7 @@ class Timeline():
     @loggedIn
     def updateProfileCoverById(self, objid: str = None, vObjid: str = None, storyShare: bool = False):
         data = {
-            "homeId": self.profile[1],
+            "homeId": self.mid,
             "storyShare": storyShare,
             "meta": {}  # heh
         }
@@ -159,8 +159,6 @@ class Timeline():
         })
         r = self.server.postContent(
             self.LINE_HOST_DOMAIN + '/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
-        print(r)
-        print(r.text)
         return r.json()
 
     @loggedIn
@@ -318,7 +316,7 @@ class Timeline():
         return r.text
 
     @loggedIn
-    def getUserPopupDetail(self, mid: str):
+    def getUserDetail(self, mid: str):
         params = {
             "userMid": mid
         }
@@ -1037,6 +1035,16 @@ class Timeline():
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
 
+    @loggedIn
+    def createGroupAlbum(self, mid, name):
+        data = json.dumps({'title': name, 'type': 'image'})
+        params = {'homeId': mid,'count': '1','auto': '1'}
+        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ext/album/api/v3/album', params)
+        r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
+        if r.status_code != 201:
+            print(r.text)
+        return r.json()
+
     """ STORY """
 
     @loggedIn
@@ -1184,6 +1192,153 @@ class Timeline():
         })
         url = self.server.urlEncode(
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/sync.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def fetchKeep(self, startRevision: int = 0, endRevision: int = 0, limit: int = 30):
+        params = {
+            'startRevision': startRevision,
+            'endRevision': endRevision,
+            'limit': limit
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json",
+            'x-source': 'KEEP-PICKER'  # or KEEP-DEFAULT
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/fetch.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def createKeepContent(self):
+        raise NotImplementedError("createKeepContent is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/create.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def updateKeepContent(self):
+        raise NotImplementedError("updateKeepContent is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/update.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def deleteKeepContent(self):
+        raise NotImplementedError("deleteKeepContent is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/delete.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def getKeepSize(self, revision: int = 0, limit: int = 30):
+        params = {
+            'revision': revision,
+            'limit': limit
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/size.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def initKeepStatus(self):
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/init.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def deleteKeepObs(self):
+        raise NotImplementedError("deleteKeepObs is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/obs/delete.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def getKeep(self):
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/get.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def deleteKeepMessage(self):
+        raise NotImplementedError("deleteKeepMessage is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/message/delete.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def pinKeepContents(self):
+        raise NotImplementedError("pinKeepContents is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/contents/pin.json', params)
+        r = self.server.postContent(url, headers=hr)
+        return r.json()
+        
+    @loggedIn
+    def unpinKeepContents(self):
+        raise NotImplementedError("UnpinKeepContents is not implemented")
+        params = {}
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "GET",
+            'content-type': "application/json"
+        })
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/contents/unpin.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
@@ -1448,6 +1603,30 @@ class Timeline():
             'Content-type': "application/json",
         })
         url = self.LINE_HOST_DOMAIN + '/tl/api/v1/bdb/card/create'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+
+    """ Avatar Service """
+
+    @loggedIn
+    def shareAvatarToTalkById(
+            self, avatar_id: str, toMids: list):
+        params = {}
+        data = {
+            "avatar_id": avatar_id,
+            "to": toMids
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            # 'X-Line-Clientid': ''
+        })
+        url = self.LINE_HOST_DOMAIN + '/ex/ya/am/v1/share'
         r = self.server.postContent(
             url,
             headers=hr,

@@ -29,11 +29,14 @@ class Helpers(object):
             except LineServiceException as e:
                 self.log(f'[sendLiff] issueLiffView error: {e}')
                 if e.code == 3 and tryConsent:
-                    if self.tryConsentLiff(e.metadata[3][1]):
+                    payload = e.metadata
+                    consentRequired = self.checkAndGetValue(payload, 'consentRequired', 3)
+                    channelId = self.checkAndGetValue(consentRequired, 'channelId', 1)
+                    if self.tryConsentLiff(channelId):
                         return self.sendLiff(to, messages, tryConsent=False)
             except Exception as e:
                 return e
-            token = liff[3]
+            token = self.checkAndGetValue(liff, 'accessToken', 3)
             self.log(f'[sendLiff] issue new token for {cache_key}...')
         else:
             token = self.liff_token_cache[cache_key]
@@ -126,7 +129,7 @@ class Helpers(object):
         ckStatusCode = lpv != 1
         if lpv == 1:
             if "x-lc" in resp.headers:
-                if resp.headers["x-lc"] != status_code:
+                if resp.headers["x-lc"] != str(status_code):
                     return False
             else:
                 ckStatusCode = True
