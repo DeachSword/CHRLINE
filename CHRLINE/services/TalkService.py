@@ -55,7 +55,6 @@ class TalkService():
             message.append(
                 # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
                 [8, 22, 3]
-
             )
             message.append(
                 [8, 24, 1]  # relatedMessageServiceCode; 1 for Talk 2 for Square
@@ -1289,7 +1288,7 @@ class TalkService():
             [8, 3, count]
         ]
         sqrd = self.generateDummyProtocol('getRecentMessagesV2', params, 4)
-        return self.postPackDataAndGetUnpackRespData("/S4", sqrd, 4, readWith=f"TalkService.{METHOD_NAME}")
+        return self.postPackDataAndGetUnpackRespData("/S5", sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
 
     def getPreviousMessageIds(self, to, count=100):
         METHOD_NAME = "getPreviousMessageIds"

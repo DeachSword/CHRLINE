@@ -781,6 +781,8 @@ class Models(object):
                 a = a()
             except AttributeError:
                 a = None
+            except NameError:
+                a = None
             if a is not None:
                 e = TMemoryBuffer()
                 f = testProtocol(e)
@@ -798,6 +800,8 @@ class Models(object):
 
         def _gen(): return DummyThrift()
 
+        def _get(a): return a.data if isinstance(a, DummyProtocolData) else a
+
         def _genFunc(a: DummyProtocolData, b, f):
             def __gen(a: DummyProtocolData, b):
                 c = _gen()
@@ -813,9 +817,12 @@ class Models(object):
                     d = a.data
                     for e in d:
                         g = d[e]
+                        h = e
+                        if isinstance(h, DummyProtocolData):
+                            h = __cek(h, f)
                         if isinstance(g, DummyProtocolData):
-                            g = __gen(g, f)
-                        c[e] = g
+                            g = __cek(g, f)
+                        c[h] = g
                 elif a.type in (14, 15):
                     c = []
                     for d in a.data:
@@ -830,7 +837,8 @@ class Models(object):
             setattr(b, f"val_{a.id}", c)
         a = _gen()
 
-        def b(c, refs): return _genFunc(c, refs, b) if type(c.data) in [
+        def b(c, refs): 
+            return _genFunc(c, refs, b) if type(c.data) in [
             list, dict] else setattr(refs, f"val_{c.id}", c.data)
         if data.data is not None:
             b(data.data, a)
@@ -850,7 +858,7 @@ def thrift2dummy(a):
     if type(a) == dict:
         b = {}
         for k, v in a.items():
-            b[k] = thrift2dummy(v)
+            b[thrift2dummy(k)] = thrift2dummy(v)
         return b
     elif type(a) == list:
         return [thrift2dummy(a2) for a2 in a]
@@ -872,5 +880,5 @@ def thrift2dummy(a):
         return b
         return [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else (a.subType + [[thrift2dummy(a2) for a2 in a.data]] if a.subType else [thrift2dummy(a2) for a2 in a.data]) if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
     else:
-        return a
-        # raise ValueError(f"不支持 `{type(a)}`: {a}")
+        # return a
+        raise ValueError(f"不支持 `{type(a)}`: {a}")

@@ -196,33 +196,44 @@ class Helpers(object):
         img.save(savePath)
         return savePath
       
-    def sendMention(self, to, text="", mids=[]):
-        arrData = ""
-        arr = []
-        mention = "@chrline "
-        if mids == []:
+    def sendMention(self, to, text="", mids=[], prefix=True):
+        tag = '@chrline'
+        str_tag = '@!'
+        arr_data = []
+        if type(mids) != list or mids == []:
             raise Exception("Invalid mids")
-        if "@!" in text:
-            if text.count("@!") != len(mids):
-                raise Exception("Invalid mids")
-            texts = text.split("@!")
-            textx = ""
+        if str_tag not in text:
+            message = text if prefix else ""
             for mid in mids:
-                textx += str(texts[mids.index(mid)])
-                slen = len(textx)
-                elen = len(textx) + 15
-                arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
-                arr.append(arrData)
-                textx += mention
-            textx += str(texts[len(mids)])
+                slen = len(message)
+                elen = len(message) + len(tag)
+                arr = {
+                    "S": str(slen),
+                    "E": str(elen),
+                    "M": mid
+                }
+                arr_data.append(arr)
+                message += tag
+            if not prefix:
+                message += text
         else:
-            textx = ""
-            slen = len(textx)
-            elen = len(textx) + 15
-            arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mids[0]}
-            arr.append(arrData)
-            textx += mention + str(text)
-        return self.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+            if text.count(str_tag) != len(mids):
+                raise Exception("Invalid tag length")
+            text_data = text.split(str_tag)
+            message = ""
+            for mid in mids:
+                message += str(text_data[mids.index(mid)])
+                slen = len(message)
+                elen = len(message) + len(tag)
+                arr = {
+                    "S": str(slen),
+                    "E": str(elen),
+                    "M": mid
+                }
+                arr_data.append(arr)
+                message += tag
+            message += text_data[-1]
+        return self.sendMessage(to, message, contentMetadata={'MENTION': str('{"MENTIONEES":' + json.dumps(arr_data) + '}')})
     
     def getMentioneesByMsgData(self, msg: dict):
         a = []
