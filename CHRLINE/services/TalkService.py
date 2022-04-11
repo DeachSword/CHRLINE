@@ -73,10 +73,11 @@ class TalkService():
         except Exception as e:
             raise e
 
-    def replyMessage(self, msgData: any, text: str, contentType: int = 0, contentMetadata: dict = {}, location: dict = None):
+    def replyMessage(self, msgData: any, text: str, contentType: int = 0, contentMetadata: dict = {}, location: dict = None, relatedMessageId: str = None):
         to = self.checkAndGetValue(msgData, 'to', 2)
         toType = self.checkAndGetValue(msgData, 'toType', 3)
-        relatedMessageId = self.checkAndGetValue(msgData, 'id', 4)
+        if relatedMessageId is None:
+            relatedMessageId = self.checkAndGetValue(msgData, 'id', 4)
         opType = self.checkAndGetValue(msgData, 'opType')
         if toType == 0 and opType in [26, None]:  # opType for hooks
             to = self.checkAndGetValue(msgData, '_from', 1)
@@ -1280,11 +1281,11 @@ class TalkService():
         sqrd = self.generateDummyProtocol('getRecentMessages', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5", sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
 
-    def getRecentMessagesV2(self, to):
+    def getRecentMessagesV2(self, to: str, count: int = 300):
         METHOD_NAME = "getRecentMessagesV2"
         params = [
             [11, 2, to],
-            [8, 3, 500]
+            [8, 3, count]
         ]
         sqrd = self.generateDummyProtocol('getRecentMessagesV2', params, 4)
         return self.postPackDataAndGetUnpackRespData("/S5", sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
