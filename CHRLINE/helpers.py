@@ -146,10 +146,28 @@ class Helpers(object):
         return False
 
     def getProfileCoverObjIdAndUrl(self, mid: str):
+        video_obj = None
+        video_url = None
         detail = self.getProfileCoverDetail(mid)['result']
-        coverObsInfo = detail['coverObsInfo']
+        coverObsInfo = self.checkAndGetValue(detail, 'coverObsInfo') #detail['coverObsInfo']
+        videoCoverObsInfo = self.checkAndGetValue(detail, 'videoCoverObsInfo') #detail['videoCoverObsInfo']
         url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
-        return url, None, coverObsInfo["objectId"], None
+        if videoCoverObsInfo is not None:
+            video_obj = videoCoverObsInfo["objectId"]
+            video_url = self.LINE_OBS_DOMAIN + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
+        return url, video_url, coverObsInfo["objectId"], video_obj
+
+    def getProfileObjIdAndUrl(self, mid: str):
+        video_obj = None
+        video_url = None
+        detail = self.getProfileDetail(mid)['result']
+        coverObsInfo = self.checkAndGetValue(detail, 'coverObsInfo') #detail['coverObsInfo']
+        videoCoverObsInfo = self.checkAndGetValue(detail, 'videoCoverObsInfo') #detail['videoCoverObsInfo']
+        url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
+        if videoCoverObsInfo is not None:
+            video_obj = videoCoverObsInfo["objectId"]
+            video_url = self.LINE_OBS_DOMAIN + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
+        return url, video_url, coverObsInfo["objectId"], video_obj
 
     def checkAndGetValue(self, value, *args):
         for arg in args:
