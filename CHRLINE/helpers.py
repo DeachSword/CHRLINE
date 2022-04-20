@@ -3,6 +3,8 @@ import json
 import time
 import os
 import qrcode
+import re
+import requests
 
 from .exceptions import LineServiceException
 
@@ -20,20 +22,28 @@ class Helpers(object):
         else:
             raise Exception('Not support Square')
     
-    def sendLiff(self, to, messages, tryConsent=True, forceIssue=False):
+    def sendLiff(self, to, messages, tryConsent=True, forceIssue=False, liffId="1562242036-RW04okm"):
         cache_key = f"{to}"
         use_cache = False
         if cache_key not in self.liff_token_cache or forceIssue:
             try:
-                liff = self.issueLiffView(to)
+                liff = self.issueLiffView(to, liffId)
             except LineServiceException as e:
                 self.log(f'[sendLiff] issueLiffView error: {e}')
                 if e.code == 3 and tryConsent:
                     payload = e.metadata
                     consentRequired = self.checkAndGetValue(payload, 'consentRequired', 3)
                     channelId = self.checkAndGetValue(consentRequired, 'channelId', 1)
-                    if self.tryConsentLiff(channelId):
+                    consentUrl = self.checkAndGetValue(consentRequired, 'consentUrl', 2)
+                    toType = self.getToType(to)
+                    hasConsent = False
+                    if toType == 4:
+                        hasConsent = self.tryConsentAuthorize(consentUrl)
+                    else:
+                        hasConsent = self.tryConsentLiff(channelId)
+                    if hasConsent:
                         return self.sendLiff(to, messages, tryConsent=False)
+                raise Exception(f'Failed to send Liff: {to}')
             except Exception as e:
                 return e
             token = self.checkAndGetValue(liff, 'accessToken', 3)
@@ -82,6 +92,41 @@ class Helpers(object):
         if r.status_code == 200:
             return True
         print(f"tryConsentLiff failed: {r.status_code}")
+        return False
+    
+    def tryConsentAuthorize(self, consentUrl, allPermission=["P", "CM"], approvedPermission=["P", "CM"]):
+        CHANNEL_ID = None
+        CSRF_TOKEN = None
+        session = requests.Session()
+        hr = {
+            'X-LINE-Access': self.authToken,
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.1; SAMSUNG Realise/DeachSword; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/56.0.2924.87 Mobile Safari/537.36',
+            'X-Line-Application': self.APP_NAME,
+        }
+        r = session.get(consentUrl, headers=hr)
+        if r.status_code == 200:
+            resp = r.text
+            # GET CSRF TOKEN
+            CHANNEL_ID = re.findall(self.CONSENT_CHANNEL_ID_REGEX, resp)[0]
+            CSRF_TOKEN = re.findall(self.CONSENT_CSRF_TOKEN_REGEX, resp)[0]
+            self.log(f"CHANNEL_ID: {CHANNEL_ID}")
+            self.log(f"CSRF_TOKEN: {CSRF_TOKEN}")
+        if CHANNEL_ID and CSRF_TOKEN:
+            url = "https://access.line.me/oauth2/v2.1/authorize/consent"
+            payload = {
+                "allPermission": allPermission,
+                "approvedPermission": allPermission,
+                "channelId": CHANNEL_ID,
+                "__csrf": CSRF_TOKEN,
+                "__WLS": "",
+                "allow": True
+            }
+            r = session.post(url, data=payload, headers=hr)
+            if r.status_code == 200:
+                return True
+            print(f"tryConsentAuthorize failed: {r.status_code}")
+        else:
+            raise Exception(f"tryConsentAuthorize failed: STATUS_CODE: {r.status_code}, CHANNEL_ID: {CHANNEL_ID}, CSRF_TOKEN: {CSRF_TOKEN}")
         return False
     
     def getToType(self, mid):
@@ -155,19 +200,33 @@ class Helpers(object):
         if videoCoverObsInfo is not None:
             video_obj = videoCoverObsInfo["objectId"]
             video_url = self.LINE_OBS_DOMAIN + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
-        return url, video_url, coverObsInfo["objectId"], video_obj
+        return url, video_url, coverObsInfo["objectId"], videoCoverObsInfo["objectId"]
 
-    def getProfileObjIdAndUrl(self, mid: str):
-        video_obj = None
-        video_url = None
-        detail = self.getProfileDetail(mid)['result']
-        coverObsInfo = self.checkAndGetValue(detail, 'coverObsInfo') #detail['coverObsInfo']
-        videoCoverObsInfo = self.checkAndGetValue(detail, 'videoCoverObsInfo') #detail['videoCoverObsInfo']
-        url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
-        if videoCoverObsInfo is not None:
-            video_obj = videoCoverObsInfo["objectId"]
-            video_url = self.LINE_OBS_DOMAIN + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
-        return url, video_url, coverObsInfo["objectId"], video_obj
+    def getProfilePictureObjIdAndUrl(self, mid: str):
+        url = None
+        url_video = None
+        objectId = mid
+        objectId_video = None
+        serviceName = 'talk'
+        obsNamespace = None
+        midType = self.getToType(mid)
+        if midType == 0:
+            obsNamespace = 'p'
+            objectId_video = f'{mid}/vp'
+            # vp.sjpg, vp.small
+        elif midType in [1, 2]:
+            obsNamespace = 'g'
+        elif midType in [3, 4, 5]:
+            serviceName = 'g2'
+            obsNamespace = 'group'
+            if midType == 5:
+                obsNamespace = 'member'
+        else:
+            raise notImplementedError(f'Not support midType: {midType}')
+        url = self.LINE_OBS_DOMAIN + f'/r/{serviceName}/{obsNamespace}/{objectId}'
+        if objectId_video is not None:
+            url_video = self.LINE_OBS_DOMAIN + f'/r/{serviceName}/{obsNamespace}/{objectId_video}'
+        return url, url_video, objectId, objectId_video
 
     def checkAndGetValue(self, value, *args):
         for arg in args:
@@ -222,7 +281,7 @@ class Helpers(object):
         str_tag = '@!'
         arr_data = []
         if type(mids) != list or mids == []:
-            raise Exception("Invalid mids")
+            raise ValueError(f"Invalid mids: {mids}")
         if str_tag not in text:
             message = text if prefix else ""
             for mid in mids:
@@ -239,7 +298,8 @@ class Helpers(object):
                 message += text
         else:
             if text.count(str_tag) != len(mids):
-                raise Exception("Invalid tag length")
+                raise ValueError(
+                    f"Invalid tag length: {text.count(str_tag)}/{len(mids)}")
             text_data = text.split(str_tag)
             message = ""
             for mid in mids:

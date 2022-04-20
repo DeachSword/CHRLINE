@@ -135,16 +135,10 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 "encData": crypto, 
                 "secret": _secret,
                 "deviceName": self.SYSTEM_NAME,
-                "calledName": "loginV2"
+                "calledName": "loginZ"
         }
         if not e2ee:
-            _req = {
-                "keynm": keynm, 
-                "encData": crypto, 
-                "secret": None,
-                "deviceName": self.SYSTEM_NAME,
-                "calledName":"loginZ"
-            }
+            _req["secret"] = None
         try:
             res = self.loginV2(**_req,
                                cert=None)

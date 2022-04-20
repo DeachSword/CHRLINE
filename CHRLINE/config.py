@@ -111,6 +111,8 @@ class Config(object):
     SYSTEM_VER  = '12.1.4'
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
+    CONSENT_CHANNEL_ID_REGEX = re.compile(r"<input type=\"hidden\" name=\"channelId\" value=\"([^\"]+)\"")
+    CONSENT_CSRF_TOKEN_REGEX = re.compile(r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\"")
     
     LOGIN_V2_SUPPORT = ["DESKTOPWIN"] # only desktop_win?
 

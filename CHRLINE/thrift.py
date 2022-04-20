@@ -503,11 +503,11 @@ class Thrift(object):
                 pass
             if ftype == 1:
                 data = True
+            elif ftype == 2:
+                data = False
             elif ftype == 3:
                 data = self.readByte(self.data[self.__last_pos:])
                 self.__last_pos += 1
-            elif ftype == 2:
-                data = False
             elif ftype == 4:
                 data = self.readDouble(self.data[self.__last_pos:])
                 self.__last_pos += 8

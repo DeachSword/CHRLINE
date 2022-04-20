@@ -12,6 +12,7 @@ from hashlib import md5, sha1
 
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
+import httpx
 import xxhash
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
@@ -324,6 +325,10 @@ class Models(object):
                 data += [_type, 0, _id]
                 isCompact = False
             elif type == 4:
+                if _type == 2:
+                    data += tcp.getFieldHeader(
+                        0x01 if _data else 0x02, _id)
+                    continue
                 data += tcp.getFieldHeader(tcp.CTYPES[_type], _id)
                 isCompact = True
             data += self.generateDummyProtocolData(_data, _type, isCompact)
@@ -336,8 +341,7 @@ class Models(object):
         ttype = 4 if isCompact else 3
         if type == 2:
             if isCompact:
-                _compact = self.TCompactProtocol(self)
-                a = _compact.getFieldHeader(1 if _data == True else 2, 0)
+                pass  # FIXED
             else:
                 data += [1] if _data == True else [0]
         elif type == 3:
@@ -409,8 +413,13 @@ class Models(object):
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
-            res = conn.post(
-                self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, files=files, timeout=180)
+            res = doLoopReq(conn.post, {
+                "url": self.LINE_GW_HOST_DOMAIN + path,
+                "data": data,
+                "headers": headers, 
+                "files": files,
+                "timeout": 180
+            })
             data = res.content
         elif encType == 1:
             if conn is None:
@@ -438,9 +447,12 @@ class Models(object):
                 data = self.encData(_data)
                 data += self.XQqwlHlXKK(self.encryptKey, data)
             headers['accept-encoding'] = 'gzip, deflate'
-            res = conn.post(
-                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
-                data=data, files=files, headers=headers)
+            res = doLoopReq(conn.post, {
+                "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
+                "data": data, 
+                "files": files, 
+                "headers": headers
+            })
             if res.content:
                 data = self.decData(res.content)
             else:
@@ -882,3 +894,19 @@ def thrift2dummy(a):
     else:
         # return a
         raise ValueError(f"不支持 `{type(a)}`: {a}")
+
+def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDelay: int = 8):
+    currCount += 1
+    doRetry = False
+    e = None
+    try:
+        res = req(**data)
+    except httpx.ReadError as ex:
+        doRetry = True
+        e = ex
+    if doRetry:
+        if currCount > maxRetryCount:
+            raise e
+        time.sleep(retryTimeDelay)
+        return doLoopReq(req, data, currCount, maxRetryCount, retryTimeDelay)
+    return res
