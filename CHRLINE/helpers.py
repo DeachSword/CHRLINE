@@ -228,7 +228,7 @@ class Helpers(object):
     
     def getMentioneesByMsgData(self, msg: dict):
         a = []
-        b = mag[18]
+        b = msg[18]
         if b is not None:
             if 'MENTION' in b:
                 c = json.loads(b['MENTION'])
