@@ -27,8 +27,19 @@ class Object(object):
     
     """
 
-    def updateProfileImage(self, path, storyShare=False, type='p'):
-        obsPath = f'talk/p/{self.mid}'
+    def updateProfileImage(self, path, storyShare=False, type='p', mid: str = None):
+        """
+        use `mid` for square member
+        """
+        if mid is None:
+            mid = self.mid
+        midType = self.getToType(mid)
+        if midType == 0:
+            obsPath = f'talk/p/{mid}'
+        elif midType == 5:
+            obsPath = f'g2/member/{mid}'
+        else:
+            raise ValueError(f"Invalid midType: {midType}")
         oType = 'IMAGE'
         params = {}
         is_video = self.checkIsVideo(path)
@@ -44,7 +55,7 @@ class Object(object):
             params["cat"] = "vp.mp4"  # let server know u have vp.mp4
         is_video = self.checkIsVideo(path)
         if is_video:
-            obsPath = f'talk/vp/{self.mid}'
+            obsPath = f'talk/vp/{mid}'
             oType = "VIDEO"
             filename = f"{hstr}.mp4"
             params = {
@@ -90,7 +101,15 @@ class Object(object):
         return home
 
     def updateChatProfileImage(self, groupId: str, path: str, oType: str = 'IMAGE'):
-        obsPath = f'talk/g/{groupId}'
+        midType = self.getToType(groupId)
+        if midType in [1, 2]:
+            obsPath = f'talk/g/{groupId}'
+        elif midType == 3:
+            obsPath = f'g2/group/{groupId}'
+        elif midType == 4:
+            obsPath = f'g2/chat/{groupId}'
+        else:
+            raise ValueError(f"Invalid midType: {midType}")
         params = {
             'cat': 'original'
         }
@@ -156,9 +175,12 @@ class Object(object):
                 f"Upload object home failure. Receive statue code: {r.status_code}")
         return objId
 
-    def uploadMultipleImageToTalk(self, paths, to):
+    def uploadMultipleImageToTalk(self, paths: list, to: str, oTypes: list = None):
         if type(paths) != list:
             raise Exception('paths must be list')
+        if oTypes is None:
+            oTypes = ["IMAGE" for _ in range(len(paths))]
+        oType = iter(oTypes)
         sqrd_base = [13, 0, 18, 11, 11]
         hashmap = {
             "GID": "0",
@@ -176,7 +198,7 @@ class Object(object):
         })
         talkMeta = b64encode(msg.encode('utf-8')).decode('utf-8')
         res = self.uploadObjTalk(
-            paths[0], to=to, talkMeta=talkMeta, returnHeaders=True)
+            paths[0], next(oType), to=to, talkMeta=talkMeta, returnHeaders=True)
         gid = res['x-line-message-gid']
         msgIds = [res['x-obs-oid']]
         if len(paths) > 1:
@@ -196,33 +218,41 @@ class Object(object):
                 })
                 talkMeta = b64encode(msg.encode('utf-8')).decode('utf-8')
                 res = self.uploadObjTalk(
-                    img, to=to, talkMeta=talkMeta, returnHeaders=True)
+                    img, next(oType), to=to, talkMeta=talkMeta, returnHeaders=True)
                 msgIds.append(res['x-obs-oid'])
                 nc += 1
         return gid
 
-    def uploadObjTalk(self, pathOrBytes, oType='image', objId=None, to=None, talkMeta=None, returnHeaders=False, filename: str = None):
+    def uploadObjTalk(self, pathOrBytes, oType='image', objId=None, to=None, talkMeta=None, returnHeaders=False, filename: str = None, isOriginal: bool = False):
         if oType.lower() not in ['image', 'gif', 'video', 'audio', 'file']:
             raise Exception('Invalid type value')
         # url = self.LINE_OBS_DOMAIN + '/talk/m/upload.nhn' #if reqseq not working
         # url = self.LINE_OBS_DOMAIN + '/r/talk/m/reqseq'
-        params = {
-            "oid": "reqseq",
-            "reqseq": str(self.getCurrReqId()),
-            'cat': 'original'
-        }
+        serviceName = 'talk'
+        obsNamespace = 'm'
+        params = {}
+        if oType.lower() == 'gif':
+            params['cat'] = 'original'
+            oType = 'IMAGE'
+        if isOriginal:
+            params['cat'] = 'original'
         if to != None:
-            params['tomid'] = to
+            params.update({
+                "oid": "reqseq",
+                "reqseq": str(self.getCurrReqId()),
+                "tomid": to
+            })
+            objId = "reqseq"
+            if self.getToType(to) == 4:
+                serviceName = 'g2'
         else:
             if objId != None:
                 params['oid'] = objId
         obsObjId, obsHash, respHeaders = self.uploadObjectForService(
-            pathOrBytes, oType, 'talk/m/reqseq', params=params, talkMeta=talkMeta, filename=filename)
+            pathOrBytes, oType, f'{serviceName}/{obsNamespace}/{objId}', params=params, talkMeta=talkMeta, filename=filename)
         if returnHeaders:
             return respHeaders
-        if objId is None:
-            # the message seq, if u oid using reqseq
-            objId = obsObjId
+        objId = obsObjId
         objHash = obsHash  # for view on cdn
         return objId
 
@@ -387,11 +417,19 @@ class Object(object):
         oType = oType.lower()
         isDebugOnly = True
         if isinstance(pathOrBytes, str):
-            files = {'file': open(pathOrBytes, 'rb')}
-            filename = files['file'].name if filename is None else filename
-            filename = filename.split('\\')[-1]
-            data = open(pathOrBytes, 'rb').read()
+            if pathOrBytes.startswith('http'):
+                # URL
+                with httpx.Client() as hc:
+                    data = hc.get(pathOrBytes).content
+            else:
+                # FILE
+                files = {'file': open(pathOrBytes, 'rb')}
+                filename = files['file'].name if filename is None else filename
+                filename = filename.split('\\')[-1]
+                with open(pathOrBytes, 'rb') as f:
+                    data = f.read()
         else:
+            # BYTES
             data = pathOrBytes
         filename = str(uuid.uuid1()) if filename is None else filename
         base_params = {
@@ -435,16 +473,12 @@ class Object(object):
         self.log(f'params: {params}', isDebugOnly)
         self.log(f'files: {files}', isDebugOnly)
         self.log(f'hr: {hr}', isDebugOnly)
-        try:
-            r = self.postPackDataAndGetUnpackRespData(
-                f'/oa{obs_path}', data, 0, 0, headers=hr, expectedRespCode=[200, 201], conn=self.obsConn, files=files)
-            #r = self.obsConn.post(self.LINE_GW_HOST_DOMAIN + f'/oa{obs_path}', data=data, headers=hr, files=files)
-            # expectedRespCode:
-            # - 200: image cache on obs server
-            # - 201: image created success
-        except Exception as e:
-            print("uploadObjectForService: ", e)
-            raise Exception(e)
+        r = self.postPackDataAndGetUnpackRespData(
+            f'/oa{obs_path}', data, 0, 0, headers=hr, expectedRespCode=[200, 201], conn=self.obsConn, files=files)
+        #r = self.obsConn.post(self.LINE_GW_HOST_DOMAIN + f'/oa{obs_path}', data=data, headers=hr, files=files)
+        # expectedRespCode:
+        # - 200: image cache on obs server
+        # - 201: image created success
         objId = r.headers['x-obs-oid']
         objHash = r.headers['x-obs-hash']  # for view on cdn
         self.log(f'Ended uploadObjectForService!', isDebugOnly)
