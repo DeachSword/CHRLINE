@@ -84,7 +84,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             self.initAll()
 
     def initAll(self):
-        self.checkNextToken()
+        self.checkNextToken(False)
         self.profile = self.getProfile()
         __profile_err = self.checkAndGetValue(self.profile, 'error')
         if __profile_err is not None:

@@ -69,7 +69,7 @@ class Models(object):
         elif returnAs == 'default':
             return oldList
 
-    def checkNextToken(self):
+    def checkNextToken(self, log4NotDebug: bool = True):
         savePath = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), '.tokens')
         if not os.path.exists(savePath):
@@ -77,8 +77,8 @@ class Models(object):
         fn = md5(self.authToken.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.authToken = open(savePath + f"/{fn}", "r").read()
-            self.log(f"New Token: {self.authToken}")
-            self.checkNextToken()
+            self.log(f"New Token: {self.authToken}", not log4NotDebug)
+            self.checkNextToken(log4NotDebug)
         return self.authToken
 
     def handleNextToken(self, newToken):
@@ -418,7 +418,7 @@ class Models(object):
                 "data": data,
                 "headers": headers, 
                 "files": files,
-                "timeout": 180
+                "timeout": None
             })
             data = res.content
         elif encType == 1:
@@ -902,6 +902,9 @@ def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDe
     try:
         res = req(**data)
     except httpx.ReadError as ex:
+        doRetry = True
+        e = ex
+    except httpx.ConnectError as ex:
         doRetry = True
         e = ex
     if doRetry:

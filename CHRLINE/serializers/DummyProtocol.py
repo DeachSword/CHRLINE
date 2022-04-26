@@ -37,9 +37,12 @@ class DummyProtocol():
 
 class DummyThrift():
 
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, **kwargs):
         if name is not None:
             self.__name__ = name
+        if kwargs:
+            for key in kwargs:
+                setattr(self, key, kwargs[key])
 
     def __repr__(self):
         L = ['%s=%r' % (key, value)
