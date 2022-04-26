@@ -1619,33 +1619,80 @@ class TalkService():
             'getBlockedRecommendationIds', params, 4)
         return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
 
-    def sync(self, revision: int, count: int = 50):
-        """ fetchOps for IOS """
+    def sync(self, revision: int, count: int = 100, fullSyncRequestReason: int = None, lastPartialFullSyncs: dict = None):
+        """ 
+        fetchOps for IOS 
+
+        - fullSyncRequestReason:
+            OTHER(0),
+            INITIALIZATION(1),
+            PERIODIC_SYNC(2),
+            MANUAL_SYNC(3),
+            LOCAL_DB_CORRUPTED(4);
+
+        """
         METHOD_NAME = "sync"
         # 2021/7/26 it blocked, but 2021/7/20 it working
         # LINE are u here?
+        # OH, just work for IOS, but 2021/07/20 it works with ANDROID :)
+        # 2022/04/20, sync() added to ANDROID apk
+        isDebugOnly = True
+        self.log(f"Using sync() for {self.DEVICE_TYPE}...", isDebugOnly)
+        self.log(f"globalRev: {self.globalRev}", isDebugOnly)
+        self.log(f"individualRev: {self.individualRev}", isDebugOnly)
         params = [
             [12, 1, [
                 [10, 1, revision],
                 [8, 2, count],
+                [10, 3, self.globalRev],
                 [10, 4, self.individualRev],
-                # [10, 5, self.globalRev]
+                [8, 5, fullSyncRequestReason],
+                [13, 6, [8, 10, lastPartialFullSyncs]]
             ]]
         ]
         sqrd = self.generateDummyProtocol('sync', params, 4)
         res = self.postPackDataAndGetUnpackRespData(
-            '/S5', sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
-        if 1 in res:
-            res = res[1]
-            ops = res[1]
-            isSync = res[2]
-            if not isSync:
-                self.individualRev = res[4][2]
+            '/SYNC5', sqrd, 5, readWith=f"SyncService.{METHOD_NAME}")
+        operationResponse = self.checkAndGetValue(res, 'operationResponse', 1)
+        fullSyncResponse = self.checkAndGetValue(res, 'fullSyncResponse', 2)
+        partialFullSyncResponse = self.checkAndGetValue(
+            res, 'partialFullSyncResponse', 2)
+        self.log(f"Resp: {res}", isDebugOnly)
+        if operationResponse is not None:
+            ops = self.checkAndGetValue(operationResponse, 'operations', 1)
+            hasMoreOps = self.checkAndGetValue(
+                operationResponse, 'hasMoreOps', 2)
+            globalEvents = self.checkAndGetValue(
+                operationResponse, 'globalEvents', 3)
+            individualEvents = self.checkAndGetValue(
+                operationResponse, 'individualEvents', 4)
+            if globalEvents is not None:
+                events = self.checkAndGetValue(globalEvents, 'events', 1)
+                lastRevision = self.checkAndGetValue(
+                    globalEvents, 'lastRevision', 2)
+                self.globalRev = lastRevision
+                self.log(f"new globalRev: {self.globalRev}", isDebugOnly)
+                self.log(f"globalEvents: {events}", isDebugOnly)
+
+            if individualEvents is not None:
+                events = self.checkAndGetValue(individualEvents, 'events', 1)
+                lastRevision = self.checkAndGetValue(
+                    individualEvents, 'lastRevision', 2)
+                self.individualRev = lastRevision
+                self.log(
+                    f"new individualRev: {self.individualRev}", isDebugOnly)
+                self.log(f"individualEvents: {events}", isDebugOnly)
+            self.log(f"operations: {ops}", isDebugOnly)
             return ops
-        elif 2 in res:
+        elif fullSyncResponse is not None:
             # revision - 1 for sync revision on next req
-            return self.sync(res[2][2] - 1, count)
-        return None
+            reasons = self.checkAndGetValue(fullSyncResponse, 'reasons', 1)
+            syncRevision = self.checkAndGetValue(
+                fullSyncResponse, 'nextRevision', 2)
+            self.log(f"[ sync ] got fullSyncResponse: {reasons}")
+            return self.sync(syncRevision - 1, count)
+        else:
+            raise EOFError(f"sync failed, unknown response: {res}")
 
     def updateChatRoomAnnouncement(self, gid: str, announcementId: int, messageLink: str, text: str, imgLink: str):
         METHOD_NAME = "updateChatRoomAnnouncement"
@@ -2827,12 +2874,15 @@ class TalkService():
             "logout", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE, readWith=f"TalkService.{METHOD_NAME}")
 
-    def updateNotificationTokenWithBytes(self):
+    def updateNotificationTokenWithBytes(self, bData: bytes, bindType: int = 1):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        2022/04/25
         """
-        raise Exception("updateNotificationTokenWithBytes is not implemented")
-        params = []
+        METHOD_NAME = "updateNotificationTokenWithBytes"
+        params = [
+            [11, 2, bData],
+            [8, 3, bindType]
+        ]
         sqrd = self.generateDummyProtocol(
             "updateNotificationTokenWithBytes", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE, readWith=f"TalkService.{METHOD_NAME}")
@@ -3229,15 +3279,26 @@ class TalkService():
             "finishUpdateVerification", params, self.TalkService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE, readWith=f"TalkService.{METHOD_NAME}")
 
-    def notifySleepV2(self):
+    def notifySleepV2(self, revision: int):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        2022/04/25
         """
-        raise Exception("notifySleepV2 is not implemented")
-        params = []
+        METHOD_NAME = "notifySleepV2"
+        params = [
+            [2, 12, [
+                [1, 12, [
+                    [10, 1, revision],
+                    [8, 2, 1]
+                ]],
+                [2, 12, [
+                    [8, 1, 0],
+                    [8, 2, 0],
+                ]]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
-            "notifySleepV2", params, self.TalkService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.TalkService_API_PATH, sqrd, self.TalkService_RES_TYPE, readWith=f"TalkService.{METHOD_NAME}")
+            "notifySleepV2", params, 4)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_NOTIFY_SLEEP_ENDPOINT, sqrd, 4, readWith=f"TalkService.{METHOD_NAME}")
 
     def getCompactRoom(self):
         """

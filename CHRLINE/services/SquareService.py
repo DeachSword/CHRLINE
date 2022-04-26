@@ -422,15 +422,35 @@ class SquareService(object):
             "deleteSquareChatAnnouncement", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def createSquareChat(self):
+    def createSquareChat(self, squareChatMid: str, name: str, chatImageObsHash: str, squareChatType: int = 1, maxMemberCount: int = 5000, ableToSearchMessage: int = 1, squareMemberMids: list = []):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        - SquareChatType:
+            OPEN(1),
+            SECRET(2),
+            ONE_ON_ONE(3),
+            SQUARE_DEFAULT(4);
+        - ableToSearchMessage:
+            NONE(0),
+            OFF(1),
+            ON(2);
         """
-        raise Exception("createSquareChat is not implemented")
-        params = []
+        params = [
+            [12, 1,  [
+                [8, 1, self.getCurrReqId()],
+                [12, 2, [
+                    [11, 1, squareChatMid],
+                    [8, 3, squareChatType],
+                    [11, 4, name],
+                    [11, 5, chatImageObsHash],
+                    [8, 7, maxMemberCount],
+                    [8, 11, ableToSearchMessage]
+                ]],
+                [15, 3, [11, squareMemberMids]]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
-            "createSquareChat", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+            "createSquareChat", params, self.SquareService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.SquareService_API_PATH, sqrd, self.SquareService_RES_TYPE)
 
     def deleteSquareChat(self):
         """
@@ -442,15 +462,20 @@ class SquareService(object):
             "deleteSquareChat", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def getSquareChatMembers(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getSquareChatMembers is not implemented")
-        params = []
+    def getSquareChatMembers(self, squareChatMid: str, continuationToken: str = None, limit: int = 200):
+        GetSquareChatMembersRequest = [
+            [11, 1, squareChatMid],
+            [8, 3, limit]
+        ]
+        if continuationToken is not None:
+            GetSquareChatMembersRequest.append(
+                [11, 2, continuationToken])
+        params = [
+            [12, 1, GetSquareChatMembersRequest]
+        ]
         sqrd = self.generateDummyProtocol(
-            "getSquareChatMembers", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+            "getSquareChatMembers", params, self.SquareService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.SquareService_API_PATH, sqrd, self.SquareService_RES_TYPE)
 
     def getSquareFeatureSet(self):
         """
@@ -622,12 +647,28 @@ class SquareService(object):
         sqrd = self.generateDummyProtocol('checkJoinCode', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
-    def createSquareChatAnnouncement(self):
+    def createSquareChatAnnouncement(self, squareChatMid: str, messageId: str, text: str, senderSquareMemberMid: str, createdAt: int, announcementType: int = 0):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        - SquareChatAnnouncementType:
+            TEXT_MESSAGE(0);
         """
-        raise Exception("createSquareChatAnnouncement is not implemented")
-        params = []
+        params = [
+            [12, 1, [
+                [8, 1, self.getCurrReqId()],
+                [11, 2, squareChatMid],
+                [12, 3, [
+                    [8, 2, announcementType],
+                    [12, 3, [
+                        [12, 1, [
+                            [11, 1, messageId],
+                            [11, 2, text],
+                            [11, 3, senderSquareMemberMid],
+                            [10, 4, createdAt]
+                        ]]
+                    ]]
+                ]]
+            ]]
+        ]
         sqrd = self.generateDummyProtocol(
             "createSquareChatAnnouncement", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
@@ -750,15 +791,24 @@ class SquareService(object):
             "getNoteStatus", params, SquareService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
 
-    def searchSquareChatMembers(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("searchSquareChatMembers is not implemented")
-        params = []
+    def searchSquareChatMembers(self, squareChatMid: str, displayName: str = '', continuationToken: str = None, limit: int = 20):
+        SearchSquareChatMembersRequest = [
+            [11, 1, squareChatMid],
+            [12, 2, [
+                [11, 1, displayName],
+                # [2, 2, True]  # includingMe
+            ]],
+            [8, 4, limit],
+        ]
+        if continuationToken is not None:
+            SearchSquareChatMembersRequest.append(
+                [11, 3, continuationToken])
+        params = [
+            [12, 1, SearchSquareChatMembersRequest]
+        ]
         sqrd = self.generateDummyProtocol(
-            "searchSquareChatMembers", params, SquareService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(SquareService_API_PATH, sqrd, SquareService_RES_TYPE)
+            "searchSquareChatMembers", params, self.SquareService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.SquareService_API_PATH, sqrd, self.SquareService_RES_TYPE)
 
 
     def getSquareChatFeatureSet(self):
