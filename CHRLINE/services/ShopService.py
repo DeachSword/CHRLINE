@@ -1284,3 +1284,9 @@ class ShopService(object):
         params = []
         sqrd = self.generateDummyProtocol(METHOD_NAME, params, self.ShopService_REQ_TYPE)
         return self.postPackDataAndGetUnpackRespData(self.ShopService_API_PATH ,sqrd,  self.ShopService_RES_TYPE)
+
+    def purchaseForSelf(self):
+        METHOD_NAME = "purchaseForSelf"
+        params = []
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, self.ShopService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.ShopService_API_PATH ,sqrd, self.ShopService_RES_TYPE)
