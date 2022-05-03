@@ -381,7 +381,7 @@ class Object(object):
         savePath = path
         if savePath is None:
             savePath = f'./.image/{time.time()}.jpg'
-        r = self.server,getContant(url)
+        r = self.server.getContant(url)
         if r.status_code != 200:
             raise Exception(f"Not a picture with URL. code: {r.status_code}")
         with open(savePath, 'wb') as f:
