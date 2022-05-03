@@ -255,7 +255,12 @@ class Object(object):
         objId = obsObjId
         objHash = obsHash  # for view on cdn
         return objId
-
+    
+    def uploadObjTalkWithURL(self, chatId: str, url: str):
+        # 
+        path = self.downloadImageWithURL(url)
+        return self.uploadObjTalk(path, to=chatId)
+    
     def forwardObjectMsg(self, to: str, msgId: str, contentType: str = 'image', copyFromService: str = 'talk', copyFromSid: str = 'm', copyFrom: str = None, copy2Service: str = 'talk', copy2Sid: str = 'm', copy2: str = None, contentId: str = None, original: bool = False, duration: int = None, issueToken4ChannelId: str = None):
         if contentType.lower() not in ['image', 'video', 'audio', 'file']:
             raise Exception('Type not valid.')
@@ -371,6 +376,18 @@ class Object(object):
     def downloadObjectMyhome(self, objId, path, objFrom='h'):
         return self.downloadObjectForService(objId, path, obsPathPrefix=f'myhome/{objFrom}')
 
+    def downloadImageWithURL(self, url: str, path=None):
+        # TEST
+        savePath = path
+        if savePath is None:
+            savePath = f'./.image/{time.time()}.jpg'
+        r = self.server,getContant(url)
+        if r.status_code != 200:
+            raise Exception(f"Not a picture with URL. code: {r.status_code}")
+        with open(savePath, 'wb') as f:
+            f.write(r.raw)
+        return savePath
+    
     def downloadObjectForService(self, objId, savePath, obsPathPrefix='myhome/h', size=None, suffix=None, issueToken4ChannelId: str = None, params: dict = {}):
         obs_path = f'/r/{obsPathPrefix}/{objId}'
         if size is not None:
