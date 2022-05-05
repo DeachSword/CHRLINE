@@ -954,10 +954,28 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def addImageToAlbum(self, mid, albumId, oid):
-        # oid like 6cbff2e4100006b58db80f87ad8666bc.20121408
-        params = {'homeId': mid}
-        data = json.dumps({"photos": [{"oid": oid}]})
+    def addImageToAlbum(self, mid: str, albumId: str, oid: any):
+        """
+        Add an image to the album
+
+        oid is a string, you can use list for multiple oids
+        """
+        oids = []
+        if type(oid) is str:
+            oid = [oid]
+        if type(oid) is list:
+            for _oid in oid:
+                oids.append({
+                    'oid': _oid
+                })
+        else:
+            raise ValueError(f'Not support oid: {oid}')
+        params = {
+            'homeId': mid
+        }
+        data = json.dumps({
+            "photos": oids
+        })
 
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'PUT',
@@ -969,8 +987,6 @@ class Timeline():
         url = self.server.urlEncode(
             self.LINE_HOST_DOMAIN, '/ext/album/api/v3/photos/%s' % albumId, params)
         r = self.server.postContent(url, data=data, headers=hr)
-
-        # {"code":0,"message":"success","result":true}
         return r.json()
 
     @loggedIn
@@ -989,10 +1005,29 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def deleteAlbumImages(self, mid, albumId, id):
-        # id 4620693219800810323, not oid
-        params = {'homeId': mid}
-        data = json.dumps({"photos": [{"id": id}]})
+    def deleteAlbumImages(self, mid: str, albumId: str, id: any):
+        """
+        Delete an image on the album
+
+        id is a string, you can use list for multiple ids
+        * id is photo id, not objId
+        """
+        ids = []
+        if type(id) is str:
+            id = [id]
+        if type(id) is list:
+            for _id in id:
+                ids.append({
+                    'id': _id
+                })
+        else:
+            raise ValueError(f'Not support id: {id}')
+        params = {
+            'homeId': mid
+        }
+        data = json.dumps({
+            "photos": ids
+        })
 
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
@@ -1038,9 +1073,11 @@ class Timeline():
     @loggedIn
     def createGroupAlbum(self, mid, name):
         data = json.dumps({'title': name, 'type': 'image'})
-        params = {'homeId': mid,'count': '1','auto': '1'}
-        url = self.server.urlEncode(self.LINE_HOST_DOMAIN, '/ext/album/api/v3/album', params)
-        r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
+        params = {'homeId': mid, 'count': '1', 'auto': '1'}
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, '/ext/album/api/v3/album', params)
+        r = self.server.postContent(
+            url, data=data, headers=self.server.timelineHeaders)
         if r.status_code != 201:
             print(r.text)
         return r.json()
@@ -1211,7 +1248,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/fetch.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def createKeepContent(self):
         raise NotImplementedError("createKeepContent is not implemented")
@@ -1224,7 +1261,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/create.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def updateKeepContent(self):
         raise NotImplementedError("updateKeepContent is not implemented")
@@ -1237,7 +1274,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/update.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def deleteKeepContent(self):
         raise NotImplementedError("deleteKeepContent is not implemented")
@@ -1250,7 +1287,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/delete.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def getKeepSize(self, revision: int = 0, limit: int = 30):
         params = {
@@ -1265,7 +1302,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/size.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def initKeepStatus(self):
         params = {}
@@ -1277,7 +1314,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/init.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def deleteKeepObs(self):
         raise NotImplementedError("deleteKeepObs is not implemented")
@@ -1290,7 +1327,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/obs/delete.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def getKeep(self):
         params = {}
@@ -1302,7 +1339,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/get.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def deleteKeepMessage(self):
         raise NotImplementedError("deleteKeepMessage is not implemented")
@@ -1315,7 +1352,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/message/delete.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def pinKeepContents(self):
         raise NotImplementedError("pinKeepContents is not implemented")
@@ -1328,7 +1365,7 @@ class Timeline():
             self.LINE_HOST_DOMAIN, '/kp/api/v27/keep/contents/pin.json', params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
-        
+
     @loggedIn
     def unpinKeepContents(self):
         raise NotImplementedError("UnpinKeepContents is not implemented")
@@ -1609,7 +1646,6 @@ class Timeline():
             json=data
         )
         return r.json()
-
 
     """ Avatar Service """
 

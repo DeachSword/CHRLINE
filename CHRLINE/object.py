@@ -121,28 +121,32 @@ class Object(object):
                 f"updateChatProfileImage failure: {e}")
         return True
 
-    def updateImageToAlbum(self, mid, albumId, path):
-        file = open(path, 'rb').read()
-        f_name = hashlib.md5(str(time.time()).encode('utf8')).hexdigest()
-        params = {
-            'name': f_name + '.20' + time.strftime('%m%d', time.localtime(int(round(time.time())))) + '08' + '.jpg',
-            'quality': '100',
-            'ver': '2.0',
-            'type': 'image'
-        }
-        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
-            'Content-Type': 'image/jpeg',
-            'X-Line-Mid': mid,
-            'X-Line-Album': albumId,
-            'X-Line-Access': self.acquireEncryptedAccessToken()[7:],
-            'x-obs-params': self.genOBSParams(params, 'b64')
-        })
-        r = self.server.postContent(self.LINE_OBS_DOMAIN + '/r/album/a/' + f_name + '.20' + time.strftime(
-            '%m%d', time.localtime(int(round(time.time())))) + '08', data=file, headers=hr)
+    def updateImage2Album(self, homeId: str, albumId: int, pathOrBytes: any, oType: str = "IMAGE", updateAlbum: bool = True):
+        """
+        Upload Object to Album Obs
 
-        if r.status_code != 201:
-            raise Exception('Add image to album failure.')
-        return f_name + '.20' + time.strftime('%m%d', time.localtime(int(round(time.time())))) + '08'
+        will use `updateAlbum` to update the album, if content uploads success. 
+        ---------------
+        Return `OBS_OID` and `OBS_HASH`
+        """
+        oids = []
+        additionalHeaders = {
+            'X-Line-Album': str(albumId),
+            'X-Line-Mid': homeId,
+        }
+        if type(pathOrBytes) != list:
+            pathOrBytes = [pathOrBytes]
+        for _uploadData in pathOrBytes:
+            oid = f"{uuid.uuid1().hex}.20{ time.strftime('%m%d') }08"
+            params = {
+                "oid": oid
+            }
+            obsObjId, obsHash, respHeaders = self.uploadObjectForService(
+                _uploadData, oType, f'album/a/{oid}', issueToken4ChannelId="1341209850", params=params, additionalHeaders=additionalHeaders)
+            oids.append(obsObjId)
+        if updateAlbum:
+            self.addImageToAlbum(homeId, albumId, oids)
+        return oids
 
     def uploadObjHome(self, path, type='image', objId=None):
         if type not in ['image', 'video', 'audio']:
@@ -255,42 +259,59 @@ class Object(object):
         objId = obsObjId
         objHash = obsHash  # for view on cdn
         return objId
-    
-    def uploadObjTalkWithURL(self, chatId: str, url: str):
-        # 
-        path = self.downloadImageWithURL(url)
-        return self.uploadObjTalk(path, to=chatId)
-    
-    def forwardObjectMsg(self, to: str, msgId: str, contentType: str = 'image', copyFromService: str = 'talk', copyFromSid: str = 'm', copyFrom: str = None, copy2Service: str = 'talk', copy2Sid: str = 'm', copy2: str = None, contentId: str = None, original: bool = False, duration: int = None, issueToken4ChannelId: str = None):
-        if contentType.lower() not in ['image', 'video', 'audio', 'file']:
-            raise Exception('Type not valid.')
-        if copyFrom is None:
-            copyFrom = f"/{copyFromService}/{copyFromSid}/{msgId}"
-        if copy2 is None:
-            copy2 = f"/{copy2Service}/{copy2Sid}"
+
+    def uploadStoryObject(self, pathOrBytes: any, oType='IMAGE'):
+        """
+        Upload Object to Story Obs
+
+        ---------------
+        Return `OBS_OID` and `OBS_HASH`
+        """
+        oid = f"{uuid.uuid1().hex}tffffffff"
+        params = {
+            "oid": oid
+        }
+        obsObjId, obsHash, respHeaders = self.uploadObjectForService(
+            pathOrBytes, oType, f'story/st/{oid}', issueToken4ChannelId="1341209850", params=params)
+        return obsObjId, obsHash
+
+    def forwardObjectMsg(self, to: str, msgId: str, _from: str = 'u', **kwargs):
+        """
+        Forward object to Talk
+
+        use `_from` to specify the source mid of the messageid
+        """
+        copyFromService = 'talk'
+        copyFromSid = 'm'
+        copy2Service = 'talk'
+        copy2Sid = 'm'
         data = {
-            'copyFrom': copyFrom,
-            'contentId': contentId,
             'oid': 'reqseq',
             'tomid': to,
             'reqseq': self.getCurrReqId(),
-            'type': contentType,
             'ver': '1.0',
         }
-        if original:
-            data['cat'] = 'original'
-        if duration is not None:
-            data['duration'] = duration
-        hr = self.Hraders4Obs
-        if issueToken4ChannelId is not None:
-            hr = self.server.additionalHeaders(hr, {
-                "X-Line-ChannelToken": self.checkAndGetValue(self.approveChannelAndIssueChannelToken(issueToken4ChannelId), 'channelAccessToken', 5),
-            })
-        data = list(urllib.parse.urlencode(data).encode())
-        r = self.postPackDataAndGetUnpackRespData(f'/oa/{copy2}/copy.nhn', data, 0, 0,
-                                                  headers=hr,
-                                                  conn=self.obsConn)
-        return r.headers['X-Obs-Oid']
+        toType = self.getToType(to)
+        if toType in [0, 1, 2]:
+            pass
+        elif toType == 4:
+            copy2Service = 'g2'
+        else:
+            raise ValueError(f"Invalid `to` midType: {toType}")
+        toType = self.getToType(_from)
+        if toType in [0, 1, 2]:
+            pass
+        elif toType == 4:
+            copyFromService = 'g2'
+        else:
+            raise ValueError(f"Invalid `_from` midType: {toType}")
+        kwargs['copyFromService'] = copyFromService
+        kwargs['copyFromSid'] = copyFromSid
+        kwargs['copyFromObjId'] = msgId
+        kwargs['copy2Service'] = copy2Service
+        kwargs['copy2Sid'] = copy2Sid
+        kwargs['copy2ObjId'] = 'reqseq'
+        return self.forwardObjectForService(data, **kwargs)
 
     def forwardKeepObjectMsg(self, to, oid, contentId, contentType='image'):
         # SHARE KEEP CONTENTS V1
@@ -313,9 +334,17 @@ class Object(object):
             raise Exception(f'Forward object failure: {r.status_code}')
         return r.headers['X-Obs-Oid']
 
-    def forwardKeepContent2Mid(self, to: str, oid: str, contentId: str, contentType='image', original: bool = False, duration: int = None):
+    def forwardKeepContent2Mid(self, to: str, oid: str, contentId: str, **kwargs):
         # SHARE KEEP CONTENTS V2
-        return self.forwardObjectMsg(to, oid, contentType, 'keep', 'p', None, contentId=contentId, original=original, duration=duration, issueToken4ChannelId='1433572998')
+        data = {
+            'tomid': to,
+            'reqseq': self.getCurrReqId(),
+        }
+        kwargs['copyFromService'] = 'keep'
+        kwargs['copyFromSid'] = 'p'
+        kwargs['copyFromObjId'] = oid
+        kwargs['contentId'] = contentId
+        return self.forwardObjectForService(data, **kwargs)
 
     def trainingImage(self, msgId):
         data = {
@@ -387,7 +416,7 @@ class Object(object):
         with open(savePath, 'wb') as f:
             f.write(r.raw)
         return savePath
-    
+
     def downloadObjectForService(self, objId, savePath, obsPathPrefix='myhome/h', size=None, suffix=None, issueToken4ChannelId: str = None, params: dict = {}):
         obs_path = f'/r/{obsPathPrefix}/{objId}'
         if size is not None:
@@ -426,7 +455,7 @@ class Object(object):
         self.log(f'Ended downloadObjectForService!', isDebugOnly)
         return r.content
 
-    def uploadObjectForService(self, pathOrBytes: any, oType: str = 'image', obsPath: str = 'myhome/h', issueToken4ChannelId: str = None, params: dict = None, talkMeta: str = None, filename: str = None):
+    def uploadObjectForService(self, pathOrBytes: any, oType: str = 'image', obsPath: str = 'myhome/h', issueToken4ChannelId: str = None, params: dict = None, talkMeta: str = None, filename: str = None, additionalHeaders: dict = None):
         obs_path = f'/r/{obsPath}'
         hr = self.Hraders4Obs
         data = None
@@ -483,6 +512,8 @@ class Object(object):
             hr = self.server.additionalHeaders(hr, {
                 'X-Talk-Meta': talkMeta
             })
+        if additionalHeaders is not None:
+            hr.update(additionalHeaders)
         self.log(f'Starting uploadObjectForService...', isDebugOnly)
         self.log(f'data: {str(data)[:200]}', isDebugOnly)
         self.log(f'files: {files}', isDebugOnly)
@@ -501,6 +532,48 @@ class Object(object):
         self.log(f'Ended uploadObjectForService!', isDebugOnly)
         return objId, objHash, r.headers
 
+    def forwardObjectForService(self, data: dict, contentType: str = 'image', copyFromService: str = 'talk', copyFromSid: str = 'm', copyFromObjId: str = None, copyFrom: str = None, copy2Service: str = 'talk', copy2Sid: str = 'm', copy2ObjId: str = None, copy2: str = None, contentId: str = None, original: bool = False, duration: int = None, issueToken4ChannelId: str = None, additionalHeaders: dict = None):
+        if contentType.lower() not in ['image', 'video', 'audio', 'file']:
+            raise Exception('Type not valid.')
+        if copyFrom is None:
+            copyFrom = f"/{copyFromService}/{copyFromSid}"
+            if copyFromObjId is not None:
+                copyFrom += f"/{copyFromObjId}"
+        if copy2 is None:
+            copy2 = f"{copy2Service}/{copy2Sid}"
+            if copy2ObjId is not None:
+                copy2 += f"/{copy2ObjId}"
+        base_data = {
+            'copyFrom': copyFrom,
+            'type': contentType,
+            'ver': '1.0',
+        }
+        if contentId is not None:
+            base_data['contentId'] = contentId
+        if original:
+            base_data['cat'] = 'original'
+        if duration is not None:
+            base_data['duration'] = duration
+        base_data.update(data)
+        data = base_data
+        hr = self.Hraders4Obs
+        if issueToken4ChannelId is not None:
+            hr = self.server.additionalHeaders(hr, {
+                "X-Line-ChannelToken": self.checkAndGetValue(self.approveChannelAndIssueChannelToken(issueToken4ChannelId), 'channelAccessToken', 5),
+            })
+        if additionalHeaders is not None:
+            hr.update(additionalHeaders)
+        print(f'data: {data}')
+        print(f'hr: {hr}')
+        print(f'path: /oa/r/{copy2}/copy.nhn')
+        data = list(urllib.parse.urlencode(data).encode())
+        r = self.postPackDataAndGetUnpackRespData(f'/oa/r/{copy2}/copy.nhn', data, 0, 0,
+                                                  headers=hr,
+                                                  conn=self.obsConn)
+        objId = r.headers['x-obs-oid']
+        objHash = r.headers['x-obs-hash']
+        return objId, objHash, r.headers
+
     def getObjPlayback(self, oid: int, type: str = "VIDEO"):
         url = self.LINE_HOST_DOMAIN + "/oa/talk/m/playback.obs?p=sg-1"
         data = {
@@ -517,16 +590,6 @@ class Object(object):
         r = self.server.postContent(url, data=data, headers=hr)
         if not self.checkRespIsSuccessWithLpv(r):
             raise Exception(f'GetObjPlayback failure: {r.status_code}')
-        return r.json()
-
-    def uploadStoryObject(self, mid, albumId, name):
-        raise Exception("uploadStoryObject is not implemented")
-        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
-            'x-obs-params': 'eyJuYW1lIjoidGltZWxpbmVfMjAyMTAyMjZfMDQzODExLmpwZyIsIm9pZCI6IjgzNTY2YWVmM2ZhNWRhMjllMGNkNGJkMzFiM2QzM2IxdGZmZmZmZmZmIiwicmFuZ2UiOiJieXRlcyAwLTIxNzEwXC8yMTcxMSIsInF1YWxpdHkiOiI3MCIsInR5cGUiOiJpbWFnZSIsInZlciI6IjEuMCJ9'
-        })
-        url = self.server.urlEncode(
-            self.LINE_OBS_DOMAIN, '/story/st/upload.nhn')
-        r = self.server.postContent(url, data=data, headers=hr)
         return r.json()
 
     def downloadKeepContentByOidAndContentId(self, oid: str, contentId: str, save_path: str = None, sid: str = 'p'):

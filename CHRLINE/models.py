@@ -390,7 +390,7 @@ class Models(object):
                 f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200]):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200], timeout: int = None):
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -413,12 +413,13 @@ class Models(object):
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
+            self.log(f"--> Headers: {headers}", True)
             res = doLoopReq(conn.post, {
                 "url": self.LINE_GW_HOST_DOMAIN + path,
                 "data": data,
                 "headers": headers, 
                 "files": files,
-                "timeout": None
+                "timeout": timeout
             })
             data = res.content
         elif encType == 1:
@@ -447,11 +448,13 @@ class Models(object):
                 data = self.encData(_data)
                 data += self.XQqwlHlXKK(self.encryptKey, data)
             headers['accept-encoding'] = 'gzip, deflate'
+            self.log(f"--> Headers: {headers} ({_headers})", True)
             res = doLoopReq(conn.post, {
                 "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
                 "data": data, 
                 "files": files, 
-                "headers": headers
+                "headers": headers,
+                "timeout": timeout
             })
             if res.content:
                 data = self.decData(res.content)
@@ -543,6 +546,8 @@ class Models(object):
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
+        elif res.status_code == 410:
+            return None
         raise Exception(f'Invalid response status code: {res.status_code}')
 
     def getCurrReqId(self):
@@ -901,6 +906,13 @@ def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDe
     e = None
     try:
         res = req(**data)
+    except httpx.ConnectTimeout as ex:
+        doRetry = True
+        e = ex
+    except httpx.ReadTimeout as ex:
+        currCount -= 1
+        doRetry = True
+        e = ex
     except httpx.ReadError as ex:
         doRetry = True
         e = ex
