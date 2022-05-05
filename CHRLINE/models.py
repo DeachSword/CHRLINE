@@ -656,6 +656,21 @@ class Models(object):
                 return _keyData
         return None
 
+    def getE2EESelfKeyData(self, mid):
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{mid}.json"
+        if os.path.exists(savePath + f"/{fn}"):
+            return json.loads(open(savePath + f"/{fn}", "r").read())
+        keys = self.getE2EEPublicKeys()
+        for key in keys:
+            _keyData = self.getE2EESelfKeyDataByKeyId(key[2])
+            if _keyData is not None:
+                return _keyData
+        return None
+
     def getE2EESelfKeyDataByKeyId(self, keyId):
         savePath = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), '.e2eeKeys')

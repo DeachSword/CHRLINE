@@ -66,6 +66,7 @@ class HookUtility(object):
         
     def getArgs(self, text: str, splitchar: str=":", defVal: any=None, maxSplit: int=-1):
         args = text.split(splitchar, maxSplit)
+
         if len(args) > 1:
             return args[1:]
         if defVal is not None:
