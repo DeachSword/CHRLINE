@@ -8,11 +8,12 @@ import requests
 
 from .exceptions import LineServiceException
 
+
 class Helpers(object):
 
     def __init__(self):
         self.liff_token_cache = {}
-    
+
     def squareMemberIdIsMe(self, squareMemberId):
         if self.can_use_square:
             if squareMemberId in self.squares.get(2, {}).keys():
@@ -21,7 +22,7 @@ class Helpers(object):
                 return False
         else:
             raise Exception('Not support Square')
-    
+
     def sendLiff(self, to, messages, tryConsent=True, forceIssue=False, liffId="1562242036-RW04okm"):
         cache_key = f"{to}"
         use_cache = False
@@ -32,9 +33,12 @@ class Helpers(object):
                 self.log(f'[sendLiff] issueLiffView error: {e}')
                 if e.code == 3 and tryConsent:
                     payload = e.metadata
-                    consentRequired = self.checkAndGetValue(payload, 'consentRequired', 3)
-                    channelId = self.checkAndGetValue(consentRequired, 'channelId', 1)
-                    consentUrl = self.checkAndGetValue(consentRequired, 'consentUrl', 2)
+                    consentRequired = self.checkAndGetValue(
+                        payload, 'consentRequired', 3)
+                    channelId = self.checkAndGetValue(
+                        consentRequired, 'channelId', 1)
+                    consentUrl = self.checkAndGetValue(
+                        consentRequired, 'consentUrl', 2)
                     toType = self.getToType(to)
                     hasConsent = False
                     if toType == 4:
@@ -42,7 +46,7 @@ class Helpers(object):
                     else:
                         hasConsent = self.tryConsentLiff(channelId)
                     if hasConsent:
-                        return self.sendLiff(to, messages, tryConsent=False)
+                        return self.sendLiff(to, messages, tryConsent=False, liffId=liffId)
                 raise Exception(f'Failed to send Liff: {to}')
             except Exception as e:
                 return e
@@ -53,24 +57,25 @@ class Helpers(object):
             use_cache = True
             self.log(f'[sendLiff] using cache token for {cache_key}', True)
         liff_headers = {
-            'Accept' : 'application/json, text/plain, */*',
+            'Accept': 'application/json, text/plain, */*',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 4.4.2; G730-U00 Build/JLS36C) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36 Line/9.8.0',
             'Accept-Encoding': 'gzip, deflate',
             'content-Type': 'application/json',
             'X-Requested-With': 'jp.naver.line.android'
         }
-        liff_headers["authorization"] = 'Bearer %s'%(token)
+        liff_headers["authorization"] = 'Bearer %s' % (token)
         if type(messages) == list:
-            messages = {"messages":messages}
+            messages = {"messages": messages}
         else:
-            messages = {"messages":[messages]}
-        resp = self.server.postContent("https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
+            messages = {"messages": [messages]}
+        resp = self.server.postContent(
+            "https://api.line.me/message/v3/share", headers=liff_headers, data=json.dumps(messages))
         if resp.status_code == 200:
             self.liff_token_cache[cache_key] = token
         elif use_cache:
-            return self.sendLiff(to, messages, tryConsent=False, forceIssue=True)
+            return self.sendLiff(to, messages, False, True, liffId)
         return resp.text
-    
+
     def tryConsentLiff(self, channelId, on=["P", "CM"], referer=None):
         payload = {
             "on": on,
@@ -88,12 +93,13 @@ class Helpers(object):
         }
         if referer is not None:
             hr['referer'] = referer
-        r = self.server.postContent("https://access.line.me/dialog/api/permissions", data=data, headers=hr)
+        r = self.server.postContent(
+            "https://access.line.me/dialog/api/permissions", data=data, headers=hr)
         if r.status_code == 200:
             return True
         print(f"tryConsentLiff failed: {r.status_code}")
         return False
-    
+
     def tryConsentAuthorize(self, consentUrl, allPermission=["P", "CM"], approvedPermission=["P", "CM"]):
         CHANNEL_ID = None
         CSRF_TOKEN = None
@@ -126,9 +132,10 @@ class Helpers(object):
                 return True
             print(f"tryConsentAuthorize failed: {r.status_code}")
         else:
-            raise Exception(f"tryConsentAuthorize failed: STATUS_CODE: {r.status_code}, CHANNEL_ID: {CHANNEL_ID}, CSRF_TOKEN: {CSRF_TOKEN}")
+            raise Exception(
+                f"tryConsentAuthorize failed: STATUS_CODE: {r.status_code}, CHANNEL_ID: {CHANNEL_ID}, CSRF_TOKEN: {CSRF_TOKEN}")
         return False
-    
+
     def getToType(self, mid):
         """
         USER(0),
@@ -157,19 +164,21 @@ class Helpers(object):
 
     def getAccessToken(self, client_id, redirect_uri, otp, code):
         data = {
-            "client_id": str(client_id), # channel id
-            "redirect_uri": redirect_uri, # intent://result#Intent;package=xxx;scheme=lineauth;end",
-            "otp": otp, # len 20
-            "code": code, # len 20
+            "client_id": str(client_id),  # channel id
+            # intent://result#Intent;package=xxx;scheme=lineauth;end",
+            "redirect_uri": redirect_uri,
+            "otp": otp,  # len 20
+            "code": code,  # len 20
             "grant_type": "authorization_code"
         }
         hr = {
             "Content-Type": "application/x-www-form-urlencoded",
             'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.1; SAMSUNG Realise/DeachSword; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/56.0.2924.87 Mobile Safari/537.36',
         }
-        r = self.server.postContent("https://access.line.me/v2/oauth/accessToken", data=data, headers=hr)
+        r = self.server.postContent(
+            "https://access.line.me/v2/oauth/accessToken", data=data, headers=hr)
         return r.json['access_token']
-    
+
     def checkRespIsSuccessWithLpv(self, resp, lpv: int = 1, status_code: int = 200):
         ckStatusCode = lpv != 1
         if lpv == 1:
@@ -182,7 +191,7 @@ class Helpers(object):
             if resp.status_code != status_code:
                 return False
         return True
-    
+
     def checkIsVideo(self, filename: str):
         video_suffix = ['.mp4', '.mkv', '.webm']
         for _vs in video_suffix:
@@ -194,12 +203,16 @@ class Helpers(object):
         video_obj = None
         video_url = None
         detail = self.getProfileCoverDetail(mid)['result']
-        coverObsInfo = self.checkAndGetValue(detail, 'coverObsInfo') #detail['coverObsInfo']
-        videoCoverObsInfo = self.checkAndGetValue(detail, 'videoCoverObsInfo') #detail['videoCoverObsInfo']
-        url = self.LINE_OBS_DOMAIN + f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
+        coverObsInfo = self.checkAndGetValue(
+            detail, 'coverObsInfo')  # detail['coverObsInfo']
+        videoCoverObsInfo = self.checkAndGetValue(
+            detail, 'videoCoverObsInfo')  # detail['videoCoverObsInfo']
+        url = self.LINE_OBS_DOMAIN + \
+            f'/r/{coverObsInfo["serviceName"]}/{coverObsInfo["obsNamespace"]}/{coverObsInfo["objectId"]}'
         if videoCoverObsInfo is not None:
             video_obj = videoCoverObsInfo["objectId"]
-            video_url = self.LINE_OBS_DOMAIN + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
+            video_url = self.LINE_OBS_DOMAIN + \
+                f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
         return url, video_url, coverObsInfo["objectId"], videoCoverObsInfo["objectId"]
 
     def getProfilePictureObjIdAndUrl(self, mid: str):
@@ -223,9 +236,11 @@ class Helpers(object):
                 obsNamespace = 'member'
         else:
             raise notImplementedError(f'Not support midType: {midType}')
-        url = self.LINE_OBS_DOMAIN + f'/r/{serviceName}/{obsNamespace}/{objectId}'
+        url = self.LINE_OBS_DOMAIN + \
+            f'/r/{serviceName}/{obsNamespace}/{objectId}'
         if objectId_video is not None:
-            url_video = self.LINE_OBS_DOMAIN + f'/r/{serviceName}/{obsNamespace}/{objectId_video}'
+            url_video = self.LINE_OBS_DOMAIN + \
+                f'/r/{serviceName}/{obsNamespace}/{objectId_video}'
         return url, url_video, objectId, objectId_video
 
     def checkAndGetValue(self, value, *args):
@@ -255,7 +270,7 @@ class Helpers(object):
                 setattr(value, str(arg), set)
         return value
 
-    def genQrcodeImageAndPrint(self, url: str, filename: str=None, output_char: list=['　', '■']):
+    def genQrcodeImageAndPrint(self, url: str, filename: str = None, output_char: list = ['　', '■']):
         if filename is None:
             filename = str(time.time())
         savePath = os.path.join(os.path.dirname(
@@ -268,14 +283,16 @@ class Helpers(object):
             error_correction=qrcode.constants.ERROR_CORRECT_L,)
         qr.add_data(url)
         qr.make()
-        win_qr_make = lambda x: print(''.join([output_char[1]] + [output_char[0] if y == True else output_char[1] for y in x] + [output_char[1]]))
-        fixed_bored = [False for _b in range(len(qr.modules[0]))] # 如果你問我問啥要加這段, 我可以告訴你fk u line >:( 你可以看到qr外面有一圈, 這是讓line讀到的必要條件(啊明明就可以不用 line的判定有夠爛)
+        def win_qr_make(x): return print(''.join(
+            [output_char[1]] + [output_char[0] if y == True else output_char[1] for y in x] + [output_char[1]]))
+        # 如果你問我問啥要加這段, 我可以告訴你fk u line >:( 你可以看到qr外面有一圈, 這是讓line讀到的必要條件(啊明明就可以不用 line的判定有夠爛)
+        fixed_bored = [False for _b in range(len(qr.modules[0]))]
         for qr_module in [fixed_bored] + qr.modules + [fixed_bored]:
             win_qr_make(qr_module)
         img = qr.make_image()
         img.save(savePath)
         return savePath
-      
+
     def sendMention(self, to, text="", mids=[], prefix=True):
         tag = '@chrline'
         str_tag = '@!'
@@ -315,7 +332,7 @@ class Helpers(object):
                 message += tag
             message += text_data[-1]
         return self.sendMessage(to, message, contentMetadata={'MENTION': str('{"MENTIONEES":' + json.dumps(arr_data) + '}')})
-    
+
     def getMentioneesByMsgData(self, msg: dict):
         a = []
         b = self.checkAndGetValue(msg, 'contentMetadata', 18)
@@ -327,7 +344,7 @@ class Helpers(object):
                     print(_m['M'])
                     a.append(_m['M'])
         return a
-    
+
     def genMentionData(self, mentions: dict):
         """
         - mentions:
