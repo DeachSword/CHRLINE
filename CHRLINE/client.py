@@ -49,7 +49,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             ** not necessarily work **
         useThrift: `bool`
             Set whether to use line thrift.
-            If true, you must place line thrifts in services\thrift.
+            If true, you must place line thrifts in `services\thrift`.
         """
         self.encType = encType
         self.isDebug = debug
@@ -84,7 +84,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
             self.initAll()
 
     def initAll(self):
-        self.checkNextToken()
+        self.checkNextToken(False)
         self.profile = self.getProfile()
         __profile_err = self.checkAndGetValue(self.profile, 'error')
         if __profile_err is not None:

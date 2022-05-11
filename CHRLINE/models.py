@@ -12,6 +12,7 @@ from hashlib import md5, sha1
 
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
+import httpx
 import xxhash
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
@@ -68,7 +69,7 @@ class Models(object):
         elif returnAs == 'default':
             return oldList
 
-    def checkNextToken(self):
+    def checkNextToken(self, log4NotDebug: bool = True):
         savePath = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), '.tokens')
         if not os.path.exists(savePath):
@@ -76,8 +77,8 @@ class Models(object):
         fn = md5(self.authToken.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.authToken = open(savePath + f"/{fn}", "r").read()
-            self.log(f"New Token: {self.authToken}")
-            self.checkNextToken()
+            self.log(f"New Token: {self.authToken}", not log4NotDebug)
+            self.checkNextToken(log4NotDebug)
         return self.authToken
 
     def handleNextToken(self, newToken):
@@ -324,6 +325,10 @@ class Models(object):
                 data += [_type, 0, _id]
                 isCompact = False
             elif type == 4:
+                if _type == 2:
+                    data += tcp.getFieldHeader(
+                        0x01 if _data else 0x02, _id)
+                    continue
                 data += tcp.getFieldHeader(tcp.CTYPES[_type], _id)
                 isCompact = True
             data += self.generateDummyProtocolData(_data, _type, isCompact)
@@ -336,8 +341,7 @@ class Models(object):
         ttype = 4 if isCompact else 3
         if type == 2:
             if isCompact:
-                _compact = self.TCompactProtocol(self)
-                a = _compact.getFieldHeader(1 if _data == True else 2, 0)
+                pass  # FIXED
             else:
                 data += [1] if _data == True else [0]
         elif type == 3:
@@ -386,7 +390,7 @@ class Models(object):
                 f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200]):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200], timeout: int = None):
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -409,8 +413,14 @@ class Models(object):
                 del headers['x-lcs']
             if access_token is not None:
                 headers['X-Line-Access'] = access_token
-            res = conn.post(
-                self.LINE_GW_HOST_DOMAIN + path, data=data, headers=headers, files=files, timeout=180)
+            self.log(f"--> Headers: {headers}", True)
+            res = doLoopReq(conn.post, {
+                "url": self.LINE_GW_HOST_DOMAIN + path,
+                "data": data,
+                "headers": headers, 
+                "files": files,
+                "timeout": timeout
+            })
             data = res.content
         elif encType == 1:
             if conn is None:
@@ -438,9 +448,14 @@ class Models(object):
                 data = self.encData(_data)
                 data += self.XQqwlHlXKK(self.encryptKey, data)
             headers['accept-encoding'] = 'gzip, deflate'
-            res = conn.post(
-                self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
-                data=data, files=files, headers=headers)
+            self.log(f"--> Headers: {headers} ({_headers})", True)
+            res = doLoopReq(conn.post, {
+                "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
+                "data": data, 
+                "files": files, 
+                "headers": headers,
+                "timeout": timeout
+            })
             if res.content:
                 data = self.decData(res.content)
             else:
@@ -531,6 +546,8 @@ class Models(object):
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
+        elif res.status_code == 410:
+            return None
         raise Exception(f'Invalid response status code: {res.status_code}')
 
     def getCurrReqId(self):
@@ -615,6 +632,23 @@ class Models(object):
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
         print(savePath + f"/{fn}")
+        keys = self.getE2EEPublicKeys()
+        for key in keys:
+            keyId = self.checkAndGetValue(key, 'keyId', 2)
+            _keyData = self.getE2EESelfKeyDataByKeyId(keyId)
+            if _keyData is not None:
+                return _keyData
+        raise Exception(
+            'E2EE Key has not been saved, try register or use SQR Login')
+
+    def getE2EESelfKeyData(self, mid):
+        savePath = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), '.e2eeKeys')
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        fn = f"{mid}.json"
+        if os.path.exists(savePath + f"/{fn}"):
+            return json.loads(open(savePath + f"/{fn}", "r").read())
         keys = self.getE2EEPublicKeys()
         for key in keys:
             keyId = self.checkAndGetValue(key, 'keyId', 2)
@@ -882,3 +916,29 @@ def thrift2dummy(a):
     else:
         # return a
         raise ValueError(f"不支持 `{type(a)}`: {a}")
+
+def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDelay: int = 8):
+    currCount += 1
+    doRetry = False
+    e = None
+    try:
+        res = req(**data)
+    except httpx.ConnectTimeout as ex:
+        doRetry = True
+        e = ex
+    except httpx.ReadTimeout as ex:
+        currCount -= 1
+        doRetry = True
+        e = ex
+    except httpx.ReadError as ex:
+        doRetry = True
+        e = ex
+    except httpx.ConnectError as ex:
+        doRetry = True
+        e = ex
+    if doRetry:
+        if currCount > maxRetryCount:
+            raise e
+        time.sleep(retryTimeDelay)
+        return doLoopReq(req, data, currCount, maxRetryCount, retryTimeDelay)
+    return res

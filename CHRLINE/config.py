@@ -90,11 +90,12 @@ class Config(object):
     LINE_SECONDARY_PWLESS_LOGIN_PERMIT_ENDPOINT = "/acct/lp/lgn/secpwless/v1"
     LINE_SECONDARY_AUTH_FACTOR_PIN_CODE_ENDPOINT = "/acct/authfactor/second/pincode/v1"
     LINE_PWLESS_CREDENTIAL_MANAGEMENT_ENDPOINT = "/acct/authfactor/pwless/manage/v1"
-    LINE_PWLESS_PRIMARY_REGISTRATION_ENDPOINT = "/acct/authfactor/pwless/v1"
+    LINE_PWLESS_PRIMARY_REGISTRATION_ENDPOINT = "/ACCT/authfactor/pwless/v1"
     LINE_VOIP_GROUP_CALL_YOUTUBE_ENDPOINT = "/EXT/groupcall/youtube-api"
     LINE_E2EE_KEY_BACKUP_ENDPOINT = "/EKBS4"
     SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE = "/LF1"
     SECONDARY_DEVICE_LOGIN_VERIFY_PIN = "/Q"
+    LINE_NOTIFY_SLEEP_ENDPOINT  = "/F4"
 
     LINE_LAN_ANDROID_URL                 = 'https://lan.line.me/v1/line/android/notification'
     LINE_LAN_IOS_URL                     = 'https://lan.line.me/v1/line/ios/notification'
@@ -111,10 +112,14 @@ class Config(object):
     SYSTEM_VER  = '12.1.4'
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
+    CONSENT_CHANNEL_ID_REGEX = re.compile(r"<input type=\"hidden\" name=\"channelId\" value=\"([^\"]+)\"")
+    CONSENT_CSRF_TOKEN_REGEX = re.compile(r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\"")
     
     LOGIN_V2_SUPPORT = ["DESKTOPWIN"] # only desktop_win?
+    SYNC_SUPPORT = ["IOS", "IOSIPAD"]
 
     def __init__(self, type="CHROME"):
+        self.DEVICE_TYPE = type
         self.isSecondary = False
         if type == "DESKTOPWIN":
             self.APP_VER = "7.7.0.2698"
@@ -124,7 +129,7 @@ class Config(object):
             self.APP_VER = "7.7.0.2698"
             self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
-            self.APP_VER = "2.4.9"
+            self.APP_VER = "2.5.1"
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER  = '1'
         # elif type == "ANDROIDLITE":
@@ -132,12 +137,11 @@ class Config(object):
             # self.SYSTEM_NAME = "Android OS"
             # self.isSecondary = True
         elif type in ["ANDROID", "ANDROIDSECONDARY"]:
-            self.APP_VER = "12.2.2"
+            self.APP_VER = "12.6.1"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "11.19.2"
+            self.APP_VER = "12.4.0"
             self.SYSTEM_NAME = "iOS"
-            self.SYSTEM_NAME = "12.1.2"
         elif type == "IOSIPAD":
             self.APP_VER = "11.19.2"
             self.SYSTEM_NAME = "iOS"

@@ -181,10 +181,7 @@ class Thrift(object):
                 for i in range(size):
                     _key, _kDPD = self.z(ktype)
                     _val, _vDPD = self.z(vtype)
-                    if vtype == 12:
-                        dummyProtocolData[_key] = _vDPD.data
-                    else:
-                        dummyProtocolData[_key] = _val
+                    dummyProtocolData[_kDPD.data] = _vDPD.data
                     data[_key] = _val
             elif ftype == 14 or ftype == 15:
                 etype, size = self.readListBegin()
@@ -506,11 +503,11 @@ class Thrift(object):
                 pass
             if ftype == 1:
                 data = True
+            elif ftype == 2:
+                data = False
             elif ftype == 3:
                 data = self.readByte(self.data[self.__last_pos:])
                 self.__last_pos += 1
-            elif ftype == 2:
-                data = False
             elif ftype == 4:
                 data = self.readDouble(self.data[self.__last_pos:])
                 self.__last_pos += 8
@@ -539,16 +536,15 @@ class Thrift(object):
                     dummyProtocolData.append(_dummyProtocolData.data)
             elif ftype == 11:
                 data = {}
-                ktype, vtype, size, len = self.readMapBegin(
+                ktype, vtype, size, dlen = self.readMapBegin(
                     self.data[self.__last_pos:])
-                self.__last_pos += len
-                dummyProtocolData = []
+                self.__last_pos += dlen
+                dummyProtocolData = {}
                 subType = [ktype, vtype]
                 for _i in range(size):
-                    _key, _dummyProtocolData = self.z(ktype)
-                    dummyProtocolData.append(_dummyProtocolData.data)
-                    _val, _dummyProtocolData = self.z(vtype)
-                    dummyProtocolData.append(_dummyProtocolData.data)
+                    _key, _kDPD = self.z(ktype)
+                    _val, _vDPD = self.z(vtype)
+                    dummyProtocolData[_kDPD.data] = _vDPD.data
                     data[_key] = _val
             elif ftype == 12:
                 data = {}
@@ -566,6 +562,10 @@ class Thrift(object):
                 raise Exception(f"can't not read type {ftype}")
             if dummyProtocolData is None:
                 dummyProtocolData = data
+            if subType:
+                # FIXED: Unified format
+                for i in range(len(subType)):
+                    subType[i] = self.TTYPES[subType[i]]
             dummyProtocol.data = DummyProtocolData(
                 fid, self.TTYPES[ftype], dummyProtocolData, subType)
             return data, dummyProtocol
@@ -584,7 +584,7 @@ class Thrift(object):
         """
         Author: YinMo (https://github.com/WEDeach)
         Source: CHRLINE (https://github.com/DeachSword/CHRLINE)
-        Version: 1.0.11 (令和最新版)
+        Version: 1.0.12 (令和最新版)
         """
 
         def __init__(self, cl, a=None, baseException: dict = None, readWith: str = None):
@@ -724,11 +724,11 @@ class Thrift(object):
                     d = self.y()        # read
                     t1, t2 = self.q(d)  # read
                     subType = [t1, t2]  # init
-                    for i in range(c):                      #
-                        k, _kDPD = self.g(t1)               # key!
-                        v, _vDPD = self.g(t2)               # val!
-                        dummyProtocolData[k] = _vDPD.data   #
-                        a[k] = v                            # dict
+                    for i in range(c):                              #
+                        k, _kDPD = self.g(t1)                       # key!
+                        v, _vDPD = self.g(t2)                       # val!
+                        dummyProtocolData[_kDPD.data] = _vDPD.data  #
+                        a[k] = v                                    # dict
             elif t == 14 or t == 15:                                #
                 a = []                                              # base
                 dec = Thrift.TCompactProtocol(self.cl)              # init

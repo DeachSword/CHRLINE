@@ -3046,6 +3046,303 @@ class BuddyBotActiveStatus(object):
     }
 
 
+class GroupCallMediaType(object):
+    AUDIO = 1
+    VIDEO = 2
+    LIVE = 3
+
+    _VALUES_TO_NAMES = {
+        1: "AUDIO",
+        2: "VIDEO",
+        3: "LIVE",
+    }
+
+    _NAMES_TO_VALUES = {
+        "AUDIO": 1,
+        "VIDEO": 2,
+        "LIVE": 3,
+    }
+
+
+class GroupCallProtocol(object):
+    STANDARD = 1
+    CONSTELLA = 2
+
+    _VALUES_TO_NAMES = {
+        1: "STANDARD",
+        2: "CONSTELLA",
+    }
+
+    _NAMES_TO_VALUES = {
+        "STANDARD": 1,
+        "CONSTELLA": 2,
+    }
+
+
+class SyncTriggerReason(object):
+    UNKNOWN = 0
+    REVISION_GAP_TOO_LARGE_CLIENT = 1
+    REVISION_GAP_TOO_LARGE_SERVER = 2
+    OPERATION_EXPIRED = 3
+    REVISION_HOLE = 4
+    FORCE_TRIGGERED = 5
+
+    _VALUES_TO_NAMES = {
+        0: "UNKNOWN",
+        1: "REVISION_GAP_TOO_LARGE_CLIENT",
+        2: "REVISION_GAP_TOO_LARGE_SERVER",
+        3: "OPERATION_EXPIRED",
+        4: "REVISION_HOLE",
+        5: "FORCE_TRIGGERED",
+    }
+
+    _NAMES_TO_VALUES = {
+        "UNKNOWN": 0,
+        "REVISION_GAP_TOO_LARGE_CLIENT": 1,
+        "REVISION_GAP_TOO_LARGE_SERVER": 2,
+        "OPERATION_EXPIRED": 3,
+        "REVISION_HOLE": 4,
+        "FORCE_TRIGGERED": 5,
+    }
+
+
+class NotificationStatus(object):
+    NOTIFICATION_ITEM_EXIST = 1
+    TIMELINE_ITEM_EXIST = 2
+    NOTE_GROUP_NEW_ITEM_EXIST = 4
+    TIMELINE_BUDDYGROUP_CHANGED = 8
+    NOTE_ONE_TO_ONE_NEW_ITEM_EXIST = 16
+    ALBUM_ITEM_EXIST = 32
+    TIMELINE_ITEM_DELETED = 64
+    OTOGROUP_ITEM_EXIST = 128
+    GROUPHOME_NEW_ITEM_EXIST = 256
+    GROUPHOME_HIDDEN_ITEM_CHANGED = 512
+    NOTIFICATION_ITEM_CHANGED = 1024
+    BEAD_ITEM_HIDE = 2048
+    BEAD_ITEM_SHOW = 4096
+    LINE_TICKET_UPDATED = 8192
+    TIMELINE_STORY_UPDATED = 16384
+    SMARTCH_UPDATED = 32768
+    AVATAR_UPDATED = 65536
+    HOME_NOTIFICATION_ITEM_EXIST = 131072
+    TIMELINE_REBOOT_COMPLETED = 262144
+    TIMELINE_GUIDE_STORY_UPDATED = 524288
+
+    _VALUES_TO_NAMES = {
+        1: "NOTIFICATION_ITEM_EXIST",
+        2: "TIMELINE_ITEM_EXIST",
+        4: "NOTE_GROUP_NEW_ITEM_EXIST",
+        8: "TIMELINE_BUDDYGROUP_CHANGED",
+        16: "NOTE_ONE_TO_ONE_NEW_ITEM_EXIST",
+        32: "ALBUM_ITEM_EXIST",
+        64: "TIMELINE_ITEM_DELETED",
+        128: "OTOGROUP_ITEM_EXIST",
+        256: "GROUPHOME_NEW_ITEM_EXIST",
+        512: "GROUPHOME_HIDDEN_ITEM_CHANGED",
+        1024: "NOTIFICATION_ITEM_CHANGED",
+        2048: "BEAD_ITEM_HIDE",
+        4096: "BEAD_ITEM_SHOW",
+        8192: "LINE_TICKET_UPDATED",
+        16384: "TIMELINE_STORY_UPDATED",
+        32768: "SMARTCH_UPDATED",
+        65536: "AVATAR_UPDATED",
+        131072: "HOME_NOTIFICATION_ITEM_EXIST",
+        262144: "TIMELINE_REBOOT_COMPLETED",
+        524288: "TIMELINE_GUIDE_STORY_UPDATED",
+    }
+
+    _NAMES_TO_VALUES = {
+        "NOTIFICATION_ITEM_EXIST": 1,
+        "TIMELINE_ITEM_EXIST": 2,
+        "NOTE_GROUP_NEW_ITEM_EXIST": 4,
+        "TIMELINE_BUDDYGROUP_CHANGED": 8,
+        "NOTE_ONE_TO_ONE_NEW_ITEM_EXIST": 16,
+        "ALBUM_ITEM_EXIST": 32,
+        "TIMELINE_ITEM_DELETED": 64,
+        "OTOGROUP_ITEM_EXIST": 128,
+        "GROUPHOME_NEW_ITEM_EXIST": 256,
+        "GROUPHOME_HIDDEN_ITEM_CHANGED": 512,
+        "NOTIFICATION_ITEM_CHANGED": 1024,
+        "BEAD_ITEM_HIDE": 2048,
+        "BEAD_ITEM_SHOW": 4096,
+        "LINE_TICKET_UPDATED": 8192,
+        "TIMELINE_STORY_UPDATED": 16384,
+        "SMARTCH_UPDATED": 32768,
+        "AVATAR_UPDATED": 65536,
+        "HOME_NOTIFICATION_ITEM_EXIST": 131072,
+        "TIMELINE_REBOOT_COMPLETED": 262144,
+        "TIMELINE_GUIDE_STORY_UPDATED": 524288,
+    }
+
+
+class GlobalEventType(object):
+    DUMMY = 0
+    NOTICE = 1
+    MORETAB = 2
+    STICKERSHOP = 3
+    CHANNEL = 4
+    DENY_KEYWORD = 5
+    CONNECTIONINFO = 6
+    BUDDY = 7
+    TIMELINEINFO = 8
+    THEMESHOP = 9
+    CALLRATE = 10
+    CONFIGURATION = 11
+    STICONSHOP = 12
+    SUGGESTDICTIONARY = 13
+    SUGGESTSETTINGS = 14
+    USERSETTINGS = 15
+    ANALYTICSINFO = 16
+    SEARCHPOPULARKEYWORD = 17
+    SEARCHNOTICE = 18
+    TIMELINE = 19
+    SEARCHPOPULARCATEGORY = 20
+    EXTENDEDPROFILE = 21
+    SEASONALMARKETING = 22
+    NEWSTAB = 23
+    SUGGESTDICTIONARYV2 = 24
+    CHATAPPSYNC = 25
+    AGREEMENTS = 26
+    INSTANTNEWS = 27
+    EMOJI_MAPPING = 28
+    SEARCHBARKEYWORDS = 29
+    SHOPPING = 30
+    CHAT_EFFECT_BACKGROUND = 31
+    CHAT_EFFECT_KEYWORD = 32
+    SEARCHINDEX = 33
+    HUBTAB = 34
+    PAY_RULE_UPDATED = 35
+    SMARTCH = 36
+    HOME_SERVICE_LIST = 37
+    TIMELINESTORY = 38
+    WALLET_TAB = 39
+    POD_TAB = 40
+    HOME_SAFETY_CHECK = 41
+
+    _VALUES_TO_NAMES = {
+        0: "DUMMY",
+        1: "NOTICE",
+        2: "MORETAB",
+        3: "STICKERSHOP",
+        4: "CHANNEL",
+        5: "DENY_KEYWORD",
+        6: "CONNECTIONINFO",
+        7: "BUDDY",
+        8: "TIMELINEINFO",
+        9: "THEMESHOP",
+        10: "CALLRATE",
+        11: "CONFIGURATION",
+        12: "STICONSHOP",
+        13: "SUGGESTDICTIONARY",
+        14: "SUGGESTSETTINGS",
+        15: "USERSETTINGS",
+        16: "ANALYTICSINFO",
+        17: "SEARCHPOPULARKEYWORD",
+        18: "SEARCHNOTICE",
+        19: "TIMELINE",
+        20: "SEARCHPOPULARCATEGORY",
+        21: "EXTENDEDPROFILE",
+        22: "SEASONALMARKETING",
+        23: "NEWSTAB",
+        24: "SUGGESTDICTIONARYV2",
+        25: "CHATAPPSYNC",
+        26: "AGREEMENTS",
+        27: "INSTANTNEWS",
+        28: "EMOJI_MAPPING",
+        29: "SEARCHBARKEYWORDS",
+        30: "SHOPPING",
+        31: "CHAT_EFFECT_BACKGROUND",
+        32: "CHAT_EFFECT_KEYWORD",
+        33: "SEARCHINDEX",
+        34: "HUBTAB",
+        35: "PAY_RULE_UPDATED",
+        36: "SMARTCH",
+        37: "HOME_SERVICE_LIST",
+        38: "TIMELINESTORY",
+        39: "WALLET_TAB",
+        40: "POD_TAB",
+        41: "HOME_SAFETY_CHECK",
+    }
+
+    _NAMES_TO_VALUES = {
+        "DUMMY": 0,
+        "NOTICE": 1,
+        "MORETAB": 2,
+        "STICKERSHOP": 3,
+        "CHANNEL": 4,
+        "DENY_KEYWORD": 5,
+        "CONNECTIONINFO": 6,
+        "BUDDY": 7,
+        "TIMELINEINFO": 8,
+        "THEMESHOP": 9,
+        "CALLRATE": 10,
+        "CONFIGURATION": 11,
+        "STICONSHOP": 12,
+        "SUGGESTDICTIONARY": 13,
+        "SUGGESTSETTINGS": 14,
+        "USERSETTINGS": 15,
+        "ANALYTICSINFO": 16,
+        "SEARCHPOPULARKEYWORD": 17,
+        "SEARCHNOTICE": 18,
+        "TIMELINE": 19,
+        "SEARCHPOPULARCATEGORY": 20,
+        "EXTENDEDPROFILE": 21,
+        "SEASONALMARKETING": 22,
+        "NEWSTAB": 23,
+        "SUGGESTDICTIONARYV2": 24,
+        "CHATAPPSYNC": 25,
+        "AGREEMENTS": 26,
+        "INSTANTNEWS": 27,
+        "EMOJI_MAPPING": 28,
+        "SEARCHBARKEYWORDS": 29,
+        "SHOPPING": 30,
+        "CHAT_EFFECT_BACKGROUND": 31,
+        "CHAT_EFFECT_KEYWORD": 32,
+        "SEARCHINDEX": 33,
+        "HUBTAB": 34,
+        "PAY_RULE_UPDATED": 35,
+        "SMARTCH": 36,
+        "HOME_SERVICE_LIST": 37,
+        "TIMELINESTORY": 38,
+        "WALLET_TAB": 39,
+        "POD_TAB": 40,
+        "HOME_SAFETY_CHECK": 41,
+    }
+
+
+class SyncCategories(object):
+    ALL = 0
+    PROFILE = 1
+    SETTINGS = 2
+    CONFIGURATIONS = 3
+    CONTACT = 4
+    GROUP = 5
+    E2EE = 6
+    MESSAGE = 7
+
+    _VALUES_TO_NAMES = {
+        0: "ALL",
+        1: "PROFILE",
+        2: "SETTINGS",
+        3: "CONFIGURATIONS",
+        4: "CONTACT",
+        5: "GROUP",
+        6: "E2EE",
+        7: "MESSAGE",
+    }
+
+    _NAMES_TO_VALUES = {
+        "ALL": 0,
+        "PROFILE": 1,
+        "SETTINGS": 2,
+        "CONFIGURATIONS": 3,
+        "CONTACT": 4,
+        "GROUP": 5,
+        "E2EE": 6,
+        "MESSAGE": 7,
+    }
+
+
 class TalkException(TException):
     """
     Attributes:
@@ -13627,7 +13924,7 @@ class GetPreviousMessagesV2Request(object):
 
     def validate(self):
         return
-      
+
     def __repr__(self):
         L = ['%s=%r' % (key, value)
              for key, value in self.__dict__.items()]
@@ -13691,7 +13988,6 @@ class ChannelToken(object):
             elif fid == 5:
                 if ftype == TType.STRING:
                     self.channelAccessToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
-
                 else:
                     iprot.skip(ftype)
             else:
@@ -13723,6 +14019,719 @@ class ChannelToken(object):
         if self.channelAccessToken is not None:
             oprot.writeFieldBegin('channelAccessToken', TType.STRING, 5)
             oprot.writeString(self.channelAccessToken.encode('utf-8') if sys.version_info[0] == 2 else self.channelAccessToken)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GroupCall(object):
+    """
+    Attributes:
+     - online
+     - chatMid
+     - hostMids
+     - memberMids
+     - started
+     - mediaType
+     - protocol
+
+    """
+
+
+    def __init__(self, online=None, chatMid=None, hostMids=None, memberMids=None, started=None, mediaType=None, protocol=None,):
+        self.online = online
+        self.chatMid = chatMid
+        self.hostMids = hostMids
+        self.memberMids = memberMids
+        self.started = started
+        self.mediaType = mediaType
+        self.protocol = protocol
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.online = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.chatMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.hostMids = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.LIST:
+                    self.memberMids = []
+                    (_etype396, _size393) = iprot.readListBegin()
+                    for _i397 in range(_size393):
+                        _elem398 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.memberMids.append(_elem398)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I64:
+                    self.started = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.I32:
+                    self.mediaType = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.I32:
+                    self.protocol = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GroupCall')
+        if self.online is not None:
+            oprot.writeFieldBegin('online', TType.BOOL, 1)
+            oprot.writeBool(self.online)
+            oprot.writeFieldEnd()
+        if self.chatMid is not None:
+            oprot.writeFieldBegin('chatMid', TType.STRING, 2)
+            oprot.writeString(self.chatMid.encode('utf-8') if sys.version_info[0] == 2 else self.chatMid)
+            oprot.writeFieldEnd()
+        if self.hostMids is not None:
+            oprot.writeFieldBegin('hostMids', TType.STRING, 3)
+            oprot.writeString(self.hostMids.encode('utf-8') if sys.version_info[0] == 2 else self.hostMids)
+            oprot.writeFieldEnd()
+        if self.memberMids is not None:
+            oprot.writeFieldBegin('memberMids', TType.LIST, 4)
+            oprot.writeListBegin(TType.STRING, len(self.memberMids))
+            for iter399 in self.memberMids:
+                oprot.writeString(iter399.encode('utf-8') if sys.version_info[0] == 2 else iter399)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.started is not None:
+            oprot.writeFieldBegin('started', TType.I64, 5)
+            oprot.writeI64(self.started)
+            oprot.writeFieldEnd()
+        if self.mediaType is not None:
+            oprot.writeFieldBegin('mediaType', TType.I32, 6)
+            oprot.writeI32(self.mediaType)
+            oprot.writeFieldEnd()
+        if self.protocol is not None:
+            oprot.writeFieldBegin('protocol', TType.I32, 7)
+            oprot.writeI32(self.protocol)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SyncResponse(object):
+    """
+    Attributes:
+     - operationResponse
+     - fullSyncResponse
+     - partialFullSyncResponse
+
+    """
+
+
+    def __init__(self, operationResponse=None, fullSyncResponse=None, partialFullSyncResponse=None,):
+        self.operationResponse = operationResponse
+        self.fullSyncResponse = fullSyncResponse
+        self.partialFullSyncResponse = partialFullSyncResponse
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.operationResponse = OperationResponse()
+                    self.operationResponse.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.fullSyncResponse = FullSyncResponse()
+                    self.fullSyncResponse.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.partialFullSyncResponse = PartialFullSyncResponse()
+                    self.partialFullSyncResponse.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SyncResponse')
+        if self.operationResponse is not None:
+            oprot.writeFieldBegin('operationResponse', TType.STRUCT, 1)
+            self.operationResponse.write(oprot)
+            oprot.writeFieldEnd()
+        if self.fullSyncResponse is not None:
+            oprot.writeFieldBegin('fullSyncResponse', TType.STRUCT, 2)
+            self.fullSyncResponse.write(oprot)
+            oprot.writeFieldEnd()
+        if self.partialFullSyncResponse is not None:
+            oprot.writeFieldBegin('partialFullSyncResponse', TType.STRUCT, 3)
+            self.partialFullSyncResponse.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class OperationResponse(object):
+    """
+    Attributes:
+     - operations
+     - hasMoreOps
+     - globalEvents
+     - individualEvents
+
+    """
+
+
+    def __init__(self, operations=None, hasMoreOps=None, globalEvents=None, individualEvents=None,):
+        self.operations = operations
+        self.hasMoreOps = hasMoreOps
+        self.globalEvents = globalEvents
+        self.individualEvents = individualEvents
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.operations = []
+                    (_etype403, _size400) = iprot.readListBegin()
+                    for _i404 in range(_size400):
+                        _elem405 = Operation()
+                        _elem405.read(iprot)
+                        self.operations.append(_elem405)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.BOOL:
+                    self.hasMoreOps = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.globalEvents = TGlobalEvents()
+                    self.globalEvents.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.individualEvents = TIndividualEvents()
+                    self.individualEvents.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('OperationResponse')
+        if self.operations is not None:
+            oprot.writeFieldBegin('operations', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.operations))
+            for iter406 in self.operations:
+                iter406.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.hasMoreOps is not None:
+            oprot.writeFieldBegin('hasMoreOps', TType.BOOL, 2)
+            oprot.writeBool(self.hasMoreOps)
+            oprot.writeFieldEnd()
+        if self.globalEvents is not None:
+            oprot.writeFieldBegin('globalEvents', TType.STRUCT, 3)
+            self.globalEvents.write(oprot)
+            oprot.writeFieldEnd()
+        if self.individualEvents is not None:
+            oprot.writeFieldBegin('individualEvents', TType.STRUCT, 4)
+            self.individualEvents.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FullSyncResponse(object):
+    """
+    Attributes:
+     - reasons
+     - nextRevision
+
+    """
+
+
+    def __init__(self, reasons=None, nextRevision=None,):
+        self.reasons = reasons
+        self.nextRevision = nextRevision
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.SET:
+                    self.reasons = set()
+                    (_etype410, _size407) = iprot.readSetBegin()
+                    for _i411 in range(_size407):
+                        _elem412 = iprot.readI32()
+                        self.reasons.add(_elem412)
+                    iprot.readSetEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.nextRevision = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FullSyncResponse')
+        if self.reasons is not None:
+            oprot.writeFieldBegin('reasons', TType.SET, 1)
+            oprot.writeSetBegin(TType.I32, len(self.reasons))
+            for iter413 in self.reasons:
+                oprot.writeI32(iter413)
+            oprot.writeSetEnd()
+            oprot.writeFieldEnd()
+        if self.nextRevision is not None:
+            oprot.writeFieldBegin('nextRevision', TType.I64, 2)
+            oprot.writeI64(self.nextRevision)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class PartialFullSyncResponse(object):
+    """
+    Attributes:
+     - targetCategories
+
+    """
+
+
+    def __init__(self, targetCategories=None,):
+        self.targetCategories = targetCategories
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.targetCategories = {}
+                    (_ktype415, _vtype416, _size414) = iprot.readMapBegin()
+                    for _i418 in range(_size414):
+                        _key419 = iprot.readI32()
+                        _val420 = iprot.readI64()
+                        self.targetCategories[_key419] = _val420
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('PartialFullSyncResponse')
+        if self.targetCategories is not None:
+            oprot.writeFieldBegin('targetCategories', TType.MAP, 1)
+            oprot.writeMapBegin(TType.I32, TType.I64, len(self.targetCategories))
+            for kiter421, viter422 in self.targetCategories.items():
+                oprot.writeI32(kiter421)
+                oprot.writeI64(viter422)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class TGlobalEvents(object):
+    """
+    Attributes:
+     - events
+     - lastRevision
+
+    """
+
+
+    def __init__(self, events=None, lastRevision=None,):
+        self.events = events
+        self.lastRevision = lastRevision
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.events = {}
+                    (_ktype424, _vtype425, _size423) = iprot.readMapBegin()
+                    for _i427 in range(_size423):
+                        _key428 = iprot.readI32()
+                        _val429 = GlobalEvent()
+                        _val429.read(iprot)
+                        self.events[_key428] = _val429
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.lastRevision = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('TGlobalEvents')
+        if self.events is not None:
+            oprot.writeFieldBegin('events', TType.MAP, 1)
+            oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.events))
+            for kiter430, viter431 in self.events.items():
+                oprot.writeI32(kiter430)
+                viter431.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.lastRevision is not None:
+            oprot.writeFieldBegin('lastRevision', TType.I64, 2)
+            oprot.writeI64(self.lastRevision)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class TIndividualEvents(object):
+    """
+    Attributes:
+     - events
+     - lastRevision
+
+    """
+
+
+    def __init__(self, events=None, lastRevision=None,):
+        self.events = events
+        self.lastRevision = lastRevision
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.SET:
+                    self.events = set()
+                    (_etype435, _size432) = iprot.readSetBegin()
+                    for _i436 in range(_size432):
+                        _elem437 = iprot.readI32()
+                        self.events.add(_elem437)
+                    iprot.readSetEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.lastRevision = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('TIndividualEvents')
+        if self.events is not None:
+            oprot.writeFieldBegin('events', TType.SET, 1)
+            oprot.writeSetBegin(TType.I32, len(self.events))
+            for iter438 in self.events:
+                oprot.writeI32(iter438)
+            oprot.writeSetEnd()
+            oprot.writeFieldEnd()
+        if self.lastRevision is not None:
+            oprot.writeFieldBegin('lastRevision', TType.I64, 2)
+            oprot.writeI64(self.lastRevision)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GlobalEvent(object):
+    """
+    Attributes:
+     - type
+     - minDelayInMinutes
+     - maxDelayInMinutes
+     - createTimeMillis
+     - maxDelayHardLimit
+
+    """
+
+
+    def __init__(self, type=None, minDelayInMinutes=None, maxDelayInMinutes=None, createTimeMillis=None, maxDelayHardLimit=None,):
+        self.type = type
+        self.minDelayInMinutes = minDelayInMinutes
+        self.maxDelayInMinutes = maxDelayInMinutes
+        self.createTimeMillis = createTimeMillis
+        self.maxDelayHardLimit = maxDelayHardLimit
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.type = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I32:
+                    self.minDelayInMinutes = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.maxDelayInMinutes = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.createTimeMillis = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.BOOL:
+                    self.maxDelayHardLimit = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GlobalEvent')
+        if self.type is not None:
+            oprot.writeFieldBegin('type', TType.I32, 1)
+            oprot.writeI32(self.type)
+            oprot.writeFieldEnd()
+        if self.minDelayInMinutes is not None:
+            oprot.writeFieldBegin('minDelayInMinutes', TType.I32, 2)
+            oprot.writeI32(self.minDelayInMinutes)
+            oprot.writeFieldEnd()
+        if self.maxDelayInMinutes is not None:
+            oprot.writeFieldBegin('maxDelayInMinutes', TType.I32, 3)
+            oprot.writeI32(self.maxDelayInMinutes)
+            oprot.writeFieldEnd()
+        if self.createTimeMillis is not None:
+            oprot.writeFieldBegin('createTimeMillis', TType.I64, 4)
+            oprot.writeI64(self.createTimeMillis)
+            oprot.writeFieldEnd()
+        if self.maxDelayHardLimit is not None:
+            oprot.writeFieldBegin('maxDelayHardLimit', TType.BOOL, 5)
+            oprot.writeBool(self.maxDelayHardLimit)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -13931,7 +14940,6 @@ PointException.thrift_spec = (
 )
 all_structs.append(E2EEKeyBackupException)
 E2EEKeyBackupException.thrift_spec = (
-
     None,  # 0
     (1, TType.I32, 'code', None, None, ),  # 1
     (2, TType.STRING, 'reason', 'UTF8', None, ),  # 2
@@ -14771,6 +15779,64 @@ ChannelToken.thrift_spec = (
     (3, TType.I64, 'expiration', None, None, ),  # 3
     (4, TType.STRING, 'refreshToken', 'UTF8', None, ),  # 4
     (5, TType.STRING, 'channelAccessToken', 'UTF8', None, ),  # 5
+)
+all_structs.append(GroupCall)
+GroupCall.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'online', None, None, ),  # 1
+    (2, TType.STRING, 'chatMid', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'hostMids', 'UTF8', None, ),  # 3
+    (4, TType.LIST, 'memberMids', (TType.STRING, 'UTF8', False), None, ),  # 4
+    (5, TType.I64, 'started', None, None, ),  # 5
+    (6, TType.I32, 'mediaType', None, None, ),  # 6
+    (7, TType.I32, 'protocol', None, None, ),  # 7
+)
+all_structs.append(SyncResponse)
+SyncResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'operationResponse', [OperationResponse, None], None, ),  # 1
+    (2, TType.STRUCT, 'fullSyncResponse', [FullSyncResponse, None], None, ),  # 2
+    (3, TType.STRUCT, 'partialFullSyncResponse', [PartialFullSyncResponse, None], None, ),  # 3
+)
+all_structs.append(OperationResponse)
+OperationResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'operations', (TType.STRUCT, [Operation, None], False), None, ),  # 1
+    (2, TType.BOOL, 'hasMoreOps', None, None, ),  # 2
+    (3, TType.STRUCT, 'globalEvents', [TGlobalEvents, None], None, ),  # 3
+    (4, TType.STRUCT, 'individualEvents', [TIndividualEvents, None], None, ),  # 4
+)
+all_structs.append(FullSyncResponse)
+FullSyncResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.SET, 'reasons', (TType.I32, None, False), None, ),  # 1
+    (2, TType.I64, 'nextRevision', None, None, ),  # 2
+)
+all_structs.append(PartialFullSyncResponse)
+PartialFullSyncResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'targetCategories', (TType.I32, None, TType.I64, None, False), None, ),  # 1
+)
+all_structs.append(TGlobalEvents)
+TGlobalEvents.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'events', (TType.I32, None, TType.STRUCT, [GlobalEvent, None], False), None, ),  # 1
+    (2, TType.I64, 'lastRevision', None, None, ),  # 2
+)
+all_structs.append(TIndividualEvents)
+TIndividualEvents.thrift_spec = (
+    None,  # 0
+    (1, TType.SET, 'events', (TType.I32, None, False), None, ),  # 1
+    (2, TType.I64, 'lastRevision', None, None, ),  # 2
+)
+all_structs.append(GlobalEvent)
+GlobalEvent.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'type', None, None, ),  # 1
+    (2, TType.I32, 'minDelayInMinutes', None, None, ),  # 2
+    (3, TType.I32, 'maxDelayInMinutes', None, None, ),  # 3
+    (4, TType.I64, 'createTimeMillis', None, None, ),  # 4
+    (5, TType.BOOL, 'maxDelayHardLimit', None, None, ),  # 5
 )
 fix_spec(all_structs)
 del all_structs

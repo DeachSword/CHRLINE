@@ -7,7 +7,10 @@ class Poll(object):
         pass
 
     def __fetchOps(self, count=100):
-        ops = self.fetchOps(self.revision, count)
+        fetchOps = self.fetchOps
+        if self.DEVICE_TYPE in self.SYNC_SUPPORT:
+            fetchOps = self.sync
+        ops = fetchOps(self.revision, count)
         if 'error' in ops:
             raise Exception(ops['error'])
         for op in ops:
@@ -23,6 +26,9 @@ class Poll(object):
             self.log(traceback.format_exc())
 
     def setRevision(self, revision):
+        if revision is None:
+            self.log(f'revision is None!!')
+            revision = 0
         self.revision = max(revision, self.revision)
 
     def trace(self, func, isThreading=True):
