@@ -549,6 +549,7 @@ class Iface(object):
         """
         pass
 
+
 class Client(Iface):
     def __init__(self, iprot, oprot=None):
         self._iprot = self._oprot = iprot
@@ -2935,7 +2936,6 @@ class Client(Iface):
         if result.e is not None:
             raise result.e
         raise TApplicationException(TApplicationException.MISSING_RESULT, "getPreviousMessagesV2 failed: unknown result")
-
 
     def getRecentMessagesV2(self, messageBoxId, messagesCount):
         """
@@ -12815,7 +12815,7 @@ class getRoomsV2_result(object):
             oprot.writeFieldBegin('success', TType.LIST, 0)
             oprot.writeListBegin(TType.STRUCT, len(self.success))
             for iter576 in self.success:
-                
+                iter576.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.e is not None:
