@@ -651,10 +651,12 @@ class Models(object):
             return json.loads(open(savePath + f"/{fn}", "r").read())
         keys = self.getE2EEPublicKeys()
         for key in keys:
-            _keyData = self.getE2EESelfKeyDataByKeyId(key[2])
+            keyId = self.checkAndGetValue(key, 'keyId', 2)
+            _keyData = self.getE2EESelfKeyDataByKeyId(keyId)
             if _keyData is not None:
                 return _keyData
-        return None
+        raise Exception(
+            'E2EE Key has not been saved, try register or use SQR Login')
 
     def getE2EESelfKeyData(self, mid):
         savePath = os.path.join(os.path.dirname(
