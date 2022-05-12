@@ -716,7 +716,7 @@ class TalkService():
         })
         try:
             data = self.postPackDataAndGetUnpackRespData(
-                "/P5", sqrd, 5, encType=0, headers=hr, readWith=f"TalkService.{METHOD_NAME}", timeout=110)
+                "/P5", sqrd, 5, encType=0, headers=hr, readWith=f"TalkService.{METHOD_NAME}")
             if data is None:
                 return []
             if 'error' not in data:
@@ -1652,9 +1652,7 @@ class TalkService():
         ]
         sqrd = self.generateDummyProtocol('sync', params, 4)
         res = self.postPackDataAndGetUnpackRespData(
-            '/SYNC5', sqrd, 5, 0, readWith=f"SyncService.{METHOD_NAME}", timeout=180)
-        if res is None:
-            return []
+            '/SYNC5', sqrd, 5, readWith=f"SyncService.{METHOD_NAME}")
         operationResponse = self.checkAndGetValue(res, 'operationResponse', 1)
         fullSyncResponse = self.checkAndGetValue(res, 'fullSyncResponse', 2)
         partialFullSyncResponse = self.checkAndGetValue(

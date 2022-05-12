@@ -159,8 +159,6 @@ class Timeline():
         })
         r = self.server.postContent(
             self.LINE_HOST_DOMAIN + '/hm/api/v1/home/cover.json', headers=hr, data=json.dumps(data))
-        print(r)
-        print(r.text)
         return r.json()
 
     @loggedIn

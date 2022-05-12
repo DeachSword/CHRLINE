@@ -130,9 +130,13 @@ class SquareService(object):
         message = [
             # [11, 1, _from],
             [11, 2, squareChatMid],
+            [10, 5, 0],
+            [10, 6, 0],
             [11, 10, text],
+            [2, 14, False], # hasContent
             [8, 15, contentType],  # contentType
             [13, 18, [11, 11, contentMetadata]],
+            [8, 19, 0],
         ]
         if relatedMessageId is not None:
             message.append(
@@ -147,7 +151,7 @@ class SquareService(object):
             )
         params = [
             [12, 1, [
-                [8, 1, self.getCurrReqId()],  # reqSeq
+                [8, 1, 0],  # reqSeq
                 [11, 2, squareChatMid],
                 [12, 3, [
                     [12, 1, message],
