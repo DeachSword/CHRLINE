@@ -1,1 +1,1 @@
-__all__ = ['ttypes', 'constants', 'TalkService', 'E2EEKeyBackupService', 'AccessTokenRefreshService', 'BuddyService', 'CallService', 'SyncService']
+__all__ = ['ttypes', 'constants', 'TalkService', 'E2EEKeyBackupService', 'AccessTokenRefreshService', 'BuddyService', 'CallService']
