@@ -15,6 +15,7 @@ from Crypto.Util.Padding import pad, unpad
 
 from .exceptions import LineServiceException
 
+
 class E2EE():
 
     def getE2EELocalPublicKey(self, mid, keyId):
@@ -27,17 +28,21 @@ class E2EE():
                 key = self.getCacheData(fd, fn, False)
             if key is None:
                 receiver_key_data = self.negotiateE2EEPublicKey(mid)
-                specVersion = self.checkAndGetValue(receiver_key_data, 'specVersion', 3)
+                specVersion = self.checkAndGetValue(
+                    receiver_key_data, 'specVersion', 3)
                 if specVersion == -1:
                     raise Exception(f'Not support E2EE on {mid}')
-                publicKey = self.checkAndGetValue(receiver_key_data, 'publicKey', 2)
+                publicKey = self.checkAndGetValue(
+                    receiver_key_data, 'publicKey', 2)
                 receiverKeyId = self.checkAndGetValue(publicKey, 'keyId', 2)
-                receiverKeyData = self.checkAndGetValue(publicKey, 'keyData', 4)
+                receiverKeyData = self.checkAndGetValue(
+                    publicKey, 'keyData', 4)
                 if receiverKeyId == keyId:
                     key = base64.b64encode(receiverKeyData)
                     self.saveCacheData(fd, fn, key.decode(), False)
                 else:
-                    raise Exception(f'E2EE key id-{keyId} not found on {mid}')
+                    raise Exception(
+                        f'E2EE key id-{keyId} not found on {mid}, key id should be {receiverKeyId}')
         else:
             fd = '.e2eeGroupKeys'
             fn = f"{mid}.json"
@@ -55,14 +60,21 @@ class E2EE():
                         2, mid)
                 except LineServiceException as e:
                     if e.code == 5:
-                        self.log(f'E2EE key not registered on {mid}: {e.message}')
+                        self.log(
+                            f'E2EE key not registered on {mid}: {e.message}')
                         E2EEGroupSharedKey = self.tryRegisterE2EEGroupKey(mid)
-                groupKeyId = self.checkAndGetValue(E2EEGroupSharedKey, 'groupKeyId', 2)
-                creator = self.checkAndGetValue(E2EEGroupSharedKey, 'creator', 3)
-                creatorKeyId = self.checkAndGetValue(E2EEGroupSharedKey, 'creatorKeyId', 4)
-                receiver = self.checkAndGetValue(E2EEGroupSharedKey, 'receiver', 5)
-                receiverKeyId = self.checkAndGetValue(E2EEGroupSharedKey, 'receiverKeyId', 6)
-                encryptedSharedKey = self.checkAndGetValue(E2EEGroupSharedKey, 'encryptedSharedKey', 7)
+                groupKeyId = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'groupKeyId', 2)
+                creator = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'creator', 3)
+                creatorKeyId = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'creatorKeyId', 4)
+                receiver = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'receiver', 5)
+                receiverKeyId = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'receiverKeyId', 6)
+                encryptedSharedKey = self.checkAndGetValue(
+                    E2EEGroupSharedKey, 'encryptedSharedKey', 7)
                 selfKey = base64.b64decode(
                     self.getE2EESelfKeyDataByKeyId(receiverKeyId)['privKey'])
                 creatorKey = self.getE2EELocalPublicKey(
@@ -94,7 +106,8 @@ class E2EE():
         members = []
         keyIds = []
         encryptedSharedKeys = []
-        selfKeyId = [self.checkAndGetValue(E2EEPublicKeys[key], 'keyId', 2) for key in E2EEPublicKeys if key == self.mid][0]
+        selfKeyId = [self.checkAndGetValue(
+            E2EEPublicKeys[key], 'keyId', 2) for key in E2EEPublicKeys if key == self.mid][0]
         selfKey = base64.b64decode(
             self.getE2EESelfKeyDataByKeyId(selfKeyId)['privKey'])
         private_key = bytes(32)  # haha
@@ -175,10 +188,12 @@ class E2EE():
         if self.getToType(to) == 0:
             private_key = base64.b64decode(selfKeyData['privKey'])
             receiver_key_data = self.negotiateE2EEPublicKey(to)
-            specVersion = self.checkAndGetValue(receiver_key_data, 'specVersion', 3)
+            specVersion = self.checkAndGetValue(
+                receiver_key_data, 'specVersion', 3)
             if specVersion == -1:
                 raise Exception(f'Not support E2EE on {to}')
-            publicKey = self.checkAndGetValue(receiver_key_data, 'publicKey', 2)
+            publicKey = self.checkAndGetValue(
+                receiver_key_data, 'publicKey', 2)
             receiverKeyId = self.checkAndGetValue(publicKey, 'keyId', 2)
             receiverKeyData = self.checkAndGetValue(publicKey, 'keyData', 4)
             keyData = self.generateSharedSecret(
@@ -191,10 +206,10 @@ class E2EE():
             keyData = self.generateSharedSecret(privK, pubK)
         if contentType == 15:
             chunks = self.encryptE2EELocationMessage(
-            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
+                senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
         else:
             chunks = self.encryptE2EETextMessage(
-            senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
+                senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=isCompact)
         return chunks
 
     def encryptE2EETextMessage(self, senderKeyId, receiverKeyId, keyData, specVersion, text, to, _from, isCompact=False):
@@ -265,7 +280,7 @@ class E2EE():
         privK = base64.b64decode(selfKey['privKey'])
         if toType == 0:
             pubK = self.getE2EELocalPublicKey(
-                to, receiverKeyId if isSelf else senderKeyId)
+                to if isSelf else _from, receiverKeyId if isSelf else senderKeyId)
         else:
             groupK = self.getE2EELocalPublicKey(to, receiverKeyId)
             privK = base64.b64decode(groupK['privKey'])
@@ -279,7 +294,7 @@ class E2EE():
         else:
             decrypted = self.decryptE2EEMessageV1(chunks, privK, pubK)
         return decrypted.get('text', '')
-    
+
     def decryptE2EELocationMessage(self, messageObj, isSelf=True):
         _from = self.checkAndGetValue(messageObj, '_from', 1)
         to = self.checkAndGetValue(messageObj, 'to', 2)

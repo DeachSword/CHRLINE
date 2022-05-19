@@ -20,15 +20,16 @@ class HookUtility(object):
         if prefix is None:
             prefix = self.prefixes[0]
         # Make CmdList
-        ls  = [[x.__name__.replace("_"," "), x.__doc__, x.prefixes, x.permissions, x.toType] for x in self.cmdFuncs]
-        ls  = [l for l in ls if l[1] != None]
+        ls = [[x.__name__.replace("_", " "), x.__doc__, x.prefixes,
+               x.permissions, x.toType] for x in self.cmdFuncs]
+        ls = [l for l in ls if l[1] != None]
         if user_mid is not None:
-            ls  = [l for l in ls if self.checkPermissions(user_mid, l[3])]
+            ls = [l for l in ls if self.checkPermissions(user_mid, l[3])]
         if msg is not None:
             toType = self.cl.checkAndGetValue(msg, 'toType', 3)
-            ls  = [l for l in ls if toType in l[4]]
+            ls = [l for l in ls if toType in l[4]]
         # Put Prefix
-        ls2 = [[prefix+l[0],l[1]] if l[2] else [l[0],l[1]] for l in ls]
+        ls2 = [[prefix+l[0], l[1]] if l[2] else [l[0], l[1]] for l in ls]
         text = '指令表如下:'
         for _cmd in ls2:
             text += f"\n{_cmd[0]}: {_cmd[1]}"
@@ -63,10 +64,9 @@ class HookUtility(object):
             self.db.saveData(_k, _p)
             return True
         return False
-        
-    def getArgs(self, text: str, splitchar: str=":", defVal: any=None, maxSplit: int=-1):
-        args = text.split(splitchar, maxSplit)
 
+    def getArgs(self, text: str, splitchar: str = ":", defVal: any = None, maxSplit: int = -1):
+        args = text.split(splitchar, maxSplit)
         if len(args) > 1:
             return args[1:]
         if defVal is not None:
