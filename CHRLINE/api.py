@@ -141,7 +141,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             _req["secret"] = None
         try:
             res = self.loginV2(**_req,
-                               cert=None)
+                               cert=certificate)
         except LineServiceException as e:
             if e.code == 89:
                 if not e2ee:
