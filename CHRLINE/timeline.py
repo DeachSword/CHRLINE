@@ -3,6 +3,7 @@
 import json
 import time
 import base64
+import uuid
 
 
 def loggedIn(func):
@@ -1663,6 +1664,34 @@ class Timeline():
             # 'X-Line-Clientid': ''
         })
         url = self.LINE_HOST_DOMAIN + '/ex/ya/am/v1/share'
+        r = self.server.postContent(
+            url,
+            headers=hr,
+            json=data
+        )
+        return r.json()
+
+    """ Translate Service """
+
+    @loggedIn
+    def translate(
+            self, originalText: str, sLang: str = 'auto', tLang: str = 'tw'):
+        params = {}
+        data = {
+            "originalText": originalText,
+            "sLang": sLang,
+            "tLang": tLang,
+            "xMode": 0,
+            "id": str(uuid.uuid1()),
+            "service": "talk"
+        }
+        hr = self.server.additionalHeaders(self.server.timelineHeaders, {
+            'x-lhm': "POST",
+            'Content-type': "application/json",
+            'x-client-channel': "chat_context",
+            'X-Line-Translate-From': "line_android",
+        })
+        url = self.LINE_HOST_DOMAIN + '/ds/translate/legyTransAPI.nhn'
         r = self.server.postContent(
             url,
             headers=hr,
