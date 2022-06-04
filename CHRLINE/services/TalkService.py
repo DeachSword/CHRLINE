@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 import httpx
 import requests
+from random import randint
 try:
     from ..exceptions import LineServiceException
 except:
@@ -105,6 +106,16 @@ class TalkService():
     def sendLocationMessage(self, to, title, la=0.0, lb=0.0, subTile='CHRLINE API'):
         data = {1: title, 2: subTile, 3: la, 4: lb}
         return self.sendMessage(to, "test", location=data)
+
+    def sendGift(self, to, productId, productType):
+        if productType not in ['theme', 'sticker']:
+            raise Exception('Invalid productType value')
+        contentMetadata = {
+            'MSGTPL': str(randint(0, 12)),
+            'PRDTYPE': productType.upper(),
+            'STKPKGID' if productType == 'sticker' else 'PRDID': productId
+        }
+        return self.sendMessage(to=to, text='', contentMetadata=contentMetadata, contentType=9)
 
     def sendMessageWithE2EE(self, to, text, contentType=0, contentMetadata=None, relatedMessageId=None):
         if contentMetadata is None:
