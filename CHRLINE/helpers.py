@@ -241,7 +241,7 @@ class Helpers(object):
             if midType == 5:
                 obsNamespace = 'member'
         else:
-            raise Exception(f'Not support midType: {midType}')
+            raise ValueError(f'Not support midType: {midType}')
         url = self.LINE_OBS_DOMAIN + \
             f'/r/{serviceName}/{obsNamespace}/{objectId}'
         if objectId_video is not None:
