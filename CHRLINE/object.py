@@ -42,7 +42,7 @@ class Object(object):
     def sendFile(self, to, path, oType='file'):
         return self.uploadObjTalk(pathOrBytes=path, oType=oType, to=to)
 
-    def sendObjToTalk(self, to, oid, returnHeaders=False, **kwargs):
+    def sendObjHomeToTalk(self, to, oid, returnHeaders=False, **kwargs):
         data = {
             'oid': 'reqseq',
             'tomid': to,
