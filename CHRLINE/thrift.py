@@ -1,9 +1,14 @@
 from struct import pack, unpack
 import binascii
+
+from thrift.transport.TTransport import TMemoryBuffer
+
+from .services.thrift import ttypes, TalkService
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData
 
 
 class Thrift(object):
+
     BASE_EXCEPTION = {
         'code': 1,
         'message': 2,
@@ -583,346 +588,346 @@ class Thrift(object):
         """
 
         def __init__(self, cl, a=None, baseException: dict = None, readWith: str = None):
-            self.cl = cl  # cl  init
-            self.__a = []  # 1st init
-            self.__b = []  # 1st init
-            self.__c = self._b  # 1st init
-            self.__d = []  # 2nd init
-            self.__e = []  # 2nd init
-            self.__f = []  # 3rd init
-            self.__h = self._c  # 2nd init
-            self.__last_fid = 0  # base fid
-            self.__last_pos = 0  # base pos
-            self.__last_sid = 0  # base sid
-            self._a()  # 4th init
-            self.res = None  # base res
-            self.baseException = baseException  # init
-            if baseException is None:  #
+            self.cl = cl                # cl  init
+            self.__a = []               # 1st init
+            self.__b = []               # 1st init
+            self.__c = self._b          # 1st init
+            self.__d = []               # 2nd init
+            self.__e = []               # 2nd init
+            self.__f = []               # 3rd init
+            self.__h = self._c          # 2nd init
+            self.__last_fid = 0         # base fid
+            self.__last_pos = 0         # base pos
+            self.__last_sid = 0         # base sid
+            self._a()                   # 4th init
+            self.res = None             # base res
+            self.baseException = baseException              # init
+            if baseException is None:                       #
                 self.baseException = Thrift.BASE_EXCEPTION  # base
-            self.readWith = readWith  # readWith
-            if a is not None:  # not None
-                self.d(a)  # for data
+            self.readWith = readWith    # readWith
+            if a is not None:           # not None
+                self.d(a)               # for data
 
         def a(self, cArr, b2):
-            self.__b[b2] = cArr  # bk array!!
-            i2 = 0  # base init!
-            for c2 in cArr:  #
-                if c2 == '0':  # is 0
+            self.__b[b2] = cArr         # bk array!!
+            i2 = 0                      # base init!
+            for c2 in cArr:             #
+                if c2 == '0':           # is 0
                     i2 = (i2 << 1) + 1  # + 1
-                elif c2 == '1':  # is 1
+                elif c2 == '1':         # is 1
                     i2 = (i2 << 1) + 2  # + 2
-            self.__a[i2] = b2  # init array
+            self.__a[i2] = b2           # init array
 
         def b(self):
-            i2 = 0  # base init
-            i3 = 0  # base init
-            while True:  #
-                l2 = self.data[self.__last_pos]  # so good!!
-                self.__last_pos += 1  # fixed pos
-                i2 |= (l2 & 127) << i3  # yea baby!
-                if (l2 & 128) != 128:  # come on!!
-                    return i2  # break!!!!
-                i3 += 7  # + 7!!!!!!
+            i2 = 0                                  # base init
+            i3 = 0                                  # base init
+            while True:                             #
+                l2 = self.data[self.__last_pos]     # so good!!
+                self.__last_pos += 1                # fixed pos
+                i2 |= (l2 & 127) << i3              # yea baby!
+                if (l2 & 128) != 128:               # come on!!
+                    return i2                       # break!!!!
+                i3 += 7                             # + 7!!!!!!
 
         def c(self, p, i2):
-            if (i2 == 0):  # is 0!!
-                return []  # break!
+            if (i2 == 0):               # is 0!!
+                return []               # break!
             bArr = self.data[p:p + i2]  # read!!
-            return list(bArr)  # break!
+            return list(bArr)           # break!
 
         def d(self, d):
-            self.data = d  # base init!
-            return self.t()  # base init?
+            self.data = d       # base init!
+            return self.t()     # base init?
 
         def e(self):
-            a = None  # base init
-            b = None  # base init
-            c = 0  # base init
-            d = DummyProtocol()  # dummy >w<
-            _fid = self.b()  # read fid!
-            if _fid == 0:  #
-                pass  #
-            elif _fid in [1, 2]:  #
-                fid, = self.n(_fid)  # read
-                if fid == 0:  #
-                    _type = self.w()  # read data
-                    a, d = self.g(_type, fid)  # read data
-                elif fid == 1:  #
-                    _type = self.w()  # read data
-                    a, d = self.g(_type, fid)  # read data
-                    a = {  #
-                        "error": {  #
-                            "code": a.get(self.baseException['code']),  #
-                            "message": a.get(self.baseException['message']),  #
+            a = None                # base init
+            b = None                # base init
+            c = 0                   # base init
+            d = DummyProtocol()     # dummy >w<
+            _fid = self.b()         # read fid!
+            if _fid == 0:           #
+                pass                #
+            elif _fid in [1, 2]:                #
+                fid, = self.n(_fid)             # read
+                if fid == 0:                    #
+                    _type = self.w()            # read data
+                    a, d = self.g(_type, fid)   # read data
+                elif fid == 1:                  #
+                    _type = self.w()            # read data
+                    a, d = self.g(_type, fid)   # read data
+                    a = {                                                       #
+                        "error": {                                              #
+                            "code": a.get(self.baseException['code']),          #
+                            "message": a.get(self.baseException['message']),    #
                             "metadata": a.get(self.baseException['metadata']),  #
-                            "_data": a  #
-                        }  #
-                    }  #
-                elif fid == 5:  #
-                    _type = self.w()  # read data
-                    a, d = self.g(_type, fid)  # exception!
-                    raise Exception(a)  # raise!
-                else:  #
-                    raise EOFError(f"fid {fid} not implemented")  # exception!
-            else:  #
-                _type = self.w()  # read data
-                a, d = self.g(_type)  # read data
-                raise EOFError(  #
-                    f"recv fid `{_fid}`, expected `1`, message: `{a}`")  # err
-            self.res = a  # write data
+                            "_data": a                                          #
+                        }                                                       #
+                    }                                                           #
+                elif fid == 5:                                      #
+                    _type = self.w()                                # read data
+                    a, d = self.g(_type, fid)                       # exception!
+                    raise Exception(a)                              # raise!
+                else:                                               #
+                    raise EOFError(f"fid {fid} not implemented")    # exception!
+            else:                                                           #
+                _type = self.w()                                            # read data
+                a, d = self.g(_type)                                        # read data
+                raise EOFError(                                             #
+                    f"recv fid `{_fid}`, expected `1`, message: `{a}`")     # err
+            self.res = a            # write data
             self.dummyProtocol = d  # write data
 
         def f(self, n):
             return (n >> 1) ^ -(n & 1)  # hmm...
 
         def g(self, t, fid=None):
-            a = None  # base
-            b = None  # base
-            c = 0  # base
-            dummyProtocol = DummyProtocol()  # base
-            dummyProtocolData = None  # base
-            subType = None  # base
-            if t == 2:  #
-                b = self.b()  # read
-                a = bool(b)  # bool
-            elif t == 3:  #
-                dec = Thrift.TCompactProtocol(self.cl)  # init
-                a = dec.readByte(self.data[self.__last_pos:])  # byte
-                self.__last_pos += 1  # fix!
-            elif t == 4:  #
-                dec = Thrift.TCompactProtocol(self.cl)  # init
-                a = dec.readDouble(self.data[self.__last_pos:])  # read
-                self.__last_pos += 8  # fix!
-            elif t == 8:  #
-                _a = self.x(self.data[self.__last_pos:])  # read
-                a = self.f(_a)  # int!
-            elif t == 10:  #
-                _a = self.b()  # read
+            a = None                            # base
+            b = None                            # base
+            c = 0                               # base
+            dummyProtocol = DummyProtocol()     # base
+            dummyProtocolData = None            # base
+            subType = None                      # base
+            if t == 2:          #
+                b = self.b()    # read
+                a = bool(b)     # bool
+            elif t == 3:                                            #
+                dec = Thrift.TCompactProtocol(self.cl)              # init
+                a = dec.readByte(self.data[self.__last_pos:])       # byte
+                self.__last_pos += 1                                # fix!
+            elif t == 4:                                            #
+                dec = Thrift.TCompactProtocol(self.cl)              # init
+                a = dec.readDouble(self.data[self.__last_pos:])     # read
+                self.__last_pos += 8                                # fix!
+            elif t == 8:                                    #
+                _a = self.x(self.data[self.__last_pos:])    # read
+                a = self.f(_a)                              # int!
+            elif t == 10:       #
+                _a = self.b()   # read
                 a = self.f(_a)  # int?
-            elif t == 11:  #
-                a = self.s()  # str!
-            elif t == 12:  #
-                a = {}  # base
-                b = self.b()  # read
-                c = self.n(b)  # read
+            elif t == 11:       #
+                a = self.s()    # str!
+            elif t == 12:               #
+                a = {}                  # base
+                b = self.b()            # read
+                c = self.n(b)           # read
                 dummyProtocolData = []  # base
-                for d in c:  #
-                    a[d], _dummyProtocolData = self.g(  #
-                        self.w(), d)  # fld!
-                    dummyProtocolData.append(_dummyProtocolData.data)  # init
-            elif t == 13:  #
-                a = {}  # base
-                c = self.b()  # read
-                subType = [0, 0]  # base
+                for d in c:                                             #
+                    a[d], _dummyProtocolData = self.g(                  #
+                        self.w(), d)                                    # fld!
+                    dummyProtocolData.append(_dummyProtocolData.data)   # init
+            elif t == 13:               #
+                a = {}                  # base
+                c = self.b()            # read
+                subType = [0, 0]        # base
                 dummyProtocolData = {}  # base
-                if c != 0:  #
-                    d = self.y()  # read
+                if c != 0:              #
+                    d = self.y()        # read
                     t1, t2 = self.q(d)  # read
                     subType = [t1, t2]  # init
-                    for i in range(c):  #
-                        k, _kDPD = self.g(t1)  # key!
-                        v, _vDPD = self.g(t2)  # val!
+                    for i in range(c):                              #
+                        k, _kDPD = self.g(t1)                       # key!
+                        v, _vDPD = self.g(t2)                       # val!
                         dummyProtocolData[_kDPD.data] = _vDPD.data  #
-                        a[k] = v  # dict
-            elif t == 14 or t == 15:  #
-                a = []  # base
-                dec = Thrift.TCompactProtocol(self.cl)  # init
-                ftype, count, offset = dec.readCollectionBegin(  #
-                    self.data[self.__last_pos:])  # read
-                self.__last_pos += offset  # fix!
-                subType = [self._d(ftype)]  # init
-                dummyProtocolData = []  # base
-                for i in range(count):  #
-                    b, _dummyProtocolData = self.g(  #
-                        self._d(ftype))  # read
-                    a.append(b)  # list
-                    dummyProtocolData.append(_dummyProtocolData.data)  # init
-            elif t == 16:  #
-                b = self.b()  # read
-                c = -(b & 1) ^ self._e(b, 1)  # wtf?
-                d = c + self.__last_sid  # fix?
-                self.__last_sid = d  # idk.
-                a = str(d)  # str!
-                t = 11  # fix.
-            elif t == 17:  #
-                b = self.b()  # read
-                if len(self.__e) > b:  #
-                    a = self.__e[b]  # str?
-                    t = 11  # fix.
-                else:  #
-                    print(f"mid not found: {b}")  # no way
-            else:  #
-                raise Exception(f"cAN't rEad TyPE: {t}")  # err!
-            if dummyProtocolData is None:  #
-                dummyProtocolData = a  # base
-            dummyProtocol.data = DummyProtocolData(  #
-                fid, t, dummyProtocolData, subType)  # good
-            return a, dummyProtocol  # nice
+                        a[k] = v                                    # dict
+            elif t == 14 or t == 15:                                #
+                a = []                                              # base
+                dec = Thrift.TCompactProtocol(self.cl)              # init
+                ftype, count, offset = dec.readCollectionBegin(     #
+                    self.data[self.__last_pos:])                    # read
+                self.__last_pos += offset                           # fix!
+                subType = [self._d(ftype)]                          # init
+                dummyProtocolData = []                              # base
+                for i in range(count):                                  #
+                    b, _dummyProtocolData = self.g(                     #
+                        self._d(ftype))                                 # read
+                    a.append(b)                                         # list
+                    dummyProtocolData.append(_dummyProtocolData.data)   # init
+            elif t == 16:                       #
+                b = self.b()                    # read
+                c = -(b & 1) ^ self._e(b, 1)    # wtf?
+                d = c + self.__last_sid         # fix?
+                self.__last_sid = d             # idk.
+                a = str(d)                      # str!
+                t = 11                          # fix.
+            elif t == 17:               #
+                b = self.b()            # read
+                if len(self.__e) > b:               #
+                    a = self.__e[b]                 # str?
+                    t = 11                          # fix.
+                else:                               #
+                    print(f"mid not found: {b}")    # no way
+            else:                                           #
+                raise Exception(f"cAN't rEad TyPE: {t}")    # err!
+            if dummyProtocolData is None:                   #
+                dummyProtocolData = a                       # base
+            dummyProtocol.data = DummyProtocolData(         #
+                fid, t, dummyProtocolData, subType)         # good
+            return a, dummyProtocol                         # nice
 
         def h(self, n):
-            return (n << 1) ^ (n >> 31)  # hmm...
+            return (n << 1) ^ (n >> 31)     # hmm...
 
         def m(self):
-            a = self.b()  # get count
-            for _a in range(a):  #
-                bArr = [self.data[self.__last_pos]]  # coooooool
-                bArr += self.__h(  #
-                    self.data[self.__last_pos + 1:self.__last_pos + 17])  # not magic
-                self.__e.append(bytes(bArr).decode())  # wow, magic
-                self.__last_pos += 17  # real pos?
-            self.e()  # base init
+            a = self.b()                                                    # get count
+            for _a in range(a):                                             #
+                bArr = [self.data[self.__last_pos]]                         # coooooool
+                bArr += self.__h(                                           #
+                    self.data[self.__last_pos + 1:self.__last_pos + 17])    # not magic
+                self.__e.append(bytes(bArr).decode())                       # wow magic
+                self.__last_pos += 17                                       # real pos?
+            self.e()                                                        # base init
 
         def n(self, d):
-            a = []  # base init
-            i = 0  # base init
-            while True:  #
-                b = 1 << i  # set &
-                if b > d:  #
-                    break  # break
-                elif d & b != 0:  #
-                    a.append(i)  # add
-                i += 1  # + 1
-            return a  # break
+            a = []                  # base init
+            i = 0                   # base init
+            while True:             #
+                b = 1 << i          # set &
+                if b > d:           #
+                    break           # break
+                elif d & b != 0:    #
+                    a.append(i)     # add
+                i += 1              # + 1
+            return a                # break
 
         def q(self, d):
-            return (self._d(d >> 4), self._d(d & 15))  # cool
+            return self._d(d >> 4), self._d(d & 15)  # cool
 
         def s(self):
-            a = self.b()  # read value
+            a = self.b()                                        # read value
             b = self.data[self.__last_pos:self.__last_pos + a]  # init first
-            try:  #
-                b = b.decode()  # any ideas?
-            except:  #
-                pass  # lamo idea.
-            self.__last_pos += a  # fixed pos!
-            return b  # - break! -
+            try:                    #
+                b = b.decode()      # any ideas?
+            except:                 #
+                pass                # lamo idea.
+            self.__last_pos += a    # fixed pos!
+            return b                # - break! -
 
         def t(self):
-            self.__last_pos = 3  # fixed pos
-            if len(self.data) == 4:  #
-                raise Exception(  #
-                    f"Invalid data: {self.data} (code: 20)")  # raise
-            a = self.b()  # first data
+            self.__last_pos = 3                                 # fixed pos
+            if len(self.data) == 4:                             #
+                raise Exception(                                #
+                    f"Invalid data: {self.data} (code: 20)")    # raise
+            a = self.b()                    # first data
             b = self.c(self.__last_pos, a)  # 2nd data!!
             self.__d = list(bytes(a << 1))  # 3rd? no!!!
-            d = 0  # base init
-            e = 0  # base init
-            f = 0  # base init
-            g = 0  # base init
-            for h in b:  #
-                _a = 0  # base value!
-                _b = 128  # base value?
-                while _a < 8:  #
-                    if h & _b == 0:  #
-                        d = (g << 1) + 1  # + 1
-                    else:  #
-                        d = (g << 1) + 2  # + 2
-                    if self.__a[d] != 0:  #
-                        if f >= len(self.__d):  #
-                            self.__d += [len(self.__d)] * 4  # x 4
-                        self.__d[f] = self.__a[d]  # set
-                        f += 1  # + 1
-                        g = 0  # = 0
-                    else:  #
-                        g = d  # set!
-                    _b >>= 1  # move
-                    _a += 1  # + 1!
-            self.__last_pos += a  # fixed pos
-            self.m()  # base init
+            d = 0                           # base init
+            e = 0                           # base init
+            f = 0                           # base init
+            g = 0                           # base init
+            for h in b:                                         #
+                _a = 0                                          # base value!
+                _b = 128                                        # base value?
+                while _a < 8:                                   #
+                    if h & _b == 0:                             #
+                        d = (g << 1) + 1                        # + 1
+                    else:                                       #
+                        d = (g << 1) + 2                        # + 2
+                    if self.__a[d] != 0:                        #
+                        if f >= len(self.__d):                  #
+                            self.__d += [len(self.__d)] * 4     # x 4
+                        self.__d[f] = self.__a[d]               # set
+                        f += 1                                  # + 1
+                        g = 0                                   # = 0
+                    else:                                       #
+                        g = d                                   # set!
+                    _b >>= 1                                    # move
+                    _a += 1                                     # + 1!
+            self.__last_pos += a                                # fixed pos
+            self.m()                                            # base init
 
         def w(self):
-            a = self.__d[self.__last_fid]  # read!
-            self.__last_fid += 1  # + 1!!
-            return a  # break
+            a = self.__d[self.__last_fid]   # read!
+            self.__last_fid += 1            # + 1!!
+            return a                        # break
 
         def x(self, a, b=False):
-            c = 0  # base init
-            d = 0  # base init
-            i = 0  # base init
-            while True:  #
-                e = a[i]  # read
-                i += 1  # + 1!
-                c |= (e & 0x7f) << d  # move
-                if e >> 7 == 0:  #
-                    self.__last_pos += i  # + i!
-                    if b:  #
-                        return [c, i]  # break
-                    return c  # break
-                d += 7  # + 7!!
+            c = 0                           # base init
+            d = 0                           # base init
+            i = 0                           # base init
+            while True:                     #
+                e = a[i]                    # read
+                i += 1                      # + 1!
+                c |= (e & 0x7f) << d        # move
+                if e >> 7 == 0:             #
+                    self.__last_pos += i    # + i!
+                    if b:                   #
+                        return [c, i]       # break
+                    return c                # break
+                d += 7                      # + 7!!
 
         def y(self):
             a = self.data[self.__last_pos]  # read!
-            self.__last_pos += 1  # + 1!!
-            return a  # break
+            self.__last_pos += 1            # + 1!!
+            return a                        # break
 
         def z(self):
-            if len(self.data) > self.__last_pos:  # Next?
-                return True  # True!
-            return False  # False
+            if len(self.data) > self.__last_pos:    # Next?
+                return True                         # True!
+            return False                            # False
 
         def _a(self):
-            self.__a = list(bytes(512))  # base init
-            self.__b = list(bytes(18))  # base init
-            self.__c(['1', '0', '1', '1'], 2)  # cool yea?
-            self.__c(['1', '0', '1', '0', '1', '0', '0', '1'], 3)  # idk why..
-            self.__c(['1', '0', '1', '0', '1', '0', '0', '0'], 4)  # too long!
-            self.__c(['1', '0', '1', '0', '1', '1', '1'], 6)  # plz make!
-            self.__c(['0', '1'], 8)  # ez plz!!!
-            self.__c(['0', '0'], 10)  # no! 0 & 0
-            self.__c(['1', '0', '1', '0', '0'], 11)  # what? bin
-            self.__c(['1', '1', '0', '1'], 12)  # stop it!!
-            self.__c(['1', '0', '1', '0', '1', '1', '0'], 13)  # aaaaaaaaa
-            self.__c(['1', '0', '1', '0', '1', '0', '1'], 14)  # AaAAaaaAa
-            self.__c(['1', '1', '0', '0'], 15)  # * DIED! *
-            self.__c(['1', '1', '1'], 16)  # 1 & 1 & 1
-            self.__c(['1', '0', '0'], 17)  # 1 & 0 & 0
+            self.__a = list(bytes(512))                             # base init
+            self.__b = list(bytes(18))                              # base init
+            self.__c(['1', '0', '1', '1'], 2)                       # cool yea?
+            self.__c(['1', '0', '1', '0', '1', '0', '0', '1'], 3)   # idk why..
+            self.__c(['1', '0', '1', '0', '1', '0', '0', '0'], 4)   # too long!
+            self.__c(['1', '0', '1', '0', '1', '1', '1'], 6)        # plz make!
+            self.__c(['0', '1'], 8)                                 # ez plz!!!
+            self.__c(['0', '0'], 10)                                # no! 0 & 0
+            self.__c(['1', '0', '1', '0', '0'], 11)                 # what? bin
+            self.__c(['1', '1', '0', '1'], 12)                      # stop it!!
+            self.__c(['1', '0', '1', '0', '1', '1', '0'], 13)       # aaaaaaaaa
+            self.__c(['1', '0', '1', '0', '1', '0', '1'], 14)       # AaAAaaaAa
+            self.__c(['1', '1', '0', '0'], 15)                      # * DIED! *
+            self.__c(['1', '1', '1'], 16)                           # 1 & 1 & 1
+            self.__c(['1', '0', '0'], 17)                           # 1 & 0 & 0
 
         def _b(self, cArr, b2):
-            self.__b[b2] = cArr  # base init
-            i2 = 0  # base init
-            for c2 in cArr:  #
-                if c2 == '0':  #
+            self.__b[b2] = cArr         # base init
+            i2 = 0                      # base init
+            for c2 in cArr:             #
+                if c2 == '0':           #
                     i2 = (i2 << 1) + 1  # + 1!!
-                elif c2 == '1':  #
+                elif c2 == '1':         #
                     i2 = (i2 << 1) + 2  # + 2!!
-            self.__a[i2] = b2  # break
+            self.__a[i2] = b2           # break
 
         def _c(self, val):
             return binascii.b2a_hex(val)  # magic right?
 
         def _d(self, val):
-            if val == 0:  #
-                return 0  # break
-            if val in [1, 2]:  #
-                return 2  # break
-            if val == 3:  #
-                return 3  # break
-            if val == 4:  #
-                return 6  # break
-            if val == 5:  #
-                return 8  # break
-            if val == 6:  #
-                return 10  # break
-            if val == 7:  #
-                return 4  # break
-            if val == 8:  #
-                return 11  # break
-            if val == 9:  #
-                return 15  # break
-            if val == 10:  #
-                return 14  # break
-            if val == 11:  #
-                return 13  # break
-            if val == 12:  #
-                return 12  # break
-            raise Exception(f'Invalid type: {val}')  # error
+            if val == 0:        #
+                return 0        # break
+            if val in [1, 2]:   #
+                return 2        # break
+            if val == 3:        #
+                return 3        # break
+            if val == 4:        #
+                return 6        # break
+            if val == 5:        #
+                return 8        # break
+            if val == 6:        #
+                return 10       # break
+            if val == 7:        #
+                return 4        # break
+            if val == 8:        #
+                return 11       # break
+            if val == 9:        #
+                return 15       # break
+            if val == 10:       #
+                return 14       # break
+            if val == 11:       #
+                return 13       # break
+            if val == 12:       #
+                return 12       # break
+            raise Exception(f'Invalid type: {val}') # error
 
         def _e(self, val, n):
-            if val >= 0:  #
-                val >>= n  # >>=?
-            else:  #
-                val = ((val + 0x10000000000000000) >> n)  # wtf?
-            return val  # ret?
+            if val >= 0:                                    #
+                val >>= n                                   # >>=?
+            else:                                           #
+                val = ((val + 0x10000000000000000) >> n)    # wtf?
+            return val                                      # ret?
 
 
 def checkIntegerLimits(i, bits):
