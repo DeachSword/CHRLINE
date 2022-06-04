@@ -16,7 +16,9 @@ class TalkService():
     def __init__(self):
         self.testPollConn = requests.session()
 
-    def sendMessage(self, to: str, text: str, contentType: int = 0, contentMetadata: dict = {}, relatedMessageId: str = None, location: dict = None, chunk: list = None):
+    def sendMessage(self, to: str, text: str, contentType: int = 0, contentMetadata: dict = None, relatedMessageId: str = None, location: dict = None, chunk: list = None):
+        if contentMetadata is None:
+            contentMetadata = {}
         METHOD_NAME = "sendMessage"
         message = [
             [11, 2, to],
@@ -73,22 +75,28 @@ class TalkService():
         except Exception as e:
             raise e
 
-    def replyMessage(self, msgData: any, text: str, contentType: int = 0, contentMetadata: dict = {}, location: dict = None, relatedMessageId: str = None):
+    def replyMessage(self, msgData: any, text: str, contentType: int = 0, contentMetadata: dict = None, location: dict = None, relatedMessageId: str = None):
         to = self.checkAndGetValue(msgData, 'to', 2)
         toType = self.checkAndGetValue(msgData, 'toType', 3)
+        if contentMetadata is None:
+            contentMetadata = {}
         if relatedMessageId is None:
             relatedMessageId = self.checkAndGetValue(msgData, 'id', 4)
         opType = self.checkAndGetValue(msgData, 'opType')
         if toType == 0 and opType in [26, None]:  # opType for hooks
             to = self.checkAndGetValue(msgData, '_from', 1)
-        if self.checkAndGetValue(msgData, 'isE2EE') == True:
+        if self.checkAndGetValue(msgData, 'isE2EE') is True:
             if contentType == 15:
                 text = location  # difference
             return self.sendMessageWithE2EE(to, text, contentType, contentMetadata, relatedMessageId)
         return self.sendMessage(to, text, contentType, contentMetadata, relatedMessageId)
 
-    def sendContact(self, to, mid):
-        return self.sendMessage(to, None, contentType=13, contentMetadata={"mid": mid})
+    def sendContact(self, to, mid, displayName=None):
+        if displayName is None:
+            contentMetadata = {"mid": mid}
+        else:
+            contentMetadata = {"mid": mid, "displayName": displayName}
+        return self.sendMessage(to, None, contentType=13, contentMetadata=contentMetadata)
 
     def sendLocation(self, to, title, la=0.0, lb=0.0, subTile='CHRLINE API'):
         data = {1: title, 2: subTile, 3: la, 4: lb}
@@ -98,7 +106,9 @@ class TalkService():
         data = {1: title, 2: subTile, 3: la, 4: lb}
         return self.sendMessage(to, "test", location=data)
 
-    def sendMessageWithE2EE(self, to, text, contentType=0, contentMetadata={}, relatedMessageId=None):
+    def sendMessageWithE2EE(self, to, text, contentType=0, contentMetadata=None, relatedMessageId=None):
+        if contentMetadata is None:
+            contentMetadata = {}
         chunk = self.encryptE2EEMessage(to, text, contentType=contentType)
         contentMetadata = self.server.additionalHeaders(contentMetadata, {
             'e2eeVersion': '2',
@@ -107,12 +117,16 @@ class TalkService():
         })
         return self.sendMessageWithChunks(to, chunk, contentType, contentMetadata, relatedMessageId)
 
-    def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata={}, relatedMessageId=None):
+    def sendMessageWithChunks(self, to, chunk, contentType=0, contentMetadata=None, relatedMessageId=None):
+        if contentMetadata is None:
+            contentMetadata = {}
         return self.sendMessage(to, None, contentType, contentMetadata, relatedMessageId, chunk=chunk)
 
-    def sendCompactMessage(self, to: str, text: str, chunks: list = []):
+    def sendCompactMessage(self, to: str, text: str, chunks: list = None):
         cType = -1  # 2 = TEXT, 4 = STICKER, 5 = E2EE_TEXT, 6 = E2EE_LOCATION
         ep = self.LINE_COMPACT_PLAIN_MESSAGE_ENDPOINT
+        if chunks is None:
+            chunks = []
         if text is not None:
             cType = 2
         elif chunks:

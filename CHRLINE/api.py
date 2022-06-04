@@ -27,10 +27,12 @@ import requests
 import httpx
 import base64
 import binascii
-import json
 
 
-class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService, AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService, SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService, E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService):
+class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService,
+          AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService,
+          SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService,
+          E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
@@ -131,18 +133,18 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         _secret = self._encryptAESECB(self.getSHA256Sum(
             pincode), base64.b64decode(secretPK))
         _req = {
-                "keynm": keynm, 
-                "encData": crypto, 
-                "secret": _secret,
-                "deviceName": self.SYSTEM_NAME,
-                "calledName": "loginZ"
+            "keynm": keynm,
+            "encData": crypto,
+            "secret": _secret,
+            "deviceName": self.SYSTEM_NAME,
+            "calledName": "loginZ"
         }
         if not e2ee:
             _req["secret"] = None
         try:
-            res = self.loginV2(**_req,
-                               cert=certificate)
+            res = self.loginV2(**_req, cert=certificate)
         except LineServiceException as e:
+            res = {}
             if e.code == 89:
                 if not e2ee:
                     raise e
@@ -159,7 +161,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 except:
                     raise Exception(f"e2eeInfo decode failed, try again")
                 blablabao = self.encryptDeviceSecret(base64.b64decode(
-                e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
+                    e2eeInfo['publicKey']), secret, base64.b64decode(e2eeInfo['encryptedKeyChain']))
                 e2eeLogin = self.confirmE2EELogin(verifier, blablabao)
             else:
                 e2eeLogin = self.checkLoginZPinCode(verifier)['verifier']
@@ -234,7 +236,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             try:
                 self.verifyCertificate(sqr, self.getSqrCert())
             except:
-                c =  self.checkAndGetValue(self.createPinCode(sqr), 1, 'val_1')
+                c = self.checkAndGetValue(self.createPinCode(sqr), 1, 'val_1')
                 yield f"請輸入pincode: {c}"
                 self.checkPinCodeVerified(sqr)
             e = self.qrCodeLogin(sqr, secret)
@@ -317,7 +319,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         try:
             self.postPackDataAndGetUnpackRespData(
                 "/acct/lp/lgn/sq/v1", sqrd, 3,
-                headers=headers, 
+                headers=headers,
                 access_token=qrcode,
                 conn=requests.session())
         except Exception as e:
@@ -358,7 +360,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         try:
             self.postPackDataAndGetUnpackRespData(
                 "/acct/lp/lgn/sq/v1", sqrd, 3,
-                headers=headers, 
+                headers=headers,
                 access_token=qrcode,
                 conn=requests.session())
         except Exception as e:
@@ -403,7 +405,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
     def CPF(self):
         sqrd = []
         return self.postPackDataAndGetUnpackRespData('/CPF', sqrd)
-        
+
     def getRSAKeyInfo(self, provider=1):
         """
         provider:
@@ -462,15 +464,15 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         # sqrd += [11, 0, 10] + self.getStringBytes("") #secret
         sqrd += [8, 0, 11] + self.getIntBytes(1)
         sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs" ,sqrd, 3)
+        return self.postPackDataAndGetUnpackRespData("/api/v3p/rs", sqrd, 3)
 
     def checkLoginZPinCode(self, accessSession):
         hr = self.server.additionalHeaders(self.server.Headers, {
             'x-lhm': 'GET'
         })
         return self.postPackDataAndGetUnpackRespData(
-            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN ,[], -3,
-            headers = hr,
+            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN, [], -3,
+            headers=hr,
             access_token=accessSession,
             conn=requests.session())['result']
 
@@ -479,8 +481,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
             'x-lhm': 'GET'
         })
         return self.postPackDataAndGetUnpackRespData(
-            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE ,[], -3,
-            headers = hr,
+            self.SECONDARY_DEVICE_LOGIN_VERIFY_PIN_WITH_E2EE, [], -3,
+            headers=hr,
             access_token=accessSession,
             conn=requests.session())['result']
 

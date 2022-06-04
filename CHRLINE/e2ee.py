@@ -16,7 +16,7 @@ from Crypto.Util.Padding import pad, unpad
 from .exceptions import LineServiceException
 
 
-class E2EE():
+class E2EE:
 
     def getE2EELocalPublicKey(self, mid, keyId):
         toType = self.getToType(mid)

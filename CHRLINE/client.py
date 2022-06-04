@@ -1,4 +1,5 @@
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 from .models import Models
@@ -15,9 +16,13 @@ from os import system
 from .e2ee import E2EE
 from .exceptions import LineServiceException
 
+
 class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, Helpers, LineCube, E2EE):
 
-    def __init__(self, authTokenOrEmail: str=None, password: str=None, device: str="CHROMEOS", version: str=None, os_name: str=None, os_version: str=None, noLogin: bool=False, encType: int=1, debug: bool=False, customDataId: str=None, phone: str=None, region: str=None, forwardedIp: str=None, useThrift: bool=False):
+    def __init__(self, authTokenOrEmail: str = None, password: str = None, device: str = "CHROMEOS",
+                 version: str = None, os_name: str = None, os_version: str = None, noLogin: bool = False,
+                 encType: int = 1, debug: bool = False, customDataId: str = None, phone: str = None, region: str = None,
+                 forwardedIp: str = None, useThrift: bool = False):
         """Use authToken or Email & Password to Login.
         phone + region to Login secondary devices (and Android).
         
@@ -63,7 +68,7 @@ class CHRLINE(Models, Config, API, Thrift, Poll, Object, Timeline, TimelineBiz, 
         self.use_thrift = useThrift
         if region is not None:
             self.LINE_SERVICE_REGION = region
-            
+
         if authTokenOrEmail is not None and password is not None:
             email_func = self.requestEmailLogin
             if device in self.LOGIN_V2_SUPPORT:

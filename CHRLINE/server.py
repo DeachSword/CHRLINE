@@ -17,10 +17,14 @@ class Server(object):
     def parseUrl(self, path):
         return self.LINE_HOST_DOMAIN + path
 
-    def urlEncode(self, url, path, params=[]):
+    def urlEncode(self, url, path, params=None):
+        if params is None:
+            params = []
         return url + path + '?' + urllib.parse.urlencode(params)
 
-    def getJson(self, url, allowHeader=False, cHeaders={}):
+    def getJson(self, url, allowHeader=False, cHeaders=None):
+        if cHeaders is None:
+            cHeaders = {}
         if allowHeader is False:
             return json.loads(self._session.get(url).text)
         else:
