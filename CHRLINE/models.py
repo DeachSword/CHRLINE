@@ -6,9 +6,9 @@ import os
 import struct
 import time
 import urllib
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from datetime import datetime
-from hashlib import md5, sha1
+from hashlib import md5
 
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
@@ -17,17 +17,11 @@ import xxhash
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
-
 from thrift.transport.TTransport import TMemoryBuffer
-
 from .exceptions import LineServiceException
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
-from .services.thrift.ap.TBinaryProtocol import \
-    TBinaryProtocol as testProtocol2
 from .services.thrift.ap.TCompactProtocol import \
     TCompactProtocol as testProtocol
-
-from .services.thrift import *
 
 
 class Models(object):
@@ -39,7 +33,7 @@ class Models(object):
         self.key = RSA.importKey(self.PUBLIC_KEY)
         self.encryptKey = b"DearSakura+2021/"
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
-                        128, 18, 123, 158, 251, 92, 45, 51])
+                         128, 18, 123, 158, 251, 92, 45, 51])
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
@@ -58,7 +52,7 @@ class Models(object):
         oldList.update(newList)
         if 'range' in oldList:
             new_range = 'bytes 0-%s\/%s' % (
-                str(oldList['range']-1), str(oldList['range']))
+                str(oldList['range'] - 1), str(oldList['range']))
             oldList.update({'range': new_range})
         if returnAs == 'json':
             oldList = json.dumps(oldList)
@@ -173,7 +167,7 @@ class Models(object):
             self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
         self.key = RSA.importKey(self.PUBLIC_KEY)
         self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
-                        128, 18, 123, 158, 251, 92, 45, 51])
+                         128, 18, 123, 158, 251, 92, 45, 51])
         self.encryptKey = b"DearSakura+2021/"
         self.encEncKey()
 
@@ -208,8 +202,7 @@ class Models(object):
     def encEncKey(self):
         # heh
         a = rsaenc.new(self.key)
-        self._encryptKey = self.lcsStart + \
-            b64encode(a.encrypt(self.encryptKey)).decode()
+        self._encryptKey = self.lcsStart + b64encode(a.encrypt(self.encryptKey)).decode()
 
     def encData(self, data):
         _data = AES.new(self.encryptKey, AES.MODE_CBC,
@@ -281,7 +274,7 @@ class Models(object):
         return bytes(d)
 
     def yVdzCLDwMN(self, d, i):
-        return (255 & self.xnEmbaRWhy(d, i)) << 8 | 255 & self.xnEmbaRWhy(d, i+1)
+        return (255 & self.xnEmbaRWhy(d, i)) << 8 | 255 & self.xnEmbaRWhy(d, i + 1)
 
     def xnEmbaRWhy(self, d, i):
         t = d[i]
@@ -290,6 +283,7 @@ class Models(object):
         return t
 
     def generateDummyProtocol(self, name, params, type):
+        data = []
         if type == 3:
             data = [128, 1, 0, 1] + self.getStringBytes(name) + [0, 0, 0, 0]
         elif type == 4:
@@ -343,7 +337,7 @@ class Models(object):
             if isCompact:
                 pass  # FIXED
             else:
-                data += [1] if _data == True else [0]
+                data += [1] if _data is True else [0]
         elif type == 3:
             if isCompact:
                 data += tcp.writeByte(_data)
@@ -369,7 +363,7 @@ class Models(object):
                 data += tcp.writeMapBegin(_ktype, _vtype, len(_vdata))
             else:
                 data += [_ktype, _vtype] + \
-                    self.getIntBytes(len(_vdata), isCompact=isCompact)
+                        self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _ktype, isCompact)
                 data += self.generateDummyProtocolData(
@@ -382,15 +376,19 @@ class Models(object):
                 data += tcp.writeCollectionBegin(_vtype, len(_vdata))
             else:
                 data += [_vtype] + \
-                    self.getIntBytes(len(_vdata), isCompact=isCompact)
+                        self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _vtype, isCompact)
         else:
-            raise Exception(
-                f"[generateDummyProtocolData] not support type: {type}")
+            raise Exception(f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None, headers: dict = None, access_token: str = None, baseException: dict = None, readWith: str = None, conn: any = None, files: dict = None, expectedRespCode: list = [200], timeout: int = None):
+    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None,
+                                         headers: dict = None, access_token: str = None, baseException: dict = None,
+                                         readWith: str = None, conn: any = None, files: dict = None,
+                                         expectedRespCode: list = None, timeout: int = None):
+        if expectedRespCode is None:
+            expectedRespCode = [200]
         if headers is None:
             headers = self.server.Headers.copy()
         if access_token is None:
@@ -417,7 +415,7 @@ class Models(object):
             res = doLoopReq(conn.post, {
                 "url": self.LINE_GW_HOST_DOMAIN + path,
                 "data": data,
-                "headers": headers, 
+                "headers": headers,
                 "files": files,
                 "timeout": timeout
             })
@@ -439,10 +437,10 @@ class Models(object):
             c = a + b
             _data = bytes(c)
             fix_bytes = False
-            if ((int(self.le) & 4) == 4):
+            if (int(self.le) & 4) == 4:
                 _data = bytes([int(self.le)]) + _data
                 fix_bytes = True
-            if ((int(self.le) & 2) != 2):
+            if (int(self.le) & 2) != 2:
                 data = self.encData(_data)
             else:
                 data = self.encData(_data)
@@ -451,8 +449,8 @@ class Models(object):
             self.log(f"--> Headers: {headers} ({_headers})", True)
             res = doLoopReq(conn.post, {
                 "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
-                "data": data, 
-                "files": files, 
+                "data": data,
+                "files": files,
                 "headers": headers,
                 "timeout": timeout
             })
@@ -526,9 +524,12 @@ class Models(object):
             else:
                 res = res.res
             if type(res) == dict and 'error' in res:
-                if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT", "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE", "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"] or res['error']['message'].startswith('suspended')):
+                resMsg = res['error']['message']
+                logOutList = ["EXPIRED", "REVOKE", "LOG_OUT","AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE",
+                              "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"]
+                if resMsg is not None and (resMsg in logOutList or resMsg.startswith('suspended')):
                     self.is_login = False
-                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                    self.log(f"LOGIN OUT: {resMsg}")
                 elif res['error']['code'] == 119:
                     refreshToken = self.getCacheData(
                         '.refreshToken', self.authToken)
@@ -541,7 +542,7 @@ class Models(object):
                         self.saveCacheData(
                             '.refreshToken', token, refreshToken)
                         return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
-                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                    self.log(f"LOGIN OUT: {resMsg}")
                 raise LineServiceException(res['error'])
             return res
         elif res.status_code in [400, 401, 403]:
@@ -559,14 +560,14 @@ class Models(object):
         self.saveCustomData()
         return self._msgSeq
 
-    def getIntBytes(self, i, l=4, isCompact=False):
+    def getIntBytes(self, i, j=4, isCompact=False):
         i = int(i)
         if isCompact:
             _compact = self.TCompactProtocol(self)
-            a = _compact.makeZigZag(i, 32 if l**2 == 16 else 64)
+            a = _compact.makeZigZag(i, 32 if j ** 2 == 16 else 64)
             b = _compact.writeVarint(a)
             return b
-        if l**2 == 16:
+        if j ** 2 == 16:
             res = struct.pack("!i", i)
         else:
             res = struct.pack("!q", i)
@@ -599,7 +600,6 @@ class Models(object):
 
     def getMagicStringBytes(self, val, rev=False):
         res = []
-        i = 0
         if rev:
             res = binascii.b2a_hex(val)
         else:
@@ -800,9 +800,11 @@ class Models(object):
                         {}, code, reason, parameterMap, a.e)
                 return None
 
-        def _gen(): return DummyThrift()
+        def _gen():
+            return DummyThrift()
 
-        def _get(a): return a.data if isinstance(a, DummyProtocolData) else a
+        def _get(a):
+            return a.data if isinstance(a, DummyProtocolData) else a
 
         def _genFunc(a: DummyProtocolData, b, f):
             def __gen(a: DummyProtocolData, b):
@@ -835,13 +837,16 @@ class Models(object):
                 else:
                     c = a.data
                 return c
+
             c = __cek(a, f)
             setattr(b, f"val_{a.id}", c)
+
         a = _gen()
 
-        def b(c, refs): 
+        def b(c, refs):
             return _genFunc(c, refs, b) if type(c.data) in [
-            list, dict] else setattr(refs, f"val_{c.id}", c.data)
+                list, dict] else setattr(refs, f"val_{c.id}", c.data)
+
         if data.data is not None:
             b(data.data, a)
         if self.checkAndGetValue(a, 'val_0') is not None:
@@ -884,6 +889,7 @@ def thrift2dummy(a):
     else:
         # return a
         raise ValueError(f"不支持 `{type(a)}`: {a}")
+
 
 def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDelay: int = 8):
     currCount += 1

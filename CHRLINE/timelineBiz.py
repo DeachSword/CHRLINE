@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 import requests
 
+
 def loggedIn(func):
     def checkLogin(*args, **kwargs):
         if args[0].can_use_timeline_biz:
             return func(*args, **kwargs)
         else:
             raise Exception("can't use Timeline Biz func")
+
     return checkLogin
 
-class TimelineBiz():
+
+class TimelineBiz:
     can_use_timeline_biz = False
 
     def __init__(self):
@@ -54,8 +57,8 @@ class TimelineBiz():
         url = 'https://timeline.line.biz/api/timeline/v2/bot/create'
         data = {
             "displayName": displayName,
-            "category": 189, 
-            "statusMessage":"台灣台灣台灣灣鴻妳好帥台灣台灣台灣台灣"
+            "category": 189,
+            "statusMessage": "台灣台灣台灣灣鴻妳好帥台灣台灣台灣台灣"
         }
         headers = {
             'referer': 'https://timeline.line.biz/liff/liff-account/information-terms',

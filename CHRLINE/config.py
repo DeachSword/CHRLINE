@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
+
 class Config(object):
     LINE_HOST_DOMAIN                     = 'https://ga2.line.naver.jp'
     LINE_LEGY_HOST_DOMAIN                = 'https://legy-jp.line.naver.jp'
@@ -115,10 +116,11 @@ class Config(object):
     CONSENT_CHANNEL_ID_REGEX = re.compile(r"<input type=\"hidden\" name=\"channelId\" value=\"([^\"]+)\"")
     CONSENT_CSRF_TOKEN_REGEX = re.compile(r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\"")
     
-    LOGIN_V2_SUPPORT = ["DESKTOPWIN"] # only desktop_win?
+    LOGIN_V2_SUPPORT = ["DESKTOPWIN"]  # only desktop_win?
     SYNC_SUPPORT = ["IOS", "IOSIPAD"]
 
     def __init__(self, type="CHROME"):
+        self.APP_NAME = None
         self.DEVICE_TYPE = type
         self.isSecondary = False
         if type == "DESKTOPWIN":

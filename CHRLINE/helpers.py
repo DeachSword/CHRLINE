@@ -76,7 +76,9 @@ class Helpers(object):
             return self.sendLiff(to, messages, False, True, liffId)
         return resp.text
 
-    def tryConsentLiff(self, channelId, on=["P", "CM"], referer=None):
+    def tryConsentLiff(self, channelId, on=None, referer=None):
+        if on is None:
+            on = ["P", "CM"]
         payload = {
             "on": on,
             "off": []
@@ -100,7 +102,11 @@ class Helpers(object):
         print(f"tryConsentLiff failed: {r.status_code}")
         return False
 
-    def tryConsentAuthorize(self, consentUrl, allPermission=["P", "CM"], approvedPermission=["P", "CM"]):
+    def tryConsentAuthorize(self, consentUrl, allPermission=None, approvedPermission=None):
+        if allPermission is None:
+            allPermission = ["P", "CM"]
+        if approvedPermission is None:
+            approvedPermission = ["P", "CM"]
         CHANNEL_ID = None
         CSRF_TOKEN = None
         session = requests.Session()
@@ -235,7 +241,7 @@ class Helpers(object):
             if midType == 5:
                 obsNamespace = 'member'
         else:
-            raise notImplementedError(f'Not support midType: {midType}')
+            raise ValueError(f'Not support midType: {midType}')
         url = self.LINE_OBS_DOMAIN + \
             f'/r/{serviceName}/{obsNamespace}/{objectId}'
         if objectId_video is not None:
@@ -270,7 +276,9 @@ class Helpers(object):
                 setattr(value, str(arg), set)
         return value
 
-    def genQrcodeImageAndPrint(self, url: str, filename: str = None, output_char: list = ['　', '■']):
+    def genQrcodeImageAndPrint(self, url: str, filename: str = None, output_char: list = None):
+        if output_char is None:
+            output_char = ['　', '■']
         if filename is None:
             filename = str(time.time())
         savePath = os.path.join(os.path.dirname(
@@ -284,7 +292,7 @@ class Helpers(object):
         qr.add_data(url)
         qr.make()
         def win_qr_make(x): return print(''.join(
-            [output_char[1]] + [output_char[0] if y == True else output_char[1] for y in x] + [output_char[1]]))
+            [output_char[1]] + [output_char[0] if y is True else output_char[1] for y in x] + [output_char[1]]))
         # 如果你問我問啥要加這段, 我可以告訴你fk u line >:( 你可以看到qr外面有一圈, 這是讓line讀到的必要條件(啊明明就可以不用 line的判定有夠爛)
         fixed_bored = [False for _b in range(len(qr.modules[0]))]
         for qr_module in [fixed_bored] + qr.modules + [fixed_bored]:
@@ -293,7 +301,9 @@ class Helpers(object):
         img.save(savePath)
         return savePath
 
-    def sendMention(self, to, text="", mids=[], prefix=True):
+    def sendMention(self, to, text="", mids=None, prefix=True):
+        if mids is None:
+            mids = []
         tag = '@chrline'
         str_tag = '@!'
         arr_data = []

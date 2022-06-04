@@ -5,8 +5,8 @@ from .hksc.utility import HookUtility
 from .hksc.database import SqliteDatabase, JsonDatabase
 import threading
 
+
 class HooksTracer(HookTypes, HookUtility):
-    
     HooksType = {
         'Operation': 0,
         'Content': 1,
@@ -34,7 +34,7 @@ class HooksTracer(HookTypes, HookUtility):
     def run(self):
         self.eventFuncs.onReady()
         for _cl in self.accounts:
-            _td = threading.Thread(target=self.runByClient, args=(_cl, ))
+            _td = threading.Thread(target=self.runByClient, args=(_cl,))
             _td.daemon = True
             _td.start()
         self.runByClient(self.cl)
@@ -46,7 +46,7 @@ class HooksTracer(HookTypes, HookUtility):
                 _td.daemon = True
                 _td.start()
 
-    def trace(self, data, type, cl):
+    def trace(self, data, type, cl, *attr):
         if type == self.HooksType['Operation']:
             _a = self.opFuncs
         elif type == self.HooksType['Content']:
@@ -59,13 +59,13 @@ class HooksTracer(HookTypes, HookUtility):
         _c = self.afterFuncs
         for _before in _b:
             if _before.type == type:
-                if _before(self, data, cl):
+                if _before(self, data, cl, *attr):
                     break
         for _func in _a:
-            if _func(self, data, cl):
+            if _func(self, data, cl, *attr):
                 return True
         for _after in _c:
             if _after.type == type:
-                if _after(self, data, cl):
+                if _after(self, data, cl, *attr):
                     break
         return False

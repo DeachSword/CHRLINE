@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-
 import json
-import time
-import base64
 import uuid
 
 
@@ -12,10 +9,11 @@ def loggedIn(func):
             return func(*args, **kwargs)
         else:
             raise Exception("can't use Timeline func")
+
     return checkLogin
 
 
-class Timeline():
+class Timeline:
 
     def __init__(self):
         TIMELINE_CHANNEL_ID = "1341209950"
@@ -28,7 +26,8 @@ class Timeline():
                 'User-Agent': self.server.Headers['User-Agent'],
                 'X-Line-Mid': self.mid,
                 'X-Line-Access': self.authToken,
-                'X-Line-ChannelToken': self.checkAndGetValue(self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID), 'channelAccessToken', 5),
+                'X-Line-ChannelToken': self.checkAndGetValue(
+                    self.approveChannelAndIssueChannelToken(TIMELINE_CHANNEL_ID), 'channelAccessToken', 5),
                 'x-lal': self.LINE_LANGUAGE,
                 "X-LAP": "5",
                 "X-LPV": "1",
@@ -45,7 +44,8 @@ class Timeline():
     """ TIMELINE """
 
     @loggedIn
-    def getSocialProfileDetail(self, mid, withSocialHomeInfo=True, postLimit=10, likeLimit=6, commentLimit=10, storyVersion='v7', timelineVersion='v57', postId=None, updatedTime=None):
+    def getSocialProfileDetail(self, mid, withSocialHomeInfo=True, postLimit=10, likeLimit=6, commentLimit=10,
+                               storyVersion='v7', timelineVersion='v57', postId=None, updatedTime=None):
         params = {
             'homeId': mid,
             'withSocialHomeInfo': withSocialHomeInfo,
@@ -68,7 +68,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getSocialProfileMediaDetail(self, mid: str, withSocialHomeInfo: bool = True, postLimit: int = 10, withStory: bool = True, storyVersion: str = 'v7', timelineVersion: str = 'v57', postId: str = None, updatedTime: int = None):
+    def getSocialProfileMediaDetail(self, mid: str, withSocialHomeInfo: bool = True, postLimit: int = 10,
+                                    withStory: bool = True, storyVersion: str = 'v7', timelineVersion: str = 'v57',
+                                    postId: str = None, updatedTime: int = None):
         params = {
             'homeId': mid,
             'withSocialHomeInfo': withSocialHomeInfo,
@@ -454,7 +456,12 @@ class Timeline():
     """ POST """
 
     @loggedIn
-    def createPost(self, homeId: str, text: str = None, sharedPostId: str = None, textSizeMode: str = "NORMAL", backgroundColor: str = "#FFFFFF", textAnimation: str = "NONE", readPermissionType: str = "ALL", readPermissionGids: list = [], holdingTime: int = None, stickerIds: list = [], stickerPackageIds: list = [], locationLatitudes: list = [], locationLongitudes: list = [], locationNames: list = [], mediaObjectIds: list = [], mediaObjectTypes: list = [], sourceType: str = "TIMELINE"):
+    def createPost(self, homeId: str, text: str = None, sharedPostId: str = None, textSizeMode: str = "NORMAL",
+                   backgroundColor: str = "#FFFFFF", textAnimation: str = "NONE", readPermissionType: str = "ALL",
+                   readPermissionGids: list = None, holdingTime: int = None, stickerIds: list = None,
+                   stickerPackageIds: list = None, locationLatitudes: list = None, locationLongitudes: list = None,
+                   locationNames: list = None, mediaObjectIds: list = None, mediaObjectTypes: list = None,
+                   sourceType: str = "TIMELINE"):
         """
         - readPermissionType:
             ALL,
@@ -473,6 +480,22 @@ class Timeline():
             BOUNCE,
             BLINK;
         """
+        if readPermissionGids is None:
+            readPermissionGids = []
+        if stickerIds is None:
+            stickerIds = []
+        if stickerPackageIds is None:
+            stickerPackageIds = []
+        if locationLatitudes is None:
+            locationLatitudes = []
+        if locationLongitudes is None:
+            locationLongitudes = []
+        if locationNames is None:
+            locationNames = []
+        if mediaObjectIds is None:
+            mediaObjectIds = []
+        if mediaObjectTypes is None:
+            mediaObjectTypes = []
         params = {
             'homeId': homeId,
             'sourceType': sourceType
@@ -628,7 +651,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def createComment(self, mid: str, contentId: str, text: str = "", stickerId: int = None, stickerPackageId: int = None, mediaObjectId: str = None, mediaObjectType: str = "PHOTO", mediaObjectFrom: str = "cmt", sourceType: str = "TIMELINE"):
+    def createComment(self, mid: str, contentId: str, text: str = "", stickerId: int = None,
+                      stickerPackageId: int = None, mediaObjectId: str = None, mediaObjectType: str = "PHOTO",
+                      mediaObjectFrom: str = "cmt", sourceType: str = "TIMELINE"):
         params = {
             'homeId': mid,
             'sourceType': sourceType
@@ -714,7 +739,8 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def createLike(self, mid: str, contentId: str, likeType: str = "1003", sharable: bool = False, sourceType: str = "TIMELINE"):
+    def createLike(self, mid: str, contentId: str, likeType: str = "1003", sharable: bool = False,
+                   sourceType: str = "TIMELINE"):
         params = {
             "sourceType": sourceType
         }
@@ -752,7 +778,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def listLike(self, mid: str, contentId: str, scrollId: str = None, includes: list = ["ALL", "GROUPED", "STATS"], filterType: str = None):
+    def listLike(self, mid: str, contentId: str, scrollId: str = None, includes: list = None, filterType: str = None):
+        if includes is None:
+            includes = ["ALL", "GROUPED", "STATS"]
         params = {
             'homeId': mid,
             'contentId': contentId,
@@ -813,7 +841,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getHashtagPosts(self, query, homeId=None, scrollId=None, range=["GROUP"]):
+    def getHashtagPosts(self, query, homeId=None, scrollId=None, range=None):
+        if range is None:
+            range = ["GROUP"]
         # range: GROUP or unset
         data = {
             "query": query,
@@ -904,7 +934,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getDiscoverRecommendFeeds(self, sourcePostId, contents=["CP", "PI", "PV", "PL", "AD"]):
+    def getDiscoverRecommendFeeds(self, sourcePostId, contents=None):
+        if contents is None:
+            contents = ["CP", "PI", "PV", "PL", "AD"]
         data = {
             "sourcePostId": sourcePostId,
             "contents": contents
@@ -1091,8 +1123,10 @@ class Timeline():
             'x-lhm': 'POST',
             'content-type': "application/json"
         })
-        data = {"content": {"sourceType": "USER", "contentType": "USER", "media": [{"oid": "83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3", "service": "story", "sid": "st",
-                                                                                    "hash": "0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ", "mediaType": "IMAGE"}]}, "shareInfo": {"shareType": "FRIEND"}}
+        data = {"content": {"sourceType": "USER", "contentType": "USER", "media": [
+            {"oid": "83566aef3fa5da29e0cd4bd31b3d33b122d46025t0d7431a3", "service": "story", "sid": "st",
+             "hash": "0hK6iOniFhFBlUNgJGU9JrTnp0D3c6Tk0NLU5SfXUxTXktUVEYOFQOL3I-HigrU1YcPVJbLHNjSCsqBlBMPVVcfnIyDygsAFZNaABZ",
+             "mediaType": "IMAGE"}]}, "shareInfo": {"shareType": "FRIEND"}}
         data = {
             "content": {
                 "sourceType": "USER",
@@ -1152,7 +1186,9 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getNewStory(self, newStoryTypes=["GUIDE"], lastTimelineVisitTime=0):
+    def getNewStory(self, newStoryTypes=None, lastTimelineVisitTime=0):
+        if newStoryTypes is None:
+            newStoryTypes = ["GUIDE"]
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': 'POST',
             'content-type': "application/json"
@@ -1383,13 +1419,14 @@ class Timeline():
     """ GroupCall YotTube """
 
     @loggedIn
-    def getYouTubeVideos(
-            self, videoIds):
+    def getYouTubeVideos(self, videoIds: list):
         params = {}
         data = {
             "id": ",".join(videoIds),
             "part": "snippet,contentDetails,id,liveStreamingDetails,status,statistics",
-            "fields": "items(snippet(publishedAt,title,thumbnails(default,high,medium),channelTitle,liveBroadcastContent),contentDetails(duration,contentRating),id,liveStreamingDetails(concurrentViewers,scheduledStartTime),status(embeddable),statistics(viewCount, commentCount))"
+            "fields": "items(snippet(publishedAt,title,thumbnails(default,high,medium),channelTitle,"
+                      "liveBroadcastContent),contentDetails(duration,contentRating),id,liveStreamingDetails("
+                      "concurrentViewers,scheduledStartTime),status(embeddable),statistics(viewCount, commentCount)) "
         }
         hr = self.server.additionalHeaders(self.server.timelineHeaders, {
             'x-lhm': "POST",
@@ -1409,8 +1446,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getYouTubeVideosWithQuery(
-            self, query="bao", pageToken=None):
+    def getYouTubeVideosWithQuery(self, query="bao", pageToken=None):
         params = {}
         data = {
             "q": query,
@@ -1441,8 +1477,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getYouTubeVideosWithPopular(
-            self, pageToken=None):
+    def getYouTubeVideosWithPopular(self, pageToken=None):
         params = {}
         data = {
             "chart": "mostPopular",
@@ -1471,8 +1506,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getYouTubeVideosWithPlaylists(
-            self, ids, pageToken=None):
+    def getYouTubeVideosWithPlaylists(self, ids, pageToken=None):
         params = {}
         data = {
             "id": ",".join(ids),
@@ -1503,9 +1537,7 @@ class Timeline():
     """ Share List Service """
 
     @loggedIn
-    def createShareList(
-            self, ownerMid: str, members: list):
-        params = {}
+    def createShareList(self, ownerMid: str, members: list):
         data = {
             "ownerMid": ownerMid,
             "name": "????",
@@ -1526,9 +1558,7 @@ class Timeline():
     """ BDB """
 
     @loggedIn
-    def incrBDBCelebrate(
-            self, boardId: str, incrCnt: int = 1):
-        params = {}
+    def incrBDBCelebrate(self, boardId: str, incrCnt: int = 1):
         data = {
             "boardId": boardId,
             "from": "POST",
@@ -1547,9 +1577,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def cancelBDBCelebrate(
-            self, boardId: str):
-        params = {}
+    def cancelBDBCelebrate(self, boardId: str):
         data = {
             "boardId": boardId,
             "from": "POST",
@@ -1567,9 +1595,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def getBDBBoard(
-            self, boardId: str):
-        params = {}
+    def getBDBBoard(self, boardId: str):
         data = {
             "boardId": boardId,
         }
@@ -1586,9 +1612,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def likeBDBCard(
-            self, boardId: str, cardId: str):
-        params = {}
+    def likeBDBCard(self, boardId: str, cardId: str):
         data = {
             "boardId": boardId,
             "cardId": cardId,
@@ -1606,9 +1630,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def unlikeBDBCard(
-            self, boardId: str, cardId: str):
-        params = {}
+    def unlikeBDBCard(self, boardId: str, cardId: str):
         data = {
             "boardId": boardId,
             "cardId": cardId,
@@ -1626,9 +1648,7 @@ class Timeline():
         return r.json()
 
     @loggedIn
-    def createBDBCard(
-            self, boardId: str, celebratorMid: str, text: str, cardStatus: str = "NORMAL"):
-        params = {}
+    def createBDBCard(self, boardId: str, celebratorMid: str, text: str, cardStatus: str = "NORMAL"):
         data = {
             "boardId": boardId,
             "cardStatus": cardStatus,  # NORMAL or HIDDEN
@@ -1651,9 +1671,7 @@ class Timeline():
     """ Avatar Service """
 
     @loggedIn
-    def shareAvatarToTalkById(
-            self, avatar_id: str, toMids: list):
-        params = {}
+    def shareAvatarToTalkById(self, avatar_id: str, toMids: list):
         data = {
             "avatar_id": avatar_id,
             "to": toMids
@@ -1674,9 +1692,7 @@ class Timeline():
     """ Translate Service """
 
     @loggedIn
-    def translate(
-            self, originalText: str, sLang: str = 'auto', tLang: str = 'tw'):
-        params = {}
+    def translate(self, originalText: str, sLang: str = 'auto', tLang: str = 'tw'):
         data = {
             "originalText": originalText,
             "sLang": sLang,

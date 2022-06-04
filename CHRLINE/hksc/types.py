@@ -21,7 +21,7 @@ class HookTypes(object):
                     message = self.cl.checkAndSetValue(message, 'isE2EE', isE2EE)
                     op = self.cl.checkAndSetValue(op, 'message', 20, message)
                 if opType == type:
-                    func(self, args[0], args[1])
+                    func(self, *args)
                     return True
                 return False
             self.opFuncs.append(__check)
@@ -34,7 +34,7 @@ class HookTypes(object):
                 op = args[0]
                 contentType = self.cl.checkAndGetValue(op, 'contentType', 15)
                 if contentType == type:
-                    func(self, args[0], args[1])
+                    func(self, *args)
                     return True
                 return False
             self.contFuncs.append(__check)
@@ -102,7 +102,7 @@ class HookTypes(object):
                                 if not isUsePrefixes:
                                     return False
                             if text == fname or isInpart and text.startswith(fname):
-                                func(self, args[0], args[1])
+                                func(self, *args)
                                 return True
                     else:
                         raise ValueError(f'wrong content type: {msgType}')
@@ -114,8 +114,8 @@ class HookTypes(object):
         def __wrapper(func):
             func.type = type
             @wraps(func)
-            def __bf(self, *args, **kwargs):
-                func(self, args[0], args[1])
+            def __bf(self, *args):
+                func(self, *args)
                 return True
             self.beforeFuncs.append(__bf)
         return __wrapper
@@ -124,8 +124,8 @@ class HookTypes(object):
         def __wrapper(func):
             func.type = type
             @wraps(func)
-            def __af(self, *args, **kwargs):
-                func(self, args[0], args[1])
+            def __af(self, *args):
+                func(self, *args)
                 return True
             self.afterFuncs.append(__af)
         return __wrapper

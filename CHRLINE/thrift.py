@@ -82,31 +82,31 @@ class Thrift(object):
                 version = sz & self.VERSION_MASK
                 if version != self.VERSION_1:
                     raise Exception(
-                        'Bad version in readMessageBegin: %d' % (sz))
+                        'Bad version in readMessageBegin: %d' % sz)
                 type = sz & self.TYPE_MASK
                 name = self.readBinary()
                 seqid = self.readI32()
             else:
-                raise Exception('Bad version in readMessageBegin: %d' % (sz))
-            return (name, type, seqid)
+                raise Exception('Bad version in readMessageBegin: %d' % sz)
+            return name, type, seqid
 
         def readFieldBegin(self):
             type = self.readByte()
             if type == 0:
-                return (None, type, 0)
+                return None, type, 0
             id = self.readI16()
-            return (None, type, id)
+            return None, type, id
 
         def readMapBegin(self):
             ktype = self.readByte()
             vtype = self.readByte()
             size = self.readI32()
-            return (ktype, vtype, size)
+            return ktype, vtype, size
 
         def readListBegin(self):
             etype = self.readByte()
             size = self.readI32()
-            return (etype, size)
+            return etype, size
 
         def writeByte(self, byte):
             buff = pack("!b", byte)
@@ -376,15 +376,15 @@ class Thrift(object):
             self.__last_pos += offset
             name, offset = self.readBinary(self.data[self.__last_pos:])
             self.__last_pos += offset
-            return (name, type, seqid)
+            return name, type, seqid
 
         def readFieldBegin(self, data):
             offset = 1
             if len(data) == 0:
-                return (None, 0, 0, 0)
+                return None, 0, 0, 0
             type = data[0]
             if type & 0x0f == 0x00:
-                return (None, 0, 0, offset)
+                return None, 0, 0, offset
             delta = type >> 4
             if delta == 0:
                 _fid = self.__readI16(data[offset:], True)
@@ -398,7 +398,7 @@ class Thrift(object):
                 self.__bool_value = True
             elif type == 0x02:
                 self.__bool_value = False
-            return (None, type, fid, offset)
+            return None, type, fid, offset
 
         def readCollectionBegin(self, data):
             size_type = data[0]
@@ -418,7 +418,7 @@ class Thrift(object):
                 return 0, 0, 0, 1  # fixed length
             vtype = types & 0x0f
             ktype = types >> 4
-            return (ktype, vtype, size, len + 1)
+            return ktype, vtype, size, len + 1
 
         def writeCollectionBegin(self, etype, size):
             a = []
@@ -602,7 +602,7 @@ class Thrift(object):
             self._a()                   # 4th init
             self.res = None             # base res
             self.baseException = baseException              # init
-            if baseException is None:                       # 
+            if baseException is None:                       #
                 self.baseException = Thrift.BASE_EXCEPTION  # base
             self.readWith = readWith    # readWith
             if a is not None:           # not None
@@ -649,7 +649,7 @@ class Thrift(object):
                 pass                #
             elif _fid in [1, 2]:                #
                 fid, = self.n(_fid)             # read
-                if fid == 0:                    # 
+                if fid == 0:                    #
                     _type = self.w()            # read data
                     a, d = self.g(_type, fid)   # read data
                 elif fid == 1:                  #
@@ -669,7 +669,7 @@ class Thrift(object):
                     raise Exception(a)                              # raise!
                 else:                                               #
                     raise EOFError(f"fid {fid} not implemented")    # exception!
-            else:                                                           # 
+            else:                                                           #
                 _type = self.w()                                            # read data
                 a, d = self.g(_type)                                        # read data
                 raise EOFError(                                             #
@@ -758,7 +758,7 @@ class Thrift(object):
                     print(f"mid not found: {b}")    # no way
             else:                                           #
                 raise Exception(f"cAN't rEad TyPE: {t}")    # err!
-            if dummyProtocolData is None:                   # 
+            if dummyProtocolData is None:                   #
                 dummyProtocolData = a                       # base
             dummyProtocol.data = DummyProtocolData(         #
                 fid, t, dummyProtocolData, subType)         # good
@@ -784,13 +784,13 @@ class Thrift(object):
                 b = 1 << i          # set &
                 if b > d:           #
                     break           # break
-                elif d & b != 0:    # 
+                elif d & b != 0:    #
                     a.append(i)     # add
                 i += 1              # + 1
             return a                # break
 
         def q(self, d):
-            return (self._d(d >> 4), self._d(d & 15))   # cool
+            return self._d(d >> 4), self._d(d & 15)  # cool
 
         def s(self):
             a = self.b()                                        # read value
@@ -806,7 +806,7 @@ class Thrift(object):
             self.__last_pos = 3                                 # fixed pos
             if len(self.data) == 4:                             #
                 raise Exception(                                #
-                    f"Invalid data: {self.data} (code: 20)")    # raise 
+                    f"Invalid data: {self.data} (code: 20)")    # raise
             a = self.b()                    # first data
             b = self.c(self.__last_pos, a)  # 2nd data!!
             self.__d = list(bytes(a << 1))  # 3rd? no!!!
