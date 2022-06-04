@@ -524,15 +524,12 @@ class Models(object):
             else:
                 res = res.res
             if type(res) == dict and 'error' in res:
-                if res['error']['message'] is not None and (res['error']['message'] in ["EXPIRED", "REVOKE", "LOG_OUT",
-                                                                                        "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE",
-                                                                                        "DEVICE_LOSE",
-                                                                                        "IDENTIFY_MODIFIED",
-                                                                                        "V3_TOKEN_CLIENT_LOGGED_OUT",
-                                                                                        "DELETED_ACCOUNT"] or
-                                                            res['error']['message'].startswith('suspended')):
+                resMsg = res['error']['message']
+                logOutList = ["EXPIRED", "REVOKE", "LOG_OUT","AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE",
+                              "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"]
+                if resMsg is not None and (resMsg in logOutList or resMsg.startswith('suspended')):
                     self.is_login = False
-                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                    self.log(f"LOGIN OUT: {resMsg}")
                 elif res['error']['code'] == 119:
                     refreshToken = self.getCacheData(
                         '.refreshToken', self.authToken)
@@ -545,7 +542,7 @@ class Models(object):
                         self.saveCacheData(
                             '.refreshToken', token, refreshToken)
                         return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
-                    self.log(f"LOGIN OUT: {res['error']['message']}")
+                    self.log(f"LOGIN OUT: {resMsg}")
                 raise LineServiceException(res['error'])
             return res
         elif res.status_code in [400, 401, 403]:
@@ -888,30 +885,7 @@ def thrift2dummy(a):
         if a.id is not None:
             return [a.type, a.id, b]
         return b
-        return [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else (
-            a.subType + [[thrift2dummy(a2) for a2 in a.data]] if a.subType else [thrift2dummy(a2) for a2 in
-                                                                                 a.data]) if a.id is None else [a.type,
-                                                                                                                a.id, [
-                                                                                                                    thrift2dummy(
-                                                                                                                        a2)
-                                                                                                                    for
-                                                                                                                    a2
-                                                                                                                    in
-                                                                                                                    a.data]] if a.type in [
-            12] else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]] if a.type == 13 else [a.type,
-                                                                                                              a.id, [
-                                                                                                                  a.subType[
-                                                                                                                      0],
-                                                                                                                  [
-                                                                                                                      thrift2dummy(
-                                                                                                                          a2) if isinstance(
-                                                                                                                          a2,
-                                                                                                                          DummyProtocolData) and a2.type == 12 else a2.data
-                                                                                                                      for
-                                                                                                                      a2
-                                                                                                                      in
-                                                                                                                      a.data]]] if a.type in [
-            14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+        return [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else (a.subType + [[thrift2dummy(a2) for a2 in a.data]] if a.subType else [thrift2dummy(a2) for a2 in a.data]) if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
     else:
         # return a
         raise ValueError(f"不支持 `{type(a)}`: {a}")
