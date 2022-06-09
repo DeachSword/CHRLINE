@@ -20,8 +20,10 @@ from Crypto.Util.Padding import pad, unpad
 from thrift.transport.TTransport import TMemoryBuffer
 from .exceptions import LineServiceException
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
-from .services.thrift.ap.TCompactProtocol import \
-    TCompactProtocol as testProtocol
+
+from .services.thrift import *
+from .services.thrift.ap.TBinaryProtocol import TBinaryProtocol as testProtocol2
+from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
 
 
 class Models(object):
