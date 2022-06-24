@@ -301,7 +301,7 @@ class Helpers(object):
         img.save(savePath)
         return savePath
 
-    def sendMention(self, to, text="", mids=[] prefix=True):
+    def sendMention(self, to, text="", mids=[], prefix=True):
         if type(mids) != list:
             mids = [mids]
         tag = '@chrline'
