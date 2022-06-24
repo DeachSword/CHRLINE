@@ -301,13 +301,13 @@ class Helpers(object):
         img.save(savePath)
         return savePath
 
-    def sendMention(self, to, text="", mids=None, prefix=True):
-        if mids is None:
-            mids = []
+    def sendMention(self, to, text="", mids=[] prefix=True):
+        if type(mids) != list:
+            mids = [mids]
         tag = '@chrline'
         str_tag = '@!'
         arr_data = []
-        if type(mids) != list or mids == []:
+        if mids == []:
             raise ValueError(f"Invalid mids: {mids}")
         if str_tag not in text:
             message = text if prefix else ""
