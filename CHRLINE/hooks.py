@@ -10,7 +10,8 @@ class HooksTracer(HookTypes, HookUtility):
     HooksType = {
         'Operation': 0,
         'Content': 1,
-        'Command': 2
+        'Command': 2,
+        'SquareEvent': 7
     }
 
     def __init__(self, cl, db=None, prefixes=["!"], accounts=[], db_type=3):
@@ -31,20 +32,31 @@ class HooksTracer(HookTypes, HookUtility):
         self.eventFuncs = HookEvents()
         self.accounts = accounts
 
-    def run(self):
+        # OpenChat
+        self.seFuncs = []
+
+    def run(self, fetchType: int = 0):
         self.eventFuncs.onReady()
         for _cl in self.accounts:
-            _td = threading.Thread(target=self.runByClient, args=(_cl,))
+            _td = threading.Thread(target=self.runByClient, args=(_cl, fetchType))
             _td.daemon = True
             _td.start()
-        self.runByClient(self.cl)
+        self.runByClient(self.cl, fetchType)
 
-    def runByClient(self, cl):
+    def runByClient(self, cl, fetchType: int = 0):
         while cl.is_login:
-            for op in cl._Poll__fetchOps():
-                _td = threading.Thread(target=self.trace, args=(op, self.HooksType['Operation'], cl))
-                _td.daemon = True
-                _td.start()
+            if fetchType == 0:
+                for op in cl._Poll__fetchOps():
+                    _td = threading.Thread(target=self.trace, args=(op, self.HooksType['Operation'], cl))
+                    _td.daemon = True
+                    _td.start()
+            elif fetchType == 2:
+                cl.legyPushers.hook_callback = self.PushCallback
+                cl.legyPushers.initializeConn()
+                cl.legyPushers.InitAndRead()
+                break
+            else:
+                raise ValueError("Invalid fetchType: %d" % fetchType)
 
     def trace(self, data, type, cl, *attr):
         if type == self.HooksType['Operation']:
@@ -53,6 +65,8 @@ class HooksTracer(HookTypes, HookUtility):
             _a = self.contFuncs
         elif type == self.HooksType['Command']:
             _a = self.cmdFuncs
+        elif type == self.HooksType['SquareEvent']:
+            _a = self.seFuncs
         else:
             raise Exception(f"unknow type: {type}")
         _b = self.beforeFuncs
@@ -69,3 +83,9 @@ class HooksTracer(HookTypes, HookUtility):
                 if _after(self, data, cl, *attr):
                     break
         return False
+    
+    def PushCallback(self, cl, serviceType, event):
+        if serviceType == 3:
+            _td = threading.Thread(target=self.trace, args=(event, self.HooksType['SquareEvent'], cl))
+            _td.daemon = True
+            _td.start()

@@ -22,8 +22,9 @@ from .exceptions import LineServiceException
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
 
 from .services.thrift import *
-from .services.thrift.ap.TBinaryProtocol import TBinaryProtocol as testProtocol2
 from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
+
+from .dyher.connManager import ConnManager
 
 
 class Models(object):
@@ -41,6 +42,9 @@ class Models(object):
         self.encEncKey()
         # self.initWithBiz()
         # self.initWithAndroid(4)
+
+        # Init 3rd Models
+        self.legyPushers = ConnManager(self)
 
     def log(self, text, debugOnly=False):
         if debugOnly and not self.isDebug:
