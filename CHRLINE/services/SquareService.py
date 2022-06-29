@@ -347,7 +347,7 @@ class SquareService(object):
                 [15, 2, [10, subscriptionIds]],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('removeSquareSubscriptions', params, 4)
+        sqrd = self.generateDummyProtocol('removeSubscriptions', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getSquareMembers(self):
@@ -697,7 +697,7 @@ class SquareService(object):
                 [15, 2, [10, subscriptions]],
             ]]
         ]
-        sqrd = self.generateDummyProtocol('refreshSquareSubscriptions', params, 4)
+        sqrd = self.generateDummyProtocol('refreshSubscriptions', params, 4)
         return self.postPackDataAndGetUnpackRespData(self.LINE_SQUARE_ENDPOINT, sqrd, 4, encType=0, baseException=SquareService.SQUARE_EXCEPTION)
 
     def getJoinedSquareChats(self):
