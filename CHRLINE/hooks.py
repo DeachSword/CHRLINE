@@ -43,7 +43,7 @@ class HooksTracer(HookTypes, HookUtility):
             _td.start()
         self.runByClient(self.cl, fetchType)
 
-    def runByClient(self, cl, fetchType: int = 0):
+    def runByClient(self, cl, fetchType: int = 0, **kwargs):
         while cl.is_login:
             if fetchType == 0:
                 for op in cl._Poll__fetchOps():
@@ -53,7 +53,8 @@ class HooksTracer(HookTypes, HookUtility):
             elif fetchType == 2:
                 cl.legyPushers.hook_callback = self.PushCallback
                 cl.legyPushers.initializeConn()
-                cl.legyPushers.InitAndRead()
+                cl.legyPushers.InitAndRead(**kwargs)
+                print('legyPushers died')
                 break
             else:
                 raise ValueError("Invalid fetchType: %d" % fetchType)
@@ -85,7 +86,13 @@ class HooksTracer(HookTypes, HookUtility):
         return False
     
     def PushCallback(self, cl, serviceType, event):
+        ht = None
         if serviceType == 3:
-            _td = threading.Thread(target=self.trace, args=(event, self.HooksType['SquareEvent'], cl))
-            _td.daemon = True
-            _td.start()
+            ht = 'SquareEvent'
+        elif serviceType == 5:
+            ht = 'Operation'
+        else:
+            raise ValueError("Invalid serviceType: {serviceType}")
+        _td = threading.Thread(target=self.trace, args=(event, self.HooksType[ht], cl))
+        _td.daemon = True
+        _td.start()

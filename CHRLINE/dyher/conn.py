@@ -59,16 +59,17 @@ class Conn(object):
                     # more response body data received
                     _data = event.data
                     if len(_data):
-                        _dl, = struct.unpack("!h", _data[:2])
+                        _dl, = struct.unpack("!H", _data[:2])
                         _dt = _data[2]
                         _dd = _data[3:(3+_dl)]
                         if _dt == 1:
                             _pingType = _dd[0]
-                            _pingId, = struct.unpack("!h", _dd[1:3])
+                            _pingId, = struct.unpack("!H", _dd[1:3])
                             if _pingType == 2:
                                 self.writeByte(
-                                    bytes([0, 3, 1, 1]) + struct.pack("!h", _pingId)
+                                    bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId)
                                 )
+                                self.manager.OnPingCallback(_pingId)
                         elif _dt == 3:
                             _requestId, = struct.unpack("!H", _dd[0:2])
                             _isFin = (_requestId & 32768) != 0
@@ -84,7 +85,7 @@ class Conn(object):
 
                                 # SEND ACK FOR PUSHES
                                 _PushAck = bytes([1] + [_serviceType]) + struct.pack("!i", _pushId) + b''
-                                _DATA = struct.pack("!h", len(_PushAck)) + bytes([4]) + _PushAck
+                                _DATA = struct.pack("!H", len(_PushAck)) + bytes([4]) + _PushAck
                                 self.conn.send_data(stream_id=1, data=_DATA, end_stream=False)
 
                                 # Callback
