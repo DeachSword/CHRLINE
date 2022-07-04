@@ -1,11 +1,9 @@
-
-from CHRLINE import CHRLINE
 import struct
 
 
 class ConnManager(object):
 
-    def __init__(self, line_client: CHRLINE):
+    def __init__(self, line_client):
         self.line_client = line_client
         self.conns = []
         self.hook_callback = None
