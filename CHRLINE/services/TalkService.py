@@ -20,7 +20,19 @@ class TalkService():
     def sendMessage(self, to: str, text: str, contentType: int = 0, contentMetadata: dict = None, relatedMessageId: str = None, location: dict = None, chunk: list = None):
         if contentMetadata is None:
             contentMetadata = {}
+
         METHOD_NAME = "sendMessage"
+        SERVICE_NAME = "TalkService"
+        RES_TYPE = 5
+        ENDPOINT = "/S5"
+        relatedMessageServiceCode = 1
+
+        if self.getToType(to) == 4:
+            SERVICE_NAME = "SquareService"
+            RES_TYPE = 4
+            ENDPOINT = "/SQ1"
+            relatedMessageServiceCode = 2
+
         message = [
             [11, 2, to],
             [10, 5, 0],  # createdTime
@@ -60,15 +72,30 @@ class TalkService():
                 [8, 22, 3]
             )
             message.append(
-                [8, 24, 1]  # relatedMessageServiceCode; 1 for Talk 2 for Square
+                [8, 24, relatedMessageServiceCode]
             )
         params = [
             [8, 1, self.getCurrReqId()],
             [12, 2, message]
         ]
+        if self.getToType(to) == 4:
+            params = [
+                [12, 1, [
+                    [8, 1, self.getCurrReqId()],
+                    [11, 2, to],
+                    [12, 3, [
+                        [12, 1, message]
+                    ]],
+                ]]
+            ]
+        else:
+            params = [
+                [8, 1, self.getCurrReqId()],
+                [12, 2, message]
+            ]
         sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
         try:
-            return self.postPackDataAndGetUnpackRespData('/S5', sqrd, 5, readWith=f"TalkService.{METHOD_NAME}")
+            return self.postPackDataAndGetUnpackRespData(ENDPOINT, sqrd, RES_TYPE, readWith=f"{SERVICE_NAME}.{METHOD_NAME}")
         except LineServiceException as e:
             if e.code in [82, 99]:
                 return self.sendMessageWithE2EE(to, text, contentType, contentMetadata, relatedMessageId)
