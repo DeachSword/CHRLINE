@@ -406,6 +406,11 @@ class Models(object):
         headers["x-lal"] = self.LINE_LANGUAGE
         if encType is None:
             encType = self.encType
+        
+        # 2022/08/24 PATCH
+        if self.DEVICE_TYPE == 'CHROMEOS':
+            headers['origin'] = 'chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released'
+
         self.log(
             f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
         if encType == 0:
