@@ -361,19 +361,27 @@ class Helpers(object):
             - S: index
             - L: len
             - M: mid
+            - A: ALL
         """
         if mentions is None or len(mentions) == 0:
             return None
         a = []
         for b in mentions:
-            a.append({
-                'S': str(b['S']),
-                'E': str(b['S'] + b['L']),
-                'M': str(b['M']),
-            })
+            c = {}
+            d = False
+            if 'A' in b:
+                d = True
+            c['S'] = str(b['S'])
+            c['E'] = str(b['S'] + b['L'])
+            if d:
+                c['A'] = str(1)
+            else:
+                c['M'] = str(b['M'])
+            a.append(c)
         a = {
             'MENTIONEES': a
         }
         return {
             'MENTION': json.dumps(a)
         }
+    

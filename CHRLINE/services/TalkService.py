@@ -208,6 +208,29 @@ class TalkService():
     def sendCompactE2EEMessage(self, to, text):
         chunks = self.encryptE2EEMessage(to, text, isCompact=True)
         return self.sendCompactMessage(to, None, chunks)
+    
+    def sendSuperEzTagAll(self, to: str, text: str, **kwargs):
+        """ 2022/08/25 """
+        a = [['contentType', 0], ['contentMetadata', {}], ['relatedMessageId', None]]
+        k = kwargs
+        L = 0
+        m = {}
+        r = text
+        S = 0
+        T = 0
+        for ck, cv in a:
+            if ck not in k:
+                k[ck] = cv
+        if '@' not in r:
+            r = f'@CHRLINE-v2.5.0-RC-Will-NOT-Be-Released {r}'
+        S = r.index('@')
+        T = r[S:].index(' ')
+        L = S + (T if T != -1 else 1)
+        m = self.genMentionData([{'S': S, 'L': L, 'A': True}])
+        k['contentMetadata'].update(m)
+        k['to'] = to
+        k['text'] = r
+        return self.sendMessage(**k)
 
     def getEncryptedIdentity(self):
         METHOD_NAME = "getEncryptedIdentity"
