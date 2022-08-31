@@ -22,6 +22,7 @@ from .exceptions import LineServiceException
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
 
 from .services.thrift import *
+from .timeline import Timeline
 from .services.thrift.ap.TBinaryProtocol import TBinaryProtocol as testProtocol2
 from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
 
@@ -86,10 +87,7 @@ class Models(object):
         open(savePath + f"/{fn}", "w").write(newToken)
         self.authToken = newToken
         self.log(f"New Token: {newToken}")
-        self.server.timelineHeaders['X-Line-Access'] = self.authToken
-        # need?
-        self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[
-            5]
+        Timeline.__init__(self)
 
     def getCustomData(self):
         savePath = os.path.join(os.path.dirname(
