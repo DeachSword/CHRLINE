@@ -117,7 +117,7 @@ class Config(object):
     CONSENT_CSRF_TOKEN_REGEX = re.compile(r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\"")
     
     LOGIN_V2_SUPPORT = ["DESKTOPWIN"]  # only desktop_win?
-    SYNC_SUPPORT = ["IOS", "IOSIPAD"]
+    SYNC_SUPPORT = ["IOS", "IOSIPAD","ANDROID"]
 
     def __init__(self, type="CHROME"):
         self.APP_NAME = None
