@@ -517,18 +517,29 @@ class Models(object):
             elif ttype == 0:
                 # RESP
                 return conn_res
-            elif ttype == 3:
-                res = self.TBinaryProtocol(
-                    self, data, baseException=baseException)
-            elif ttype == 4:
-                res = self.TCompactProtocol(
-                    self, data, baseException=baseException)
-            elif ttype == 5:
-                tmore = self.TMoreCompactProtocol(
-                    self, data, baseException=baseException)
-                res = tmore
             else:
-                raise ValueError(f"Unknown ThriftType: {ttype}")
+                # THRIFT
+                try:
+                    if ttype == 3:
+                        res = self.TBinaryProtocol(
+                            self, data, baseException=baseException)
+                    elif ttype == 4:
+                        res = self.TCompactProtocol(
+                            self, data, baseException=baseException)
+                    elif ttype == 5:
+                        tmore = self.TMoreCompactProtocol(
+                            self, data, baseException=baseException)
+                        res = tmore
+                    else:
+                        raise ValueError(f"Unknown ThriftType: {ttype}")
+                except LineServiceException as e:
+                    res = {
+                        'error': {
+                            'code': e.code,
+                            'message': e.message,
+                            'metadata': e.metadata,
+                        }
+                    }
             if self.use_thrift and getattr(res, 'dummyProtocol', None) is not None:
                 res = self.serializeDummyProtocolToThrift(
                     res.dummyProtocol, baseException, readWith)
