@@ -38,6 +38,8 @@ class Timeline:
                 # "X-Line-StoryShare": "true"
             }
             self.can_use_timeline = True
+            if self.APP_TYPE in ["CHROMEOS"]:
+                self.server.timelineHeaders['origin'] = 'chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released'
         except Exception as e:
             self.log(f"can't use Timeline: {e}")
 
