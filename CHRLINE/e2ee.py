@@ -110,7 +110,8 @@ class E2EE:
             E2EEPublicKeys[key], 'keyId', 2) for key in E2EEPublicKeys if key == self.mid][0]
         selfKey = base64.b64decode(
             self.getE2EESelfKeyDataByKeyId(selfKeyId)['privKey'])
-        private_key = bytes(32)  # haha
+        private_key = Curve25519.generatePrivateKey(bytes(32))  # ios patch
+        # you can use bytes(32) for LINE Android & PC ver. but it will failed to decrypt on iOS & ChromeOS
         for key_mid in E2EEPublicKeys:
             members.append(key_mid)
             key = E2EEPublicKeys[key_mid]
