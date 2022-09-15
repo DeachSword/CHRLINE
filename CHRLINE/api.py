@@ -191,8 +191,15 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pincode = b"1314520"
         _secret = self._encryptAESECB(self.getSHA256Sum(
             pincode), base64.b64decode(secretPK))
-        res = self.loginV2(keynm, crypto, _secret,
-                           deviceName=self.SYSTEM_NAME, cert=certificate)
+        try:
+            res = self.loginV2(keynm, crypto, _secret,
+                               deviceName=self.SYSTEM_NAME, cert=certificate)
+        except LineServiceException as e:
+            if e.code == 89:
+                print(
+                    f"can't login: {e.message}, try use LoginZ...")
+                return self.requestEmailLogin(email, pw)
+            raise e
         if self.checkAndGetValue(res, 9, 'val_9') is None:
             verifier = self.checkAndGetValue(res, 3, 'val_3')
             if self.checkAndGetValue(res, 5, 'val_5') == 3:
