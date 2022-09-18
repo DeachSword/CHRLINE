@@ -8,6 +8,7 @@ from .connManager import ConnManager
 
 
 class Conn(object):
+
     def __init__(self, manager: ConnManager):
         self.manager = manager
         self.conn = None
@@ -51,6 +52,9 @@ class Conn(object):
         try:
             response_stream_ended = False
             self.send()
+            is_not_finished = False
+            cache_requestId = -1
+            cache_data = b''
             while not response_stream_ended and self.manager.line_client.is_login:
                 data = self.writer.recv(65536 * 1024)
                 if not data:
@@ -60,81 +64,95 @@ class Conn(object):
                     if isinstance(event, h2.events.DataReceived):
                         # update flow control so the server doesn't starve us
                         self.conn.acknowledge_received_data(
-                            event.flow_controlled_length, event.stream_id
-                        )
+                            event.flow_controlled_length, event.stream_id)
+
+                        # long data received
+                        if is_not_finished:
+                            _isFin = True  # need check again?
+                            cache_data += event.data
+                            self.manager.OnSignOnResponse(
+                                cache_requestId, _isFin, cache_data)
+                            is_not_finished = False
 
                         # more response body data received
                         _data = event.data
-                        if len(_data):
-                            (_dl,) = struct.unpack("!H", _data[:2])
+                        DATA_LEN = len(event.data)
+                        if DATA_LEN:
+                            (_dl, ) = struct.unpack("!H", _data[:2])
                             _dt = _data[2]
-                            _dd = _data[3 : (3 + _dl)]
-                            if _dt == 1:
+                            _dd = _data[3:(3 + _dl)]
+                            if _dt == 0:
+                                # maybe just let me know that this is the end of the long data
+                                pass
+                            elif _dt == 1:
                                 _pingType = _dd[0]
-                                (_pingId,) = struct.unpack("!H", _dd[1:3])
+                                (_pingId, ) = struct.unpack("!H", _dd[1:3])
                                 if _pingType == 2:
                                     self.writeByte(
-                                        bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId)
-                                    )
+                                        bytes([0, 3, 1, 1]) +
+                                        struct.pack("!H", _pingId))
                                     self.manager.OnPingCallback(_pingId)
                                 else:
                                     raise NotImplementedError(
                                         f"ping type not Implemented: {_pingType}"
                                     )
                             elif _dt == 3:
-                                (_requestId,) = struct.unpack("!H", _dd[0:2])
-                                _isFin = (_requestId & 32768) != 0
-                                _requestId &= 32767
+                                (I, ) = struct.unpack("!H", _dd[0:2])
+                                _requestId = I
+                                # Android using 32768, CHRLINE use (32768 / 2)
+                                _isFin = (DATA_LEN & 16383) != 0
                                 _responsePayload = _dd[2:]
-                                self.manager.OnSignOnResponse(
-                                    _requestId, _isFin, _responsePayload
-                                )
+                                if _isFin:
+                                    self.manager.OnSignOnResponse(
+                                        _requestId, _isFin, _responsePayload)
+                                else:
+                                    is_not_finished = True
+                                    cache_requestId = _requestId
+                                    cache_data = _responsePayload
                             elif _dt == 4:
                                 _pushType = _dd[0]
                                 _serviceType = _dd[1]
-                                (_pushId,) = struct.unpack("!i", _dd[2:6])
+                                (_pushId, ) = struct.unpack("!i", _dd[2:6])
                                 if _pushType in [0, 2]:
                                     _pushPayload = _dd[6:]
 
-                                    # SEND ACK FOR PUSHES
-                                    _PushAck = (
-                                        bytes([1] + [_serviceType])
-                                        + struct.pack("!i", _pushId)
-                                        + b""
-                                    )
-                                    _DATA = (
-                                        struct.pack("!H", len(_PushAck))
-                                        + bytes([4])
-                                        + _PushAck
-                                    )
-                                    self.conn.send_data(
-                                        stream_id=1, data=_DATA, end_stream=False
-                                    )
+                                    if _pushType == 2:
+                                        # SEND ACK FOR PUSHES
+                                        _PushAck = (
+                                            bytes([1] + [_serviceType]) +
+                                            struct.pack("!i", _pushId) + b"")
+                                        _DATA = (
+                                            struct.pack("!H", len(_PushAck)) +
+                                            bytes([4]) + _PushAck)
+                                        self.conn.send_data(stream_id=1,
+                                                            data=_DATA,
+                                                            end_stream=False)
 
                                     # Callback
                                     self.manager.OnPushResponse(
-                                        _serviceType, _pushId, _pushPayload
-                                    )
+                                        _serviceType, _pushId, _pushPayload)
                                 else:
                                     raise NotImplementedError(
-                                        f"ack type not Implemented: {_pushType}"
+                                        f"push type not Implemented: {_pushType}"
                                     )
                             else:
                                 raise NotImplementedError(
-                                    f"PUSH type not Implemented: {_dt}"
+                                    f"PUSH not Implemented: type:{_dt}, payloads:{_dd}"
                                 )
                     elif isinstance(event, h2.events.StreamEnded):
                         # response body completed, let's exit the loop
                         response_stream_ended = True
                         break
                     elif isinstance(event, h2.events.StreamReset):
-                        raise RuntimeError("Stream reset: %d" % event.error_code)
+                        raise RuntimeError("Stream reset: %d" %
+                                           event.error_code)
                 # send any pending data to the server
                 self.send()
             self.conn.close_connection()
             self.send()
         except Exception as e:
             self.manager.line_client.log(f"[CONN] task disconnect:{e}")
+            raise e
         self._closed = True
         # close the socket
         self.writer.close()
