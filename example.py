@@ -2,7 +2,7 @@ from CHRLINE import *
 from CHRLINE.hooks import HooksTracer
 
 cl = CHRLINE(useThrift=True)
-#cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")#with IOSIPAD
+#cl = CHRLINE(device="IOSIPAD", version="10.21.3", os_name="iOS", os_ver="11")  #with IOSIPAD
 #cl = CHRLINE("your email", "your password") #with Email
 #cl = CHRLINE(phone="your phone number(0911....)", region="your phone region(TW ,JP, ID..)") #with phone number
 
@@ -23,6 +23,33 @@ class EventHook:
     @tracer.Event
     def onReady():
         print('Ready!')
+
+    @tracer.Event
+    def onInitializePushConn():
+        print('onInitializePushConn!')
+
+
+class SquareEventHook(object):
+
+    @tracer.Before(tracer.HooksType["SquareEvent"])
+    def __before(self, op, cl):
+        pass
+
+    @tracer.SquareEvent(29)
+    def NOTIFICATION_MESSAGE(self, event, cl):
+        payload = cl.checkAndGetValue(event, 'payload', 4)
+        notificationMessage = cl.checkAndGetValue(payload, 'notificationMessage', 30)
+        squareChatMid = cl.checkAndGetValue(notificationMessage, 'squareChatMid', 1)
+        squareMessage = cl.checkAndGetValue(notificationMessage, 'squareMessage', 2)
+        senderDisplayName = cl.checkAndGetValue(notificationMessage, 'senderDisplayName', 3)
+        message = cl.checkAndGetValue(squareMessage, 'message', 1)
+        text = cl.checkAndGetValue(message, 'text', 10)
+        self.trace(message, self.HooksType["Content"], cl)
+
+    @tracer.After(tracer.HooksType["SquareEvent"])
+    def __after(self, op, cl):
+        print(f"{op}")
+        
 
 class OpHook(object):
 
@@ -45,4 +72,14 @@ class NormalCmd(object):
         '''Ping.'''
         cl.replyMessage(msg, "Pong!")
 
-tracer.run()
+    @tracer.Command(ignoreCase=True)
+    def ping(self, msg, cl, toType=[4]):
+        '''Ping for OpenChat.'''
+        cl.replyMessage(msg, "Pong!!!")
+
+tracer.run()  # run for Talk only
+
+# run for Square + Talk (use /PUSH path)
+# tracer.run(2, **{
+    # 'initServices': [3, 5]
+# })
