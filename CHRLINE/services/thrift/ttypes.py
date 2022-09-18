@@ -3343,6 +3343,42 @@ class SyncCategories(object):
     }
 
 
+class MediaMessageFlow(object):
+    V1 = 1
+    V2 = 2
+
+    _VALUES_TO_NAMES = {
+        1: "V1",
+        2: "V2",
+    }
+
+    _NAMES_TO_VALUES = {
+        "V1": 1,
+        "V2": 2,
+    }
+
+
+class SquareMessageState(object):
+    SENT = 1
+    DELETED = 2
+    FORBIDDEN = 3
+    UNSENT = 4
+
+    _VALUES_TO_NAMES = {
+        1: "SENT",
+        2: "DELETED",
+        3: "FORBIDDEN",
+        4: "UNSENT",
+    }
+
+    _NAMES_TO_VALUES = {
+        "SENT": 1,
+        "DELETED": 2,
+        "FORBIDDEN": 3,
+        "UNSENT": 4,
+    }
+
+
 class TalkException(TException):
     """
     Attributes:
@@ -14749,6 +14785,481 @@ class GlobalEvent(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class DetermineMediaMessageFlowResponse(object):
+    """
+    Attributes:
+     - flowMap
+     - cacheTtlMillis
+
+    """
+
+
+    def __init__(self, flowMap=None, cacheTtlMillis=None,):
+        self.flowMap = flowMap
+        self.cacheTtlMillis = cacheTtlMillis
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.MAP:
+                    self.flowMap = {}
+                    (_ktype440, _vtype441, _size439) = iprot.readMapBegin()
+                    for _i443 in range(_size439):
+                        _key444 = iprot.readI32()
+                        _val445 = iprot.readI32()
+                        self.flowMap[_key444] = _val445
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.cacheTtlMillis = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('DetermineMediaMessageFlowResponse')
+        if self.flowMap is not None:
+            oprot.writeFieldBegin('flowMap', TType.MAP, 1)
+            oprot.writeMapBegin(TType.I32, TType.I32, len(self.flowMap))
+            for kiter446, viter447 in self.flowMap.items():
+                oprot.writeI32(kiter446)
+                oprot.writeI32(viter447)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.cacheTtlMillis is not None:
+            oprot.writeFieldBegin('cacheTtlMillis', TType.I64, 2)
+            oprot.writeI64(self.cacheTtlMillis)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class DisasterInfo(object):
+    """
+    Attributes:
+     - disasterId
+     - title
+     - region
+     - disasterDescription
+     - seeMoreUrl
+     - status
+
+    """
+
+
+    def __init__(self, disasterId=None, title=None, region=None, disasterDescription=None, seeMoreUrl=None, status=None,):
+        self.disasterId = disasterId
+        self.title = title
+        self.region = region
+        self.disasterDescription = disasterDescription
+        self.seeMoreUrl = seeMoreUrl
+        self.status = status
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.disasterId = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.title = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.region = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.disasterDescription = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.seeMoreUrl = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.I32:
+                    self.status = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('DisasterInfo')
+        if self.disasterId is not None:
+            oprot.writeFieldBegin('disasterId', TType.STRING, 1)
+            oprot.writeString(self.disasterId.encode('utf-8') if sys.version_info[0] == 2 else self.disasterId)
+            oprot.writeFieldEnd()
+        if self.title is not None:
+            oprot.writeFieldBegin('title', TType.STRING, 2)
+            oprot.writeString(self.title.encode('utf-8') if sys.version_info[0] == 2 else self.title)
+            oprot.writeFieldEnd()
+        if self.region is not None:
+            oprot.writeFieldBegin('region', TType.STRING, 3)
+            oprot.writeString(self.region.encode('utf-8') if sys.version_info[0] == 2 else self.region)
+            oprot.writeFieldEnd()
+        if self.disasterDescription is not None:
+            oprot.writeFieldBegin('disasterDescription', TType.STRING, 4)
+            oprot.writeString(self.disasterDescription.encode('utf-8') if sys.version_info[0] == 2 else self.disasterDescription)
+            oprot.writeFieldEnd()
+        if self.seeMoreUrl is not None:
+            oprot.writeFieldBegin('seeMoreUrl', TType.STRING, 5)
+            oprot.writeString(self.seeMoreUrl.encode('utf-8') if sys.version_info[0] == 2 else self.seeMoreUrl)
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.I32, 7)
+            oprot.writeI32(self.status)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetDisasterCasesRequest(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetDisasterCasesRequest')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetDisasterCasesResponse(object):
+    """
+    Attributes:
+     - disasters
+     - messageTemplate
+     - ttlInMillis
+
+    """
+
+
+    def __init__(self, disasters=None, messageTemplate=None, ttlInMillis=None,):
+        self.disasters = disasters
+        self.messageTemplate = messageTemplate
+        self.ttlInMillis = ttlInMillis
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.disasters = []
+                    (_etype451, _size448) = iprot.readListBegin()
+                    for _i452 in range(_size448):
+                        _elem453 = DisasterInfo()
+                        _elem453.read(iprot)
+                        self.disasters.append(_elem453)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.messageTemplate = []
+                    (_etype457, _size454) = iprot.readListBegin()
+                    for _i458 in range(_size454):
+                        _elem459 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.messageTemplate.append(_elem459)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I64:
+                    self.ttlInMillis = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetDisasterCasesResponse')
+        if self.disasters is not None:
+            oprot.writeFieldBegin('disasters', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.disasters))
+            for iter460 in self.disasters:
+                iter460.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.messageTemplate is not None:
+            oprot.writeFieldBegin('messageTemplate', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.messageTemplate))
+            for iter461 in self.messageTemplate:
+                oprot.writeString(iter461.encode('utf-8') if sys.version_info[0] == 2 else iter461)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.ttlInMillis is not None:
+            oprot.writeFieldBegin('ttlInMillis', TType.I64, 3)
+            oprot.writeI64(self.ttlInMillis)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SquareMessage(object):
+    """
+    Attributes:
+     - message
+     - fromType
+     - squareMessageRevision
+     - state
+
+    """
+
+
+    def __init__(self, message=None, fromType=None, squareMessageRevision=None, state=None,):
+        self.message = message
+        self.fromType = fromType
+        self.squareMessageRevision = squareMessageRevision
+        self.state = state
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.message = Message()
+                    self.message.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.fromType = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.squareMessageRevision = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I32:
+                    self.state = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SquareMessage')
+        if self.message is not None:
+            oprot.writeFieldBegin('message', TType.STRUCT, 1)
+            self.message.write(oprot)
+            oprot.writeFieldEnd()
+        if self.fromType is not None:
+            oprot.writeFieldBegin('fromType', TType.I32, 3)
+            oprot.writeI32(self.fromType)
+            oprot.writeFieldEnd()
+        if self.squareMessageRevision is not None:
+            oprot.writeFieldBegin('squareMessageRevision', TType.I64, 4)
+            oprot.writeI64(self.squareMessageRevision)
+            oprot.writeFieldEnd()
+        if self.state is not None:
+            oprot.writeFieldBegin('state', TType.I32, 5)
+            oprot.writeI32(self.state)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class UnsendMessageResponse(object):
+    """
+    Attributes:
+     - unsentMessage
+
+    """
+
+
+    def __init__(self, unsentMessage=None,):
+        self.unsentMessage = unsentMessage
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.unsentMessage = SquareMessage()
+                    self.unsentMessage.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('UnsendMessageResponse')
+        if self.unsentMessage is not None:
+            oprot.writeFieldBegin('unsentMessage', TType.STRUCT, 1)
+            self.unsentMessage.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(TalkException)
 TalkException.thrift_spec = (
     None,  # 0
@@ -15837,6 +16348,47 @@ GlobalEvent.thrift_spec = (
     (3, TType.I32, 'maxDelayInMinutes', None, None, ),  # 3
     (4, TType.I64, 'createTimeMillis', None, None, ),  # 4
     (5, TType.BOOL, 'maxDelayHardLimit', None, None, ),  # 5
+)
+all_structs.append(DetermineMediaMessageFlowResponse)
+DetermineMediaMessageFlowResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.MAP, 'flowMap', (TType.I32, None, TType.I32, None, False), None, ),  # 1
+    (2, TType.I64, 'cacheTtlMillis', None, None, ),  # 2
+)
+all_structs.append(DisasterInfo)
+DisasterInfo.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'disasterId', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'title', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'region', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'disasterDescription', 'UTF8', None, ),  # 4
+    (5, TType.STRING, 'seeMoreUrl', 'UTF8', None, ),  # 5
+    None,  # 6
+    (7, TType.I32, 'status', None, None, ),  # 7
+)
+all_structs.append(GetDisasterCasesRequest)
+GetDisasterCasesRequest.thrift_spec = (
+)
+all_structs.append(GetDisasterCasesResponse)
+GetDisasterCasesResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'disasters', (TType.STRUCT, [DisasterInfo, None], False), None, ),  # 1
+    (2, TType.LIST, 'messageTemplate', (TType.STRING, 'UTF8', False), None, ),  # 2
+    (3, TType.I64, 'ttlInMillis', None, None, ),  # 3
+)
+all_structs.append(SquareMessage)
+SquareMessage.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'message', [Message, None], None, ),  # 1
+    None,  # 2
+    (3, TType.I32, 'fromType', None, None, ),  # 3
+    (4, TType.I64, 'squareMessageRevision', None, None, ),  # 4
+    (5, TType.I32, 'state', None, None, ),  # 5
+)
+all_structs.append(UnsendMessageResponse)
+UnsendMessageResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'unsentMessage', [SquareMessage, None], None, ),  # 1
 )
 fix_spec(all_structs)
 del all_structs
