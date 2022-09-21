@@ -5,7 +5,6 @@ from ..client import CHRLINE
 
 
 class ConnManager(object):
-
     def __init__(self, line_client: CHRLINE):
         self.line_client = line_client
         self.conns = []
@@ -29,10 +28,8 @@ class ConnManager(object):
         _conn = Conn(self)
         self.conns.append(_conn)
         tosend_headers = {
-            "x-line-application":
-            self.line_client.server.Headers["x-line-application"],
-            "x-line-access":
-            self.line_client.authToken,
+            "x-line-application": self.line_client.server.Headers["x-line-application"],
+            "x-line-access": self.line_client.authToken,
         }
         _conn.new("gw.line.naver.jp", 443, "/PUSH/1/subs?m=20", tosend_headers)
         return _conn
@@ -44,25 +41,31 @@ class ConnManager(object):
         _conn = self.conns[0]
         _conn.wirteRequest(0, bytes([0, 0, self._pingInterval]))
         self.line_client.log(
-            f"[PUSH] send status frame. flag:0, pi:{self._pingInterval}")
+            f"[PUSH] send status frame. flag:0, pi:{self._pingInterval}"
+        )
         for service in initServices:
             self.line_client.log(f"[PUSH] Init service: {service}")
             ex_val = {}
             if service == 3:
+                subscriptionId = int(time.time() * 1000)
+                syncToken = ""
                 ex_val = {
-                    "subscriptionId": int(time.time() * 1000),
-                    "syncToken": "",
+                    "subscriptionId": subscriptionId,
+                    "syncToken": syncToken,
                 }
+                self.line_client.log(
+                    f"[SQ_FETCHER][SQ] request fetchMyEvent({subscriptionId}), syncToken:{syncToken}"
+                )
             payload, _ = self.buildSignOnRequest(service, **ex_val)
             _conn.wirteRequest(2, payload)
+        self.line_client.log(f"[PUSH] CONN start read push.")
         _conn.read()
         self.line_client.log(f"[PUSH] CONN died on PingId={self.curr_ping_id}")
         self.conns.remove(_conn)
 
-    def SendAndReadSignOnRequest(self,
-                                 serviceType,
-                                 waitAndReadResp: bool = False,
-                                 **kwargs):
+    def SendAndReadSignOnRequest(
+        self, serviceType, waitAndReadResp: bool = False, **kwargs
+    ):
         """Test send request and read response."""
         if not self.conns:
             raise ValueError("No valid connections found.")
@@ -75,7 +78,7 @@ class ConnManager(object):
             pusher = ConnManager(self.line_client)
             pusher.initializeConn()
             # use thread for send pings
-            _td = threading.Thread(target=pusher.InitAndRead, args=([], ))
+            _td = threading.Thread(target=pusher.InitAndRead, args=([],))
             _td.daemon = True
             _td.start()
             _conn = pusher.conns[0]
@@ -138,18 +141,17 @@ class ConnManager(object):
     def buildFetchMyEventsRequest(self, subscriptionId, syncToken):
         """Build request for fetchMyEvents."""
         cl = self.line_client
-        params = [[
-            12,
-            1,
+        params = [
             [
-                [10, 1, subscriptionId],
-                [11, 2, syncToken],
-                [8, 3, 100],
-            ],
-        ]]
-        self.line_client.log(
-            f"[SQ_FETCHER][SQ] request fetchMyEvent({subscriptionId}), syncToken:{syncToken}"
-        )
+                12,
+                1,
+                [
+                    [10, 1, subscriptionId],
+                    [11, 2, syncToken],
+                    [8, 3, 100],
+                ],
+            ]
+        ]
         return bytes(cl.generateDummyProtocol("fetchMyEvents", params, 4))
 
     def buildFetchOpsRequest(self, revision: int = -1):
@@ -172,12 +174,13 @@ class ConnManager(object):
             callback = self.SignOnRequests[reqId][2]
             cl = self.line_client
             self.line_client.log(
-                f'[PUSH] receives sign-on-response frame. requestId:{reqId}, service:{serviceType}, isFin:{isFin}, payload:{data.hex()}'
+                f"[PUSH] receives sign-on-response frame. requestId:{reqId}, service:{serviceType}, isFin:{isFin}, payload:{data.hex()}",
+                True,
             )
             if serviceType == 3:
                 data = cl.TCompactProtocol(cl, data)
                 resp = data.res
-                if 'error' in resp:
+                if "error" in resp:
                     self.line_client.log(
                         f"[SQ_FETCHER][SQ] can't use PUSH for OpenChat:{resp['error']}"
                     )
@@ -185,8 +188,7 @@ class ConnManager(object):
                 subscription = cl.checkAndGetValue(resp, "subscription", 1)
                 events = cl.checkAndGetValue(resp, "events", 2)
                 syncToken = cl.checkAndGetValue(resp, "syncToken", 3)
-                subscriptionId = cl.checkAndGetValue(subscription,
-                                                     "subscriptionId", 1)
+                subscriptionId = cl.checkAndGetValue(subscription, "subscriptionId", 1)
                 self.line_client.log(
                     f"[SQ_FETCHER][SQ] response fetchMyEvent({subscriptionId}) events:{len(events)}, syncToken:{syncToken}"
                 )
@@ -203,8 +205,10 @@ class ConnManager(object):
                     data = cl.TMoreCompactProtocol(cl, data)
                     resp = data.res
                     if methodName == "fetchOps":
-                        cl.log(f"[PUSH] recv fetchOps resp")
                         ops = resp
+                        cl.log(
+                            f"[POLLING][PUSH] response fetchOps. operations:{len(ops)}"
+                        )
                         for op in ops:
                             opType = cl.checkAndGetValue(op, "type", 3)
                             param1 = cl.checkAndGetValue(op, "param1", 10)
@@ -212,8 +216,7 @@ class ConnManager(object):
                             if opType == 0:
                                 if param1 is not None:
                                     cl.individualRev = param1.split("\x1e")[0]
-                                    cl.log(f"individualRev: {cl.individualRev}",
-                                        True)
+                                    cl.log(f"individualRev: {cl.individualRev}", True)
                                 if param2 is not None:
                                     cl.globalRev = param2.split("\x1e")[0]
                                     cl.log(f"globalRev: {cl.globalRev}", True)
@@ -264,8 +267,7 @@ class ConnManager(object):
         refreshIds = []
         for subscriptionId in self.subscriptionIds.keys():
             pingId2 = self.subscriptionIds[subscriptionId]
-            if (pingId -
-                    pingId2) * self._pingInterval >= 3600 - self._pingInterval:
+            if (pingId - pingId2) * self._pingInterval >= 3600 - self._pingInterval:
                 self.subscriptionIds[subscriptionId] = pingId
                 refreshIds.append(subscriptionId)
         if refreshIds:

@@ -13,6 +13,9 @@ class Conn(object):
         self.conn = None
         self.writer = None
         self.h2_headers = []
+        self.is_not_finished = False
+        self.cache_data = b""
+        self.notFinPayloads = {}
 
         self._last_send_time = 0
         self._closed = False
@@ -51,9 +54,6 @@ class Conn(object):
         try:
             response_stream_ended = False
             self.send()
-            is_not_finished = False
-            cache_requestId = -1
-            cache_data = b""
             while not response_stream_ended and self.manager.line_client.is_login:
                 data = self.writer.recv(65536 * 1024)
                 if not data:
@@ -67,106 +67,7 @@ class Conn(object):
                         )
 
                         _data = event.data
-                        DATA_LEN = len(event.data)
-
-                        # long data received
-                        if is_not_finished:
-                            _isFin = (DATA_LEN & 16383) != 0
-                            cache_data += _data
-                            self.manager.OnSignOnResponse(
-                                cache_requestId, _isFin, cache_data
-                            )
-                            is_not_finished = not _isFin
-                            self.manager.line_client.log(
-                                f"[PUSH] receives long data. size:{DATA_LEN}, requestId: {cache_requestId}, isFin: {_isFin}"
-                            )
-                            continue
-
-                        # more response body data received
-                        if DATA_LEN:
-                            (_dl,) = struct.unpack("!H", _data[:2])
-                            _dt = _data[2]
-                            _dd = _data[3 : (3 + _dl)]
-                            if _dt == 0:
-                                # maybe just let me know that this is the end of the long data
-                                pass
-                            elif _dt == 1:
-                                _pingType = _dd[0]
-                                (_pingId,) = struct.unpack("!H", _dd[1:3])
-                                self.manager.line_client.log(
-                                    f"[PUSH] receives ping frame. pingId:{_pingId}"
-                                )
-
-                                if _pingType == 2:
-                                    self.writeByte(
-                                        bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId)
-                                    )
-                                    self.manager.line_client.log(
-                                        f"[PUSH] send ping ack. pingId:{_pingId}"
-                                    )
-                                    self.manager.OnPingCallback(_pingId)
-                                else:
-                                    raise NotImplementedError(
-                                        f"ping type not Implemented: {_pingType}"
-                                    )
-                            elif _dt == 3:
-                                (I,) = struct.unpack("!H", _dd[0:2])
-                                _requestId = I & 32767
-                                # Android using 32768, CHRLINE use (32768 / 2)
-                                _isFin = (DATA_LEN & 16383) != 0
-                                _responsePayload = _dd[2:]
-                                if _isFin:
-                                    self.manager.OnSignOnResponse(
-                                        _requestId, _isFin, _responsePayload
-                                    )
-                                else:
-                                    is_not_finished = True
-                                    cache_requestId = _requestId
-                                    cache_data = _responsePayload
-                                    self.manager.line_client.log(
-                                        f"[PUSH] receives long data. size:{DATA_LEN}, requestId: {cache_requestId}, I={I}"
-                                    )
-                            elif _dt == 4:
-                                _pushType = _dd[0]
-                                _serviceType = _dd[1]
-                                (_pushId,) = struct.unpack("!i", _dd[2:6])
-                                self.manager.line_client.log(
-                                    f"[PUSH] receives push frame. service:{_serviceType}"
-                                )
-                                if _pushType in [0, 2]:
-                                    _pushPayload = _dd[6:]
-
-                                    if _pushType == 2:
-                                        # SEND ACK FOR PUSHES
-                                        _PushAck = (
-                                            bytes([1] + [_serviceType])
-                                            + struct.pack("!i", _pushId)
-                                            + b""
-                                        )
-                                        _DATA = (
-                                            struct.pack("!H", len(_PushAck))
-                                            + bytes([4])
-                                            + _PushAck
-                                        )
-                                        self.conn.send_data(
-                                            stream_id=1, data=_DATA, end_stream=False
-                                        )
-                                        self.manager.line_client.log(
-                                            f"[PUSH] send push ack. service:{_serviceType}"
-                                        )
-
-                                    # Callback
-                                    self.manager.OnPushResponse(
-                                        _serviceType, _pushId, _pushPayload
-                                    )
-                                else:
-                                    raise NotImplementedError(
-                                        f"push type not Implemented: {_pushType}"
-                                    )
-                            else:
-                                raise NotImplementedError(
-                                    f"PUSH not Implemented: type:{_dt}, payloads:{_dd[:30]}"
-                                )
+                        self.onDataReceived(_data)
                     elif isinstance(event, h2.events.StreamEnded):
                         # response body completed, let's exit the loop
                         response_stream_ended = True
@@ -189,3 +90,93 @@ class Conn(object):
             if time.time() - self._last_send_time > 0.5:
                 return True
         return False
+
+    def readPacketHeader(self, data):
+        (_dl,) = struct.unpack("!H", data[:2])
+        _dt = data[2]
+        _dd = data[3:]
+        return _dt, _dd, _dl
+
+    def onDataReceived(self, data):
+        # long data received
+        if self.is_not_finished:
+            data = self.cache_data + data
+
+        # more response body data received
+        _dt, _dd, _dl = self.readPacketHeader(data)
+        if _dl > len(_dd):
+            self.is_not_finished = True
+            self.cache_data = data
+            return
+        else:
+            self.is_not_finished = False
+            if len(_dd) > _dl:
+                self.onPacketReceived(_dt, _dd[:_dl])
+                data = _dd[_dl:]
+                self.manager.line_client.log(f"[PUSH] extra data {data.hex()[:50]}...")
+                return self.onDataReceived(data)
+        self.onPacketReceived(_dt, _dd)
+
+    def onPacketReceived(self, _dt, _dd):
+        if _dt == 1:
+            _pingType = _dd[0]
+            (_pingId,) = struct.unpack("!H", _dd[1:3])
+            self.manager.line_client.log(
+                f"[PUSH] receives ping frame. pingId:{_pingId}"
+            )
+
+            if _pingType == 2:
+                self.writeByte(bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId))
+                self.manager.line_client.log(f"[PUSH] send ping ack. pingId:{_pingId}")
+                self.manager.OnPingCallback(_pingId)
+            else:
+                raise NotImplementedError(f"ping type not Implemented: {_pingType}")
+        elif _dt == 3:
+            (I,) = struct.unpack("!H", _dd[0:2])
+            _requestId = I & 32767
+            # Android using 32768, CHRLINE use (32768 / 2)
+            _isFin = (I & 32768) != 0
+            _responsePayload = _dd[2:]
+            if _isFin:
+                if _requestId in self.notFinPayloads:
+                    _responsePayload = (
+                        self.notFinPayloads[_requestId] + _responsePayload
+                    )
+                    del self.notFinPayloads[_requestId]
+                self.manager.OnSignOnResponse(_requestId, _isFin, _responsePayload)
+            else:
+                self.manager.line_client.log(
+                    f"[PUSH] receives long data. requestId: {_requestId}, I={I}"
+                )
+                if _requestId not in self.notFinPayloads:
+                    self.notFinPayloads[_requestId] = b""
+                self.notFinPayloads[_requestId] += _responsePayload
+        elif _dt == 4:
+            _pushType = _dd[0]
+            _serviceType = _dd[1]
+            (_pushId,) = struct.unpack("!i", _dd[2:6])
+            self.manager.line_client.log(
+                f"[PUSH] receives push frame. service:{_serviceType}"
+            )
+            if _pushType in [0, 2]:
+                _pushPayload = _dd[6:]
+
+                if _pushType == 2:
+                    # SEND ACK FOR PUSHES
+                    _PushAck = (
+                        bytes([1] + [_serviceType]) + struct.pack("!i", _pushId) + b""
+                    )
+                    _DATA = struct.pack("!H", len(_PushAck)) + bytes([4]) + _PushAck
+                    self.conn.send_data(stream_id=1, data=_DATA, end_stream=False)
+                    self.manager.line_client.log(
+                        f"[PUSH] send push ack. service:{_serviceType}"
+                    )
+
+                # Callback
+                self.manager.OnPushResponse(_serviceType, _pushId, _pushPayload)
+            else:
+                raise NotImplementedError(f"push type not Implemented: {_pushType}")
+        else:
+            raise NotImplementedError(
+                f"PUSH not Implemented: type:{_dt}, payloads:{_dd[:30]}, len:{len(_dd)}"
+            )
