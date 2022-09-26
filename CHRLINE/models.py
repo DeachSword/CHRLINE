@@ -24,19 +24,17 @@ from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyTh
 from .services.thrift import *
 from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
 
-from .dyher.connManager import ConnManager
-
 
 class Models(object):
-
     def __init__(self):
         self.lcsStart = "0005"
         self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
         self.encryptKey = b"DearSakura+2021/"
-        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
-                         128, 18, 123, 158, 251, 92, 45, 51])
+        self.IV = bytes(
+            [78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51]
+        )
         self.cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.d_cipher = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV)
         self.encEncKey()
@@ -44,6 +42,8 @@ class Models(object):
         # self.initWithAndroid(4)
 
         # Init 3rd Models
+        from .dyher.connManager import ConnManager
+
         self.legyPushers = ConnManager(self)
 
     def log(self, text, debugOnly=False):
@@ -51,27 +51,28 @@ class Models(object):
             return
         print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {text}")
 
-    def genOBSParams(self, newList, returnAs='json', ext='jpg'):
-        oldList = {'name': f'CHRLINE-{int(time.time())}.{ext}', 'ver': '1.0'}
-        if returnAs not in ['json', 'b64', 'default']:
-            raise Exception('Invalid parameter returnAs')
+    def genOBSParams(self, newList, returnAs="json", ext="jpg"):
+        oldList = {"name": f"CHRLINE-{int(time.time())}.{ext}", "ver": "1.0"}
+        if returnAs not in ["json", "b64", "default"]:
+            raise Exception("Invalid parameter returnAs")
         oldList.update(newList)
-        if 'range' in oldList:
-            new_range = 'bytes 0-%s\/%s' % (
-                str(oldList['range'] - 1), str(oldList['range']))
-            oldList.update({'range': new_range})
-        if returnAs == 'json':
+        if "range" in oldList:
+            new_range = "bytes 0-%s\/%s" % (
+                str(oldList["range"] - 1),
+                str(oldList["range"]),
+            )
+            oldList.update({"range": new_range})
+        if returnAs == "json":
             oldList = json.dumps(oldList)
             return oldList
-        elif returnAs == 'b64':
+        elif returnAs == "b64":
             oldList = json.dumps(oldList)
-            return b64encode(oldList.encode('utf-8'))
-        elif returnAs == 'default':
+            return b64encode(oldList.encode("utf-8"))
+        elif returnAs == "default":
             return oldList
 
     def checkNextToken(self, log4NotDebug: bool = True):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.tokens')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".tokens")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.authToken.encode()).hexdigest()
@@ -82,34 +83,29 @@ class Models(object):
         return self.authToken
 
     def handleNextToken(self, newToken):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.tokens')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".tokens")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.authToken.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(newToken)
         self.authToken = newToken
         self.log(f"New Token: {newToken}")
-        self.server.timelineHeaders['X-Line-Access'] = self.authToken
+        self.server.timelineHeaders["X-Line-Access"] = self.authToken
         # need?
-        self.server.timelineHeaders['X-Line-ChannelToken'] = self.issueChannelToken()[
-            5]
+        self.server.timelineHeaders["X-Line-ChannelToken"] = self.issueChannelToken()[5]
 
     def getCustomData(self):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.customDataId.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
-            self.custom_data = json.loads(
-                open(savePath + f"/{fn}", "r").read())
-        self.log(f'Loading Custom Data: {fn}')
+            self.custom_data = json.loads(open(savePath + f"/{fn}", "r").read())
+        self.log(f"Loading Custom Data: {fn}")
         return True
 
     def saveCustomData(self):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = md5(self.customDataId.encode()).hexdigest()
@@ -117,8 +113,7 @@ class Models(object):
         return True
 
     def getSqrCert(self):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = "cert.pem"
@@ -127,8 +122,7 @@ class Models(object):
         return None
 
     def saveSqrCert(self, cert):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = "cert.pem"
@@ -136,8 +130,7 @@ class Models(object):
         return True
 
     def getEmailCert(self, email):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{email}.crt"
@@ -146,8 +139,7 @@ class Models(object):
         return None
 
     def saveEmailCert(self, email, cert):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.data')
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{email}.crt"
@@ -158,7 +150,7 @@ class Models(object):
         if ver == 1:
             self.lcsStart = "0001"
             self.le = "1"
-            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZAAoZNRwIlLUXaUgrgYi8bAYq\nQeFVtXvCNIEm+F4/jAyTU3YoDwmoLaKQ6itGOonykGtwy2k/3BeWefL/q5eUGjVG\nBEa1vBeUNEb4IFU8n9WK3N/GIIPuD6ZiusB+U1FPg/NaEiVX8ldmEQJgmuG1hykk\n2dU3oy7O1M+Kwl1lJQIDAQAB\n-----END PUBLIC KEY-----'
+            self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCZAAoZNRwIlLUXaUgrgYi8bAYq\nQeFVtXvCNIEm+F4/jAyTU3YoDwmoLaKQ6itGOonykGtwy2k/3BeWefL/q5eUGjVG\nBEa1vBeUNEb4IFU8n9WK3N/GIIPuD6ZiusB+U1FPg/NaEiVX8ldmEQJgmuG1hykk\n2dU3oy7O1M+Kwl1lJQIDAQAB\n-----END PUBLIC KEY-----"
         elif ver == 4:
             self.lcsStart = "0004"
             self.le = "7"  # LegyEncHelper.cpp::decryptStream -> legy xle value
@@ -166,14 +158,15 @@ class Models(object):
         elif ver == 6:
             self.lcsStart = "0007"
             self.le = "7"
-            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5ABzJbexh+HH1+RzVTH4\nDFj8b/42vRqUp0NWLIBAgi5+bAgeJYzyVBI7Pk6YkQnd44HPvUvFMF3V3TocRXLP\nZV/NSawgcAh+VrXe3VIlruCOe14qrd/ZMpTRTxtBJ5aRpVhTsnGpZtGggPYnPh4c\n6V/R7Wxymj4SBZ1Ipsa7ZI83z/XIPFXT38qTJN3UAW5YhjQon1eNbwaxALVajuvI\npUE52aIBi05gE/V0HEoOUjfOg1V6RHFbcchTgmcze6Vbye+7kmdsIboDXnNpm/fJ\nuItub+iwLKSWf9OPc/bYpU4YVBxZXzmSCXFMLeCe2i5wJeMg4iG8NpVpwVv2W+Hb\nQQIDAQAB\n-----END PUBLIC KEY-----'
+            self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5ABzJbexh+HH1+RzVTH4\nDFj8b/42vRqUp0NWLIBAgi5+bAgeJYzyVBI7Pk6YkQnd44HPvUvFMF3V3TocRXLP\nZV/NSawgcAh+VrXe3VIlruCOe14qrd/ZMpTRTxtBJ5aRpVhTsnGpZtGggPYnPh4c\n6V/R7Wxymj4SBZ1Ipsa7ZI83z/XIPFXT38qTJN3UAW5YhjQon1eNbwaxALVajuvI\npUE52aIBi05gE/V0HEoOUjfOg1V6RHFbcchTgmcze6Vbye+7kmdsIboDXnNpm/fJ\nuItub+iwLKSWf9OPc/bYpU4YVBxZXzmSCXFMLeCe2i5wJeMg4iG8NpVpwVv2W+Hb\nQQIDAQAB\n-----END PUBLIC KEY-----"
         elif ver == 7:
             self.lcsStart = "0008"
             self.le = "7"
-            self.PUBLIC_KEY = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----'
+            self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsMC6HAYeMq4R59e2yRw6\nW1OWT2t9aepiAp4fbSCXzRj7A29BOAFAvKlzAub4oxN13Nt8dbcB+ICAufyDnN5N\nd3+vXgDxEXZ/sx2/wuFbC3B3evSNKR4hKcs80suRs8aL6EeWi+bAU2oYIc78Bbqh\nNzx0WCzZSJbMBFw1VlsU/HQ/XdiUufopl5QSa0S246XXmwJmmXRO0v7bNvrxaNV0\ncbviGkOvTlBt1+RerIFHMTw3SwLDnCOolTz3CuE5V2OrPZCmC0nlmPRzwUfxoxxs\n/6qFdpZNoORH/s5mQenSyqPkmH8TBOlHJWPH3eN1k6aZIlK5S54mcUb/oNRRq9wD\n1wIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
-        self.IV = bytes([78, 9, 72, 62, 56, 245, 255, 114,
-                         128, 18, 123, 158, 251, 92, 45, 51])
+        self.IV = bytes(
+            [78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51]
+        )
         self.encryptKey = b"DearSakura+2021/"
         self.encEncKey()
 
@@ -208,18 +201,20 @@ class Models(object):
     def encEncKey(self):
         # heh
         a = rsaenc.new(self.key)
-        self._encryptKey = self.lcsStart + b64encode(a.encrypt(self.encryptKey)).decode()
+        self._encryptKey = (
+            self.lcsStart + b64encode(a.encrypt(self.encryptKey)).decode()
+        )
 
     def encData(self, data):
-        _data = AES.new(self.encryptKey, AES.MODE_CBC,
-                        iv=self.IV).encrypt(pad(data, AES.block_size))
+        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).encrypt(
+            pad(data, AES.block_size)
+        )
         debug = []
         return _data
 
     def decData(self, data):
         data = pad(data, AES.block_size)
-        _data = AES.new(self.encryptKey, AES.MODE_CBC,
-                        iv=self.IV).decrypt(data)[:-16]
+        _data = AES.new(self.encryptKey, AES.MODE_CBC, iv=self.IV).decrypt(data)[:-16]
         _data = unpad(_data, AES.block_size)
         i = 1
         data = self.yVdzCLDwMN(_data, i)
@@ -255,7 +250,7 @@ class Models(object):
         while i < n:
             _i = 0
             try:
-                _i = int(t[i:i + 2], 16)
+                _i = int(t[i : i + 2], 16)
             except:
                 _i = 16
             e.append(_i)
@@ -266,8 +261,8 @@ class Models(object):
         r = []
         for o in range(16):
             r.append(92 ^ e[o])
-        n = xxhash.xxh32(b'', seed=0)
-        s = xxhash.xxh32(b'', seed=0)
+        n = xxhash.xxh32(b"", seed=0)
+        s = xxhash.xxh32(b"", seed=0)
         n.update(bytes(r))
         for o in range(16):
             r[o] ^= 106
@@ -297,7 +292,9 @@ class Models(object):
         data += self.generateDummyProtocolField(params, type) + [0]
         return data
 
-    def generateDummyProtocol2(self, params: DummyProtocol, type: int = 3, fixSuccessHeaders: bool = False):
+    def generateDummyProtocol2(
+        self, params: DummyProtocol, type: int = 3, fixSuccessHeaders: bool = False
+    ):
         newParams = []
         d = params.data
         if d is not None:
@@ -326,8 +323,7 @@ class Models(object):
                 isCompact = False
             elif type == 4:
                 if _type == 2:
-                    data += tcp.getFieldHeader(
-                        0x01 if _data else 0x02, _id)
+                    data += tcp.getFieldHeader(0x01 if _data else 0x02, _id)
                     continue
                 data += tcp.getFieldHeader(tcp.CTYPES[_type], _id)
                 isCompact = True
@@ -368,12 +364,12 @@ class Models(object):
             if isCompact:
                 data += tcp.writeMapBegin(_ktype, _vtype, len(_vdata))
             else:
-                data += [_ktype, _vtype] + \
-                        self.getIntBytes(len(_vdata), isCompact=isCompact)
+                data += [_ktype, _vtype] + self.getIntBytes(
+                    len(_vdata), isCompact=isCompact
+                )
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _ktype, isCompact)
-                data += self.generateDummyProtocolData(
-                    _vdata[vd], _vtype, isCompact)
+                data += self.generateDummyProtocolData(_vdata[vd], _vtype, isCompact)
         elif type == 14 or type == 15:
             # [11, targetUserMids]
             _vtype = _data[0]
@@ -381,18 +377,28 @@ class Models(object):
             if isCompact:
                 data += tcp.writeCollectionBegin(_vtype, len(_vdata))
             else:
-                data += [_vtype] + \
-                        self.getIntBytes(len(_vdata), isCompact=isCompact)
+                data += [_vtype] + self.getIntBytes(len(_vdata), isCompact=isCompact)
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _vtype, isCompact)
         else:
             raise Exception(f"[generateDummyProtocolData] not support type: {type}")
         return data
 
-    def postPackDataAndGetUnpackRespData(self, path: str, bdata: bytes, ttype: int = 3, encType: int = None,
-                                         headers: dict = None, access_token: str = None, baseException: dict = None,
-                                         readWith: str = None, conn: any = None, files: dict = None,
-                                         expectedRespCode: list = None, timeout: int = None):
+    def postPackDataAndGetUnpackRespData(
+        self,
+        path: str,
+        bdata: bytes,
+        ttype: int = 3,
+        encType: int = None,
+        headers: dict = None,
+        access_token: str = None,
+        baseException: dict = None,
+        readWith: str = None,
+        conn: any = None,
+        files: dict = None,
+        expectedRespCode: list = None,
+        timeout: int = None,
+    ):
         if expectedRespCode is None:
             expectedRespCode = [200]
         if headers is None:
@@ -406,43 +412,45 @@ class Models(object):
         headers["x-lal"] = self.LINE_LANGUAGE
         if encType is None:
             encType = self.encType
-        
+
         # 2022/08/24 PATCH
-        if self.DEVICE_TYPE == 'CHROMEOS':
-            headers['origin'] = 'chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released'
+        if self.DEVICE_TYPE == "CHROMEOS":
+            headers[
+                "origin"
+            ] = "chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released"
 
         self.log(
-            f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}", True)
+            f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}",
+            True,
+        )
         if encType == 0:
             if conn is None:
                 conn = self.req_h2
             data = bytes(bdata) if isinstance(bdata, list) else bdata
             if "x-le" in headers:
-                del headers['x-le']
-                del headers['x-lcs']
+                del headers["x-le"]
+                del headers["x-lcs"]
             if access_token is not None:
-                headers['X-Line-Access'] = access_token
+                headers["X-Line-Access"] = access_token
             self.log(f"--> Headers: {headers}", True)
-            res = doLoopReq(conn.post, {
-                "url": self.LINE_GW_HOST_DOMAIN + path,
-                "data": data,
-                "headers": headers,
-                "files": files,
-                "timeout": timeout
-            })
+            res = doLoopReq(
+                conn.post,
+                {
+                    "url": self.LINE_GW_HOST_DOMAIN + path,
+                    "data": data,
+                    "headers": headers,
+                    "files": files,
+                    "timeout": timeout,
+                },
+            )
             data = res.content
         elif encType == 1:
             if conn is None:
                 conn = self.req
             if access_token is not None:
-                _headers = {
-                    'x-lt': access_token,
-                    'x-lpqs': path
-                }
+                _headers = {"x-lt": access_token, "x-lpqs": path}
             else:
-                _headers = {
-                    'x-lpqs': path
-                }
+                _headers = {"x-lpqs": path}
             a = self.encHeaders(_headers)
             b = bdata
             c = a + b
@@ -456,15 +464,18 @@ class Models(object):
             else:
                 data = self.encData(_data)
                 data += self.XQqwlHlXKK(self.encryptKey, data)
-            headers['accept-encoding'] = 'gzip, deflate'
+            headers["accept-encoding"] = "gzip, deflate"
             self.log(f"--> Headers: {headers} ({_headers})", True)
-            res = doLoopReq(conn.post, {
-                "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
-                "data": data,
-                "files": files,
-                "headers": headers,
-                "timeout": timeout
-            })
+            res = doLoopReq(
+                conn.post,
+                {
+                    "url": self.LINE_GF_HOST_DOMAIN + self.LINE_ENCRYPTION_ENDPOINT,
+                    "data": data,
+                    "files": files,
+                    "headers": headers,
+                    "timeout": timeout,
+                },
+            )
             if res.content:
                 data = self.decData(res.content)
             else:
@@ -476,18 +487,20 @@ class Models(object):
         self.log(f"<--  {res.status_code}", True)
         self.log(f"{data}", True)
         if res.status_code in expectedRespCode:
-            if res.headers.get('x-lc') is not None and int(res.headers['x-lc']) not in expectedRespCode:
-                raise Exception(
-                    f'Invalid response code: {res.headers["x-lc"]}')
+            if (
+                res.headers.get("x-lc") is not None
+                and int(res.headers["x-lc"]) not in expectedRespCode
+            ):
+                raise Exception(f'Invalid response code: {res.headers["x-lc"]}')
             if encType == 1:
                 respHeaders, data = self.decHeaders(data)
             else:
                 respHeaders = {}
             respHeaders.update(res.headers)
             self.log(f"RespHraders: {respHeaders}", True)
-            if 'x-line-next-access' in respHeaders:
+            if "x-line-next-access" in respHeaders:
                 print(respHeaders)
-                self.handleNextToken(respHeaders['x-line-next-access'])
+                self.handleNextToken(respHeaders["x-line-next-access"])
             conn_res = res
             res = None
             if ttype == -7:
@@ -503,14 +516,10 @@ class Models(object):
                     data = data[_offset:]
                     _ts, _offset = compact.readI32(data, True)
                     data = data[_offset:]
-                    compact.res = {
-                        '_seq': _seq,
-                        'messageId': _msgId,
-                        'time': _ts
-                    }
+                    compact.res = {"_seq": _seq, "messageId": _msgId, "time": _ts}
                     res = compact
                 elif _type == 2:
-                    raise LineServiceException({'code': compact.readI32(data)})
+                    raise LineServiceException({"code": compact.readI32(data)})
             elif ttype == -3:
                 # JSON RAW
                 return json.loads(data)
@@ -522,56 +531,74 @@ class Models(object):
                 try:
                     if ttype == 3:
                         res = self.TBinaryProtocol(
-                            self, data, baseException=baseException)
+                            self, data, baseException=baseException
+                        )
                     elif ttype == 4:
                         res = self.TCompactProtocol(
-                            self, data, baseException=baseException)
+                            self, data, baseException=baseException
+                        )
                     elif ttype == 5:
                         tmore = self.TMoreCompactProtocol(
-                            self, data, baseException=baseException)
+                            self, data, baseException=baseException
+                        )
                         res = tmore
                     else:
                         raise ValueError(f"Unknown ThriftType: {ttype}")
+                    if (
+                        self.use_thrift
+                        and getattr(res, "dummyProtocol", None) is not None
+                    ):
+                        res = self.serializeDummyProtocolToThrift(
+                            res.dummyProtocol, baseException, readWith
+                        )
+                    else:
+                        res = res.res
                 except LineServiceException as e:
                     res = {
-                        'error': {
-                            'code': e.code,
-                            'message': e.message,
-                            'metadata': e.metadata,
+                        "error": {
+                            "code": e.code,
+                            "message": e.message,
+                            "metadata": e.metadata,
                         }
                     }
-            if self.use_thrift and getattr(res, 'dummyProtocol', None) is not None:
-                res = self.serializeDummyProtocolToThrift(
-                    res.dummyProtocol, baseException, readWith)
-            else:
-                res = res.res
-            if type(res) == dict and 'error' in res:
-                resMsg = res['error']['message']
-                logOutList = ["EXPIRED", "REVOKE", "LOG_OUT","AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE",
-                              "DEVICE_LOSE", "IDENTIFY_MODIFIED", "V3_TOKEN_CLIENT_LOGGED_OUT", "DELETED_ACCOUNT"]
-                if resMsg is not None and (resMsg in logOutList or resMsg.startswith('suspended')):
+            if type(res) == dict and "error" in res:
+                # idk why it got int on sometime
+                resMsg = str(res["error"]["message"])
+                logOutList = [
+                    "EXPIRED",
+                    "REVOKE",
+                    "LOG_OUT",
+                    "AUTHENTICATION_DIVESTED_BY_OTHER_DEVICE",
+                    "DEVICE_LOSE",
+                    "IDENTIFY_MODIFIED",
+                    "V3_TOKEN_CLIENT_LOGGED_OUT",
+                    "DELETED_ACCOUNT",
+                ]
+                if resMsg is not None and (
+                    resMsg in logOutList or resMsg.startswith("suspended")
+                ):
                     self.is_login = False
                     self.log(f"LOGIN OUT: {resMsg}")
-                elif res['error']['code'] == 119:
-                    refreshToken = self.getCacheData(
-                        '.refreshToken', self.authToken)
-                    print(f'try to refresh access token... {refreshToken}')
+                elif res["error"]["code"] == 119:
+                    refreshToken = self.getCacheData(".refreshToken", self.authToken)
+                    print(f"try to refresh access token... {refreshToken}")
                     if refreshToken is not None:
                         RATR = self.refreshAccessToken(refreshToken)
-                        token = self.checkAndGetValue(RATR, 'accessToken', 1)
+                        token = self.checkAndGetValue(RATR, "accessToken", 1)
                         # refreshToken = self.checkAndGetValue(RATR, 'refreshToken', 5)
                         self.handleNextToken(token)
-                        self.saveCacheData(
-                            '.refreshToken', token, refreshToken)
-                        return self.postPackDataAndGetUnpackRespData(path, bdata, ttype, encType, headers)
+                        self.saveCacheData(".refreshToken", token, refreshToken)
+                        return self.postPackDataAndGetUnpackRespData(
+                            path, bdata, ttype, encType, headers
+                        )
                     self.log(f"LOGIN OUT: {resMsg}")
-                raise LineServiceException(res['error'])
+                raise LineServiceException(res["error"])
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
         elif res.status_code == 410:
             return None
-        raise Exception(f'Invalid response status code: {res.status_code}')
+        raise Exception(f"Invalid response status code: {res.status_code}")
 
     def getCurrReqId(self):
         self._msgSeq = 0
@@ -586,10 +613,10 @@ class Models(object):
         i = int(i)
         if isCompact:
             _compact = self.TCompactProtocol(self)
-            a = _compact.makeZigZag(i, 32 if j ** 2 == 16 else 64)
+            a = _compact.makeZigZag(i, 32 if j**2 == 16 else 64)
             b = _compact.writeVarint(a)
             return b
-        if j ** 2 == 16:
+        if j**2 == 16:
             res = struct.pack("!i", i)
         else:
             res = struct.pack("!q", i)
@@ -633,7 +660,8 @@ class Models(object):
                     res.append(mgc)
             else:
                 raise ValueError(
-                    f"getMagicStringBytes() expected 32, but got {len(val)}")
+                    f"getMagicStringBytes() expected 32, but got {len(val)}"
+                )
         return res
 
     def createSqrSecret(self, base64Only=False):
@@ -646,26 +674,26 @@ class Models(object):
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
 
     def getE2EESelfKeyData(self, mid):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
+        )
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{mid}.json"
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
-        print(savePath + f"/{fn}")
         keys = self.getE2EEPublicKeys()
         for key in keys:
-            keyId = self.checkAndGetValue(key, 'keyId', 2)
+            keyId = self.checkAndGetValue(key, "keyId", 2)
             _keyData = self.getE2EESelfKeyDataByKeyId(keyId)
             if _keyData is not None:
                 return _keyData
-        raise Exception(
-            'E2EE Key has not been saved, try register or use SQR Login')
+        raise Exception("E2EE Key has not been saved, try register or use SQR Login")
 
     def getE2EESelfKeyDataByKeyId(self, keyId):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
+        )
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"key_{keyId}.json"
@@ -674,18 +702,21 @@ class Models(object):
         return None
 
     def saveE2EESelfKeyData(self, mid, pubK, privK, kI, e2eeVersion):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), '.e2eeKeys')
+        savePath = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
+        )
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{mid}.json"
         fn2 = f"key_{kI}.json"
-        data = json.dumps({
-            "keyId": kI,
-            "privKey": b64encode(privK).decode(),
-            "pubKey": b64encode(pubK).decode(),
-            "e2eeVersion": e2eeVersion,
-        })
+        data = json.dumps(
+            {
+                "keyId": kI,
+                "privKey": b64encode(privK).decode(),
+                "pubKey": b64encode(pubK).decode(),
+                "e2eeVersion": e2eeVersion,
+            }
+        )
         if mid is not None:
             open(savePath + f"/{fn}", "w").write(data)
         open(savePath + f"/{fn2}", "w").write(data)
@@ -698,12 +729,11 @@ class Models(object):
             raise ValueError("Invalid private key.")
         pubK = curve.generatePublicKey(privK)
         EPK = self.registerE2EEPublicKey(1, None, pubK, 0)
-        keyId = self.checkAndGetValue(EPK, 'keyId', 2)
+        keyId = self.checkAndGetValue(EPK, "keyId", 2)
         return self.saveE2EESelfKeyData(self.mid, pubK, privK, keyId, 1)
 
     def getCacheData(self, cT, cN, needHash=True, pathOnly=False):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), cT)
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{cN}"
@@ -716,8 +746,7 @@ class Models(object):
         return None
 
     def saveCacheData(self, cT, cN, cD, needHash=True):
-        savePath = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), cT)
+        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
         if not os.path.exists(savePath):
             os.makedirs(savePath)
         fn = f"{cN}"
@@ -728,21 +757,19 @@ class Models(object):
         return True
 
     def decodeE2EEKeyV1(self, data, secret, mid=None):
-        if 'encryptedKeyChain' in data:
+        if "encryptedKeyChain" in data:
             print("Try to decode E2EE Key")
-            encryptedKeyChain = base64.b64decode(data['encryptedKeyChain'])
+            encryptedKeyChain = base64.b64decode(data["encryptedKeyChain"])
             # hashKeyChain = data['hashKeyChain']
-            keyId = data['keyId']
-            publicKey = base64.b64decode(data['publicKey'])
-            e2eeVersion = data['e2eeVersion']
-            e2eeKey = self.decryptKeyChain(
-                publicKey, secret, encryptedKeyChain)
+            keyId = data["keyId"]
+            publicKey = base64.b64decode(data["publicKey"])
+            e2eeVersion = data["e2eeVersion"]
+            e2eeKey = self.decryptKeyChain(publicKey, secret, encryptedKeyChain)
             print(f"E2EE Priv Key: {e2eeKey[0]}")
             print(f"E2EE Pub Key: {e2eeKey[1]}")
             print(f"keyId: {keyId}")
             print(f"e2eeVersion: {e2eeVersion}")
-            self.saveE2EESelfKeyData(
-                mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
+            self.saveE2EESelfKeyData(mid, e2eeKey[1], e2eeKey[0], keyId, e2eeVersion)
             return {
                 "keyId": keyId,
                 "privKey": e2eeKey[0],
@@ -778,16 +805,15 @@ class Models(object):
             for i in range(vsize):
                 if vtype == 12:
                     _aaa, _bbb = self.tryReadThriftContainerStruct(
-                        data[offset:], get_data_len=True)
+                        data[offset:], get_data_len=True
+                    )
                     _data[fid].append(_aaa)
                     offset += _bbb + 1
         else:
-            print(
-                f"[tryReadThriftContainerStruct]不支援Type: {ftype} => ID: {fid}")
+            print(f"[tryReadThriftContainerStruct]不支援Type: {ftype} => ID: {fid}")
         if nextPos > 0:
             data = data[nextPos:]
-            c = self.tryReadThriftContainerStruct(
-                data, id=fid, get_data_len=True)
+            c = self.tryReadThriftContainerStruct(data, id=fid, get_data_len=True)
             if c[0] is not None:
                 _data.update(c[0])
             nextPos += c[1]
@@ -795,13 +821,15 @@ class Models(object):
             return [_data, nextPos]
         return _data
 
-    def serializeDummyProtocolToThrift(self, data: DummyProtocol, baseException: dict = None, readWith: str = None):
+    def serializeDummyProtocolToThrift(
+        self, data: DummyProtocol, baseException: dict = None, readWith: str = None
+    ):
         if baseException is None:
             baseException = {}
         if readWith is not None:
             new1 = self.generateDummyProtocol2(data, 4, fixSuccessHeaders=True)
             try:
-                a = eval(f'{readWith}_result')
+                a = eval(f"{readWith}_result")
                 a = a()
             except AttributeError:
                 a = None
@@ -812,14 +840,13 @@ class Models(object):
                 f = testProtocol(e)
                 e._buffer = io.BytesIO(new1)
                 a.read(f)
-                if getattr(a, 'success', None) is not None:
+                if getattr(a, "success", None) is not None:
                     return a.success
-                if getattr(a, 'e', None) is not None:
-                    code = getattr(a.e, 'code', None)
-                    reason = getattr(a.e, 'reason', None)
-                    parameterMap = getattr(a.e, 'parameterMap', None)
-                    raise LineServiceException(
-                        {}, code, reason, parameterMap, a.e)
+                if getattr(a, "e", None) is not None:
+                    code = getattr(a.e, "code", None)
+                    reason = getattr(a.e, "reason", None)
+                    parameterMap = getattr(a.e, "parameterMap", None)
+                    raise LineServiceException({}, code, reason, parameterMap, a.e)
                 return None
 
         def _gen():
@@ -866,19 +893,27 @@ class Models(object):
         a = _gen()
 
         def b(c, refs):
-            return _genFunc(c, refs, b) if type(c.data) in [
-                list, dict] else setattr(refs, f"val_{c.id}", c.data)
+            return (
+                _genFunc(c, refs, b)
+                if type(c.data) in [list, dict]
+                else setattr(refs, f"val_{c.id}", c.data)
+            )
 
         if data.data is not None:
             b(data.data, a)
-        if self.checkAndGetValue(a, 'val_0') is not None:
+        if self.checkAndGetValue(a, "val_0") is not None:
             return a.val_0
-        _ecode = baseException.get('code', 1)
-        _emsg = baseException.get('message', 2)
-        _emeta = baseException.get('metadata', 3)
-        if self.checkAndGetValue(a, 'val_1') is not None:
-            raise LineServiceException({}, self.checkAndGetValue(a.val_1, f'val_{_ecode}'), self.checkAndGetValue(
-                a.val_1, f'val_{_emsg}'), self.checkAndGetValue(a.val_1, f'val_{_emeta}'), a.val_1)
+        _ecode = baseException.get("code", 1)
+        _emsg = baseException.get("message", 2)
+        _emeta = baseException.get("metadata", 3)
+        if self.checkAndGetValue(a, "val_1") is not None:
+            raise LineServiceException(
+                {},
+                self.checkAndGetValue(a.val_1, f"val_{_ecode}"),
+                self.checkAndGetValue(a.val_1, f"val_{_emsg}"),
+                self.checkAndGetValue(a.val_1, f"val_{_emeta}"),
+                a.val_1,
+            )
         print(a)
         return None
 
@@ -907,13 +942,43 @@ def thrift2dummy(a):
         if a.id is not None:
             return [a.type, a.id, b]
         return b
-        return [a.type, a.id, a.data] if a.type in [2, 3, 4, 6, 8, 10, 11] else (a.subType + [[thrift2dummy(a2) for a2 in a.data]] if a.subType else [thrift2dummy(a2) for a2 in a.data]) if a.id is None else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]] if a.type in [12] else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]] if a.type == 13 else [a.type, a.id, [a.subType[0], [thrift2dummy(a2) if isinstance(a2, DummyProtocolData) and a2.type == 12 else a2.data for a2 in a.data]]] if a.type in [14, 15] else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+        return (
+            [a.type, a.id, a.data]
+            if a.type in [2, 3, 4, 6, 8, 10, 11]
+            else (
+                a.subType + [[thrift2dummy(a2) for a2 in a.data]]
+                if a.subType
+                else [thrift2dummy(a2) for a2 in a.data]
+            )
+            if a.id is None
+            else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]]
+            if a.type in [12]
+            else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]]
+            if a.type == 13
+            else [
+                a.type,
+                a.id,
+                [
+                    a.subType[0],
+                    [
+                        thrift2dummy(a2)
+                        if isinstance(a2, DummyProtocolData) and a2.type == 12
+                        else a2.data
+                        for a2 in a.data
+                    ],
+                ],
+            ]
+            if a.type in [14, 15]
+            else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
+        )
     else:
         # return a
         raise ValueError(f"不支持 `{type(a)}`: {a}")
 
 
-def doLoopReq(req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDelay: int = 8):
+def doLoopReq(
+    req, data, currCount: int = 0, maxRetryCount: int = 5, retryTimeDelay: int = 8
+):
     currCount += 1
     doRetry = False
     e = None
