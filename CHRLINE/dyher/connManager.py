@@ -204,10 +204,15 @@ class ConnManager(object):
                 try:
                     data = cl.TMoreCompactProtocol(cl, data)
                     resp = data.res
+                    if cl.use_thrift:
+                        resp = cl.serializeDummyProtocolToThrift(
+                            data.dummyProtocol, readWith=f"TalkService.{methodName}")
+                        print(resp)
                     if methodName == "fetchOps":
                         ops = resp
                         cl.log(
-                            f"[POLLING][PUSH] response fetchOps. operations:{len(ops)}"
+                            f"[POLLING][PUSH] response fetchOps. operations:{len(ops)}",
+                            True,
                         )
                         for op in ops:
                             opType = cl.checkAndGetValue(op, "type", 3)
@@ -232,11 +237,10 @@ class ConnManager(object):
                         # Callback resp to ReqId
                         if callback is not None:
                             callback(self, reqId, resp)
-                except:
-                    _conn = self.conns[0]
-                    fetch_req_data = {"revision": cl.revision + 1}
-                    payload, _ = self.buildSignOnRequest(5, **fetch_req_data)
-                    _conn.wirteRequest(2, payload)
+                except Exception as e:
+                    raise Exception(
+                        f"[PUSH] response {methodName} error: {e}"
+                    )
             else:
                 raise ValueError(
                     "[PUSH] receives invalid sign-on-response frame. requestId:{reqId}, service:{serviceType}"
@@ -255,7 +259,8 @@ class ConnManager(object):
             for event in self.line_client._Poll__fetchMyEvents():
                 _type = cl.checkAndGetValue(event, "type", 3)
                 cl.log(
-                    f"[SQ_FETCHER][PUSH] subscriptionId:{subscriptionId}, eventType:{_type}"
+                    f"[SQ_FETCHER][PUSH] subscriptionId:{subscriptionId}, eventType:{_type}",
+                    True,
                 )
                 self.hook_callback(self.line_client, serviceType, event)
         else:
@@ -271,5 +276,5 @@ class ConnManager(object):
                 self.subscriptionIds[subscriptionId] = pingId
                 refreshIds.append(subscriptionId)
         if refreshIds:
-            cl.log(f"refresh subscriptionId: {refreshIds}")
+            cl.log(f"[SQ_FETCHER][PUSH] refresh subscriptionId: {refreshIds}")
             self.line_client.refreshSquareSubscriptions(refreshIds)
