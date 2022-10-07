@@ -262,7 +262,7 @@ class Object(object):
             oType = iter(oTypes)
             res = self.uploadObjTalk(pathOrObjids[0], next(oType), to=to, talkMeta=talkMeta, returnHeaders=True)
         elif mtype == 'objids':
-            res = self.sendObjToTalk(to, pathOrObjids[0], talkMeta=talkMeta, returnHeaders=True)
+            res = self.sendObjHomeToTalk(to, pathOrObjids[0], talkMeta=talkMeta, returnHeaders=True)
 
         gid, msgIds = res['x-line-message-gid'], [res['x-obs-oid']]
 
@@ -276,7 +276,7 @@ class Object(object):
                 if mtype == 'image':
                     res = self.uploadObjTalk(poo, next(oType), to=to, talkMeta=talkMeta, returnHeaders=True)
                 elif mtype == 'objids':
-                    res = self.sendObjToTalk(to, poo, talkMeta=talkMeta, returnHeaders=True)
+                    res = self.sendObjHomeToTalk(to, poo, talkMeta=talkMeta, returnHeaders=True)
                 msgIds.append(res['x-obs-oid'])
                 nc += 1
 
