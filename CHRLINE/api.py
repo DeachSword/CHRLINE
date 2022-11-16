@@ -22,6 +22,7 @@ from .services.AccessTokenRefreshService import AccessTokenRefreshService
 from .services.HomeSafetyCheckService import HomeSafetyCheckService
 from .services.PrimaryQrCodeMigrationLongPollingService import PrimaryQrCodeMigrationLongPollingService
 from .services.PrimaryQrCodeMigrationPreparationService import PrimaryQrCodeMigrationPreparationService
+from .services.LoginService import LoginService
 from .server import Server
 from .exceptions import LineServiceException
 import rsa
@@ -35,7 +36,8 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
           AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService,
           SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService,
           E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService, 
-          PrimaryQrCodeMigrationLongPollingService, PrimaryQrCodeMigrationPreparationService):
+          PrimaryQrCodeMigrationLongPollingService, PrimaryQrCodeMigrationPreparationService,
+          LoginService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
@@ -86,6 +88,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         HomeSafetyCheckService.__init__(self)
         PrimaryQrCodeMigrationLongPollingService.__init__(self)
         PrimaryQrCodeMigrationPreparationService.__init__(self)
+        LoginService.__init__(self)
 
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.checkAndGetValue(self.createPwlessSession(phone), 1, 'val_1')

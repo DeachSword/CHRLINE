@@ -997,6 +997,10 @@ def doLoopReq(
     except httpx.ConnectError as ex:
         doRetry = True
         e = ex
+    except httpx.RemoteProtocolError as ex:
+        currCount -= 1
+        doRetry = True
+        e = ex
     if doRetry:
         if currCount > maxRetryCount:
             raise e

@@ -42,7 +42,7 @@ class HooksTracer(HookTypes, HookUtility):
         self.runByClient(self.cl, fetchType, **kwargs)
 
     def runByClient(self, cl, fetchType: int = 0, **kwargs):
-        IGNORE_ERRORS = ["ConnectionResetError", "socket.gaierror"]
+        IGNORE_ERRORS = ["ConnectionResetError", "gaierror"]
         while cl.is_login:
             if fetchType == 0:
                 for op in cl._Poll__fetchOps():
