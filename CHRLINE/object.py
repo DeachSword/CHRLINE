@@ -12,7 +12,7 @@ class Object(object):
     def __init__(self):
         self.Hraders4Obs = {
             "User-Agent": self.server.Headers["User-Agent"],
-            "X-Line-Access": self.acquireEncryptedAccessToken().split("\x1e")[1],
+            "X-Line-Access": self.authToken,
             "X-Line-Application": self.server.Headers["x-line-application"],
             "X-Line-Mid": self.mid,
             "x-lal": self.LINE_LANGUAGE,
