@@ -6,7 +6,8 @@ import traceback
 class Poll(object):
 
     def __init__(self):
-        pass
+        self.subscriptionId = 0
+        self.eventSyncToken = None
 
     def __fetchOps(self, count=100):
         fetchOps = self.fetchOps
@@ -21,6 +22,17 @@ class Poll(object):
                 self.setRevision(self.checkAndGetValue(op, 'revision', 1))
             yield op
 
+    def __fetchMyEvents(self, count: int = 100, initLastSyncToken: bool = False):
+        resp = self.fetchMyEvents(self.subscriptionId, self.eventSyncToken, count)
+        events = self.checkAndGetValue(resp, 'events', 2)
+        for event in events:
+            syncToken = self.checkAndGetValue(event, 'syncToken', 5)
+            self.setEventSyncToken(syncToken)
+            yield event
+        if initLastSyncToken:
+            syncToken = self.checkAndGetValue(resp, 'syncToken', 3)
+            self.setEventSyncToken(syncToken)
+
     def __execute(self, op, func):
         try:
             func(op, self)
@@ -32,6 +44,15 @@ class Poll(object):
             self.log(f'revision is None!!')
             revision = 0
         self.revision = max(revision, self.revision)
+
+    def setEventSyncToken(self, syncToken):
+        if syncToken is None:
+            self.log(f'syncToken is None!!')
+            syncToken = 0
+        if self.eventSyncToken is None:
+            self.eventSyncToken = syncToken
+        else:
+            self.eventSyncToken = max(int(syncToken), int(self.eventSyncToken))
 
     def trace(self, func, isThreading=True):
         while self.is_login:

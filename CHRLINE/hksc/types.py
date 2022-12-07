@@ -110,6 +110,19 @@ class HookTypes(object):
             self.cmdFuncs.append(__check)
         return __wrapper
 
+    def SquareEvent(self, SquareEventType: int):
+        def __wrapper(func):
+            @wraps(func)
+            def __check(self, *args):
+                event = args[0]
+                _type = self.cl.checkAndGetValue(event, 'type', 3)
+                if _type == SquareEventType:
+                    func(self, *args)
+                    return True
+                return False
+            self.seFuncs.append(__check)
+        return __wrapper
+
     def Before(self, type: int):
         def __wrapper(func):
             func.type = type

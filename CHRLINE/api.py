@@ -20,6 +20,9 @@ from .services.AccountAuthFactorEapConnectService import \
     AccountAuthFactorEapConnectService
 from .services.AccessTokenRefreshService import AccessTokenRefreshService
 from .services.HomeSafetyCheckService import HomeSafetyCheckService
+from .services.PrimaryQrCodeMigrationLongPollingService import PrimaryQrCodeMigrationLongPollingService
+from .services.PrimaryQrCodeMigrationPreparationService import PrimaryQrCodeMigrationPreparationService
+from .services.LoginService import LoginService
 from .server import Server
 from .exceptions import LineServiceException
 import rsa
@@ -32,7 +35,9 @@ import binascii
 class API(TalkService, ShopService, LiffService, ChannelService, SquareService, BuddyService, PrimaryAccountInitService,
           AuthService, SettingsService, AccessTokenRefreshService, CallService, SecondaryPwlessLoginService,
           SecondaryPwlessLoginPermitNoticeService, ChatAppService, AccountAuthFactorEapConnectService,
-          E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService):
+          E2EEKeyBackupService, SquareBotService, TestService, HomeSafetyCheckService, 
+          PrimaryQrCodeMigrationLongPollingService, PrimaryQrCodeMigrationPreparationService,
+          LoginService):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
 
@@ -81,6 +86,9 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         SquareBotService.__init__(self)
         TestService.__init__(self)
         HomeSafetyCheckService.__init__(self)
+        PrimaryQrCodeMigrationLongPollingService.__init__(self)
+        PrimaryQrCodeMigrationPreparationService.__init__(self)
+        LoginService.__init__(self)
 
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.checkAndGetValue(self.createPwlessSession(phone), 1, 'val_1')
@@ -191,8 +199,15 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
         pincode = b"1314520"
         _secret = self._encryptAESECB(self.getSHA256Sum(
             pincode), base64.b64decode(secretPK))
-        res = self.loginV2(keynm, crypto, _secret,
-                           deviceName=self.SYSTEM_NAME, cert=certificate)
+        try:
+            res = self.loginV2(keynm, crypto, _secret,
+                               deviceName=self.SYSTEM_NAME, cert=certificate)
+        except LineServiceException as e:
+            if e.code == 89:
+                print(
+                    f"can't login: {e.message}, try use LoginZ...")
+                return self.requestEmailLogin(email, pw)
+            raise e
         if self.checkAndGetValue(res, 9, 'val_9') is None:
             verifier = self.checkAndGetValue(res, 3, 'val_3')
             if self.checkAndGetValue(res, 5, 'val_5') == 3:

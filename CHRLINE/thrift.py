@@ -134,7 +134,8 @@ class Thrift(object):
                     }
                 }
             else:
-                raise Exception(f"unknown fid: {fid}")
+                error, d = self.z(ftype, fid)
+                raise Exception(f"unknown fid: {fid}, err: {error}, HEX: {self.data.hex()}")
             self.res = data
             self.dummyProtocol = d
 
