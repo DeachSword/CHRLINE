@@ -423,6 +423,10 @@ class Models(object):
             f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}",
             True,
         )
+        self.log(
+            f"--> {bdata}",
+            True,
+        )
         if encType == 0:
             if conn is None:
                 conn = self.req_h2
@@ -995,6 +999,8 @@ def doLoopReq(
         doRetry = True
         e = ex
     except httpx.ConnectError as ex:
+        currCount -= 1
+        retryTimeDelay += 1
         doRetry = True
         e = ex
     except httpx.RemoteProtocolError as ex:

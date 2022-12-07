@@ -18,3 +18,6 @@ class HookEvents(BaseEvent):
 
     def __init__(self):
         pass
+
+    def onInitializePushConn(self):
+        pass

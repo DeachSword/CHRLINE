@@ -53,6 +53,8 @@ class HooksTracer(HookTypes, HookUtility):
                     _td.start()
             elif fetchType == 2:
                 cl.legyPushers.hook_callback = self.PushCallback
+                if cl.DEVICE_TYPE not in ["ANDROID", "IOS", "DESKTOPWIN", "DESKTOPMAC"]:
+                    raise ValueError("device not supported PUSH: {cl.DEVICE_TYPE}")
                 try:
                     cl.legyPushers.conns = []
                     cl.legyPushers.initializeConn()

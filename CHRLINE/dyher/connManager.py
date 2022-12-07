@@ -39,9 +39,10 @@ class ConnManager(object):
         if not self.conns:
             raise ValueError("No valid connections found.")
         _conn = self.conns[0]
-        _conn.wirteRequest(0, bytes([0, 0, self._pingInterval]))
+        FLAG = 0
+        _conn.wirteRequest(0, bytes([0, FLAG, self._pingInterval]))
         self.line_client.log(
-            f"[PUSH] send status frame. flag:0, pi:{self._pingInterval}"
+            f"[PUSH] send status frame. flag:{FLAG}, pi:{self._pingInterval}"
         )
         for service in initServices:
             self.line_client.log(f"[PUSH] Init service: {service}")
@@ -174,7 +175,7 @@ class ConnManager(object):
             callback = self.SignOnRequests[reqId][2]
             cl = self.line_client
             self.line_client.log(
-                f"[PUSH] receives sign-on-response frame. requestId:{reqId}, service:{serviceType}, isFin:{isFin}, payload:{data.hex()}",
+                f"[PUSH] receives sign-on-response frame. requestId:{reqId}, service:{serviceType}, isFin:{isFin}, payload:{data[:20].hex()}",
                 True,
             )
             if serviceType == 3:
@@ -207,7 +208,6 @@ class ConnManager(object):
                     if cl.use_thrift:
                         resp = cl.serializeDummyProtocolToThrift(
                             data.dummyProtocol, readWith=f"TalkService.{methodName}")
-                        print(resp)
                     if methodName == "fetchOps":
                         ops = resp
                         cl.log(
