@@ -237,7 +237,7 @@ class Helpers(object):
                 self.LINE_OBS_DOMAIN
                 + f'/r/{videoCoverObsInfo["serviceName"]}/{videoCoverObsInfo["obsNamespace"]}/{videoCoverObsInfo["objectId"]}'
             )
-        return url, video_url, coverObsInfo["objectId"], videoCoverObsInfo["objectId"]
+        return url, video_url, coverObsInfo["objectId"], video_obj
 
     def getProfilePictureObjIdAndUrl(self, mid: str):
         url = None
