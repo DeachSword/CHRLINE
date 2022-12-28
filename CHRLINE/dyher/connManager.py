@@ -195,7 +195,7 @@ class ConnManager(object):
                 )
                 cl.subscriptionId = subscriptionId
                 if subscriptionId is not None:
-                    self.subscriptionIds[subscriptionId] = self.curr_ping_id
+                    self.subscriptionIds[subscriptionId] = time.time()
                 if not self._eventSynced:
                     cl.setEventSyncToken(syncToken)
                     self.line_client.log(
@@ -243,7 +243,7 @@ class ConnManager(object):
                     )
             else:
                 raise ValueError(
-                    "[PUSH] receives invalid sign-on-response frame. requestId:{reqId}, service:{serviceType}"
+                    f"[PUSH] receives invalid sign-on-response frame. requestId:{reqId}, service:{serviceType}"
                 )
 
     def _OnPushResponse(self, serviceType, pushId, pushPayload):
@@ -264,16 +264,21 @@ class ConnManager(object):
                 )
                 self.hook_callback(self.line_client, serviceType, event)
         else:
-            raise NotImplementedError("Not support type: {serviceType}")
+            raise NotImplementedError(f"Not support type: {serviceType}")
 
     def _OnPingCallback(self, pingId):
         cl = self.line_client
         self.curr_ping_id = pingId
+        
+        # check subscriptionIds need refresh.
+        # LOG:
+        #   - 221227: change use ts.
         refreshIds = []
+        t1 = time.time()
         for subscriptionId in self.subscriptionIds.keys():
-            pingId2 = self.subscriptionIds[subscriptionId]
-            if (pingId - pingId2) * self._pingInterval >= 3600 - self._pingInterval:
-                self.subscriptionIds[subscriptionId] = pingId
+            t2 = self.subscriptionIds[subscriptionId]
+            if (t1 - t2) >= 3600:
+                self.subscriptionIds[subscriptionId] = time.time()
                 refreshIds.append(subscriptionId)
         if refreshIds:
             cl.log(f"[SQ_FETCHER][PUSH] refresh subscriptionId: {refreshIds}")
