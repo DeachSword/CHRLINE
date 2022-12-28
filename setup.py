@@ -1,7 +1,7 @@
 import re, setuptools
 
 with open('CHRLINE/__init__.py') as f:
-    version = re.search(r'__version__\s*=\s*\'(.+?)\'', f.read()).group(1)
+    version = re.search(r'__version__\s*=\s*\"(.+?)\"', f.read()).group(1)
     
 with open("README.md","r", encoding="utf-8") as f:
   long_description = f.read()
