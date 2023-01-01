@@ -268,5 +268,5 @@ class CallService(object):
                 [15, 2, [11, targetMids]]
             ]]
         ]
-        sqrd = self.generateDummyProtocol(METHOD_NAME, params, self.CallService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(self.CallService_API_PATH ,sqrd,  self.CallService_RES_TYPE)
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 3)
+        return self.postPackDataAndGetUnpackRespData(self.LINE_CALL_ENDPOINT, sqrd, 3)
