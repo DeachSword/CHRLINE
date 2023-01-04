@@ -17,13 +17,13 @@ class PrimaryQrCodeMigrationPreparationService(object):
         return self.postPackDataAndGetUnpackRespData(
             self.PQCMPS_API_PATH ,sqrd, self.PQCMPS_RES_TYPE)
         
-    def sendEncryptedE2EEKey(self, sessionId: str, recoveryKey: str):
+    def sendEncryptedE2EEKey(self, sessionId: str, recoveryKey: bytes, backupBlobPayload: bytes):
         params = [
             [12, 1, [
                 [11, 1, sessionId],
                 [12, 2, [
                     [11, 1, recoveryKey],
-                    [11, 2, backupBlobPayload]
+                    [11, 2, backupBlobPayload] 
                 ]]
             ]]
         ]

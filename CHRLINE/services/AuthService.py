@@ -7,7 +7,9 @@ import requests
 class AuthService(object):
 
     def __init__(self):
-        pass
+        self.AuthService_REQ_TYPE = 4
+        self.AuthService_RES_TYPE = 4
+        self.AuthService_API_PATH = self.LINE_AUTH_ENDPOINT_V4
 
     def openAuthSession(self):
         sqrd = [128, 1, 0, 1] + \
@@ -180,8 +182,8 @@ class AuthService(object):
     def logoutZ(self):
         params = []
         sqrd = self.generateDummyProtocol(
-            "logoutZ", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "logoutZ", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def issueTokenForAccountMigration(self):
         """
@@ -190,8 +192,8 @@ class AuthService(object):
         raise Exception("issueTokenForAccountMigration is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "issueTokenForAccountMigration", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "issueTokenForAccountMigration", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def updatePassword(self, authSessionId: str, identityProvider: int, cipherKeyId: str, cipherText: str, metaData: dict = {}):
         confirmationRequest = [
@@ -202,7 +204,6 @@ class AuthService(object):
         params = [
             [11, 2, authSessionId],
             [12, 3, [
-                [13, 1, [11, 11, metaData]],
                 [8, 2, identityProvider],
                 [11, 3, cipherKeyId],
                 [11, 4, cipherText],
@@ -210,8 +211,8 @@ class AuthService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol(
-            "updatePassword", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "updatePassword", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def respondE2EELoginRequest(self, verifier, keyId, keyData, createdTime, encryptedKeyChain, hashKeyChain):
         params = [
@@ -227,14 +228,14 @@ class AuthService(object):
             [8, 5, 95],  # errorCode
         ]
         sqrd = self.generateDummyProtocol(
-            "respondE2EELoginRequest", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "respondE2EELoginRequest", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def logoutV2(self):
         params = []
         sqrd = self.generateDummyProtocol(
-            "logoutV2", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "logoutV2", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def establishE2EESession(self, clientPublicKey: str):
         params = [
@@ -243,8 +244,8 @@ class AuthService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol(
-            "establishE2EESession", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "establishE2EESession", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def releaseLockScreen(self, authSessionId: str, cipherKeyId: str, cipherText: str):
         """
@@ -259,8 +260,8 @@ class AuthService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol(
-            "releaseLockScreen", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "releaseLockScreen", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def normalizePhoneNumber(self):
         """
@@ -269,8 +270,8 @@ class AuthService(object):
         raise Exception("normalizePhoneNumber is not implemented")
         params = []
         sqrd = self.generateDummyProtocol(
-            "normalizePhoneNumber", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "normalizePhoneNumber", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def exchangeKey(self, authSessionId: str, authKeyVersion: int, publicKey: str, nonce: str):
         params = [
@@ -282,8 +283,8 @@ class AuthService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol(
-            "exchangeKey", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "exchangeKey", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def setIdentifierAndPassword(self, authSessionId: str, identityProvider: int, cipherKeyId: str, cipherText: str, metaData: dict = {}):
         confirmationRequest = [
@@ -302,13 +303,13 @@ class AuthService(object):
             ]]
         ]
         sqrd = self.generateDummyProtocol(
-            "setIdentifierAndPassword", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "setIdentifierAndPassword", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
 
     def issueTokenForAccountMigrationSettings(self, enforce: bool):
         params = [
             [2, 2, enforce]
         ]
         sqrd = self.generateDummyProtocol(
-            "issueTokenForAccountMigrationSettings", params, AuthService_REQ_TYPE)
-        return self.postPackDataAndGetUnpackRespData(AuthService_API_PATH, sqrd, AuthService_RES_TYPE)
+            "issueTokenForAccountMigrationSettings", params, self.AuthService_REQ_TYPE)
+        return self.postPackDataAndGetUnpackRespData(self.AuthService_API_PATH, sqrd, self.AuthService_RES_TYPE)
