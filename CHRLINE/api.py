@@ -157,6 +157,7 @@ class API(TalkService, ShopService, LiffService, ChannelService, SquareService, 
                 if not e2ee:
                     raise e
                 return self.requestEmailLogin(email, pw, False)
+            raise e
         if self.checkAndGetValue(res, 1, 'val_1') is None:
             verifier = self.checkAndGetValue(res, 3, 'val_3')
             if not e2ee:

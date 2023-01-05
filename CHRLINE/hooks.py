@@ -42,7 +42,7 @@ class HooksTracer(HookTypes, HookUtility):
         self.runByClient(self.cl, fetchType, **kwargs)
 
     def runByClient(self, cl, fetchType: int = 0, **kwargs):
-        IGNORE_ERRORS = ["ConnectionResetError", "gaierror"]
+        IGNORE_ERRORS = ["ConnectionResetError", "gaierror", "ConnectionError"]
         while cl.is_login:
             if fetchType == 0:
                 for op in cl._Poll__fetchOps():
@@ -54,7 +54,7 @@ class HooksTracer(HookTypes, HookUtility):
             elif fetchType == 2:
                 cl.legyPushers.hook_callback = self.PushCallback
                 if cl.DEVICE_TYPE not in ["ANDROID", "IOS", "DESKTOPWIN", "DESKTOPMAC"]:
-                    raise ValueError("device not supported PUSH: {cl.DEVICE_TYPE}")
+                    raise ValueError(f"device not supported PUSH: {cl.DEVICE_TYPE}")
                 try:
                     cl.legyPushers.conns = []
                     cl.legyPushers.initializeConn()

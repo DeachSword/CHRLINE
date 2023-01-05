@@ -118,16 +118,17 @@ class Object(object):
             obsPath = f"myhome/vc/{objId}"
             oType = "VIDEO"
             filename = f"{objId}.mp4"
-            params = {"cat": "vp.mp4"}
+            params = {}
         try:
             objId, objHash, respHeaders = self.uploadObjectForService(
                 path, oType, obsPath, "1341209850", params, filename=filename
             )
+            print(respHeaders)
         except Exception as e:
             raise Exception(e)
         if is_video:
             _url, _vc_url, _objId, _vc_objId = self.getProfileCoverObjIdAndUrl(self.mid)
-            home = self.updateProfileCoverById(_objId, objId, storyShare=storyShare)
+            home = self.updateProfileCoverById(_objId, f"{objId}/vp", storyShare=storyShare)
         else:
             home = self.updateProfileCoverById(objId, storyShare=storyShare)
         return home
