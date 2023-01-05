@@ -126,17 +126,20 @@ class SquareService(object):
                       syncToken: str = None,
                       continuationToken: str = None,
                       limit: int = 100):
+
+        METHOD_NAME = "fetchMyEvents"
         params = [[
             12, 1,
             [[10, 1, subscriptionId], [11, 2, syncToken], [8, 3, limit],
              [11, 4, continuationToken]]
         ]]
-        sqrd = self.generateDummyProtocol('fetchMyEvents', params, 4)
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
         return self.postPackDataAndGetUnpackRespData(
             self.LINE_SQUARE_ENDPOINT,
             sqrd,
             4,
-            baseException=SquareService.SQUARE_EXCEPTION)
+            baseException=SquareService.SQUARE_EXCEPTION,
+            readWith=f"SquareService.{METHOD_NAME}")
 
     def fetchSquareChatEvents(self,
                               squareChatMid,

@@ -292,7 +292,7 @@ class ShopService(object):
     def getProductsByBillingItemId(self, shopId: str, billingItemIds: list, language: str = 'zh_TW', country: str = 'TW'):
         params = [
             [11, 2, shopId],
-            [15, 3, [11, billingItemIds]]
+            [15, 3, [11, billingItemIds]],
             [12, 4, [
                 [11, 1, language],
                 [11, 2, country],
