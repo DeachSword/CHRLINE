@@ -1,9 +1,5 @@
 from struct import pack, unpack
 import binascii
-
-from thrift.transport.TTransport import TMemoryBuffer
-
-from .services.thrift import ttypes, TalkService
 from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData
 
 
@@ -77,25 +73,24 @@ class Thrift(object):
 
         def readMessageBegin(self):
             sz = self.readI32()
-            data = {}
             if sz < 0:
                 version = sz & self.VERSION_MASK
                 if version != self.VERSION_1:
                     raise Exception(
                         'Bad version in readMessageBegin: %d' % sz)
-                type = sz & self.TYPE_MASK
+                _type = sz & self.TYPE_MASK
                 name = self.readBinary()
                 seqid = self.readI32()
             else:
                 raise Exception('Bad version in readMessageBegin: %d' % sz)
-            return name, type, seqid
+            return name, _type, seqid
 
         def readFieldBegin(self):
-            type = self.readByte()
-            if type == 0:
-                return None, type, 0
-            id = self.readI16()
-            return None, type, id
+            _type = self.readByte()
+            if _type == 0:
+                return None, _type, 0
+            _id = self.readI16()
+            return None, _type, _id
 
         def readMapBegin(self):
             ktype = self.readByte()
@@ -115,7 +110,7 @@ class Thrift(object):
         def x(self):
             if len(self.data) < 4:
                 return None
-            name, type, seqid = self.readMessageBegin()
+            name, _type, seqid = self.readMessageBegin()
             _, ftype, fid = self.readFieldBegin()
             data = None
             d = DummyProtocol()
@@ -197,8 +192,9 @@ class Thrift(object):
                 raise Exception(f"can't not read type {ftype}")
             if dummyProtocolData is None:
                 dummyProtocolData = data
-            dummyProtocol.data = DummyProtocolData(
-                fid, ftype, dummyProtocolData, subType)
+            if dummyProtocolData is not None:
+                dummyProtocol.data = DummyProtocolData(
+                    fid, ftype, dummyProtocolData, subType)
             return data, dummyProtocol
 
     class TCompactProtocol(object):
@@ -269,13 +265,13 @@ class Thrift(object):
                 self.data = data
                 self.x()
 
-        def getFieldHeader(self, type, fid):
+        def getFieldHeader(self, _type, fid):
             delta = fid - self.__last_fid
             res = []
             if 0 < delta <= 15:
-                res.append(delta << 4 | type)
+                res.append(delta << 4 | _type)
             else:
-                res += self.__writeByte(type)
+                res += self.__writeByte(_type)
                 res += self.__writeI16(fid)
             self.__last_fid = fid
             return res
@@ -368,7 +364,7 @@ class Thrift(object):
                 raise Exception(
                     'Bad protocol id in the message: %d' % proto_id)
             ver_type = self.__readUByte(self.y(1))
-            type = (ver_type >> 5) & 7
+            _type = (ver_type >> 5) & 7
             version = ver_type & 15
             if version != 1:
                 raise Exception('Bad version: %d (expect %d)' % (version, 1))
@@ -377,16 +373,16 @@ class Thrift(object):
             self.__last_pos += offset
             name, offset = self.readBinary(self.data[self.__last_pos:])
             self.__last_pos += offset
-            return name, type, seqid
+            return name, _type, seqid
 
         def readFieldBegin(self, data):
             offset = 1
             if len(data) == 0:
                 return None, 0, 0, 0
-            type = data[0]
-            if type & 0x0f == 0x00:
+            _type = data[0]
+            if _type & 0x0f == 0x00:
                 return None, 0, 0, offset
-            delta = type >> 4
+            delta = _type >> 4
             if delta == 0:
                 _fid = self.__readI16(data[offset:], True)
                 fid = _fid[0]
@@ -394,21 +390,21 @@ class Thrift(object):
             else:
                 fid = self.__last_fid + delta
             self.__last_fid = fid
-            type = type & 0x0f
-            if type == 0x01:
+            _type = _type & 0x0f
+            if _type == 0x01:
                 self.__bool_value = True
-            elif type == 0x02:
+            elif _type == 0x02:
                 self.__bool_value = False
-            return None, type, fid, offset
+            return None, _type, fid, offset
 
         def readCollectionBegin(self, data):
             size_type = data[0]
             size = size_type >> 4
-            type = size_type & 0x0f
-            len = 0
+            _type = size_type & 0x0f
+            _len = 0
             if size == 15:
-                size, len = self.__readSize(data[1:])
-            return type, size, len + 1
+                size, _len = self.__readSize(data[1:])
+            return _type, size, _len + 1
 
         def readMapBegin(self, data):
             size, len = self.__readSize(data)
@@ -447,7 +443,7 @@ class Thrift(object):
 
         def x(self, isFirst=True):
             if isFirst:
-                name, type, seqid = self.readMessageBegin()
+                name, _type, seqid = self.readMessageBegin()
             _, ftype, fid, offset = self.readFieldBegin(
                 self.data[self.__last_pos:])
             self.__last_pos += offset
@@ -567,8 +563,10 @@ class Thrift(object):
                 # FIXED: Unified format
                 for i in range(len(subType)):
                     subType[i] = self.TTYPES[subType[i]]
-            dummyProtocol.data = DummyProtocolData(
-                fid, self.TTYPES[ftype], dummyProtocolData, subType)
+            
+            if dummyProtocolData is not None:
+                dummyProtocol.data = DummyProtocolData(
+                    fid, self.TTYPES[ftype], dummyProtocolData, subType)
             return data, dummyProtocol
 
         writeByte = __writeByte
