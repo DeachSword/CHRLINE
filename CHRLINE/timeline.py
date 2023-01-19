@@ -1399,16 +1399,30 @@ class Timeline:
 
     @loggedIn
     def getNewStory(self, lastTimelineVisitTime: int = 0):
+        """Get new story."""
         hr = self.server.additionalHeaders(
             self.server.timelineHeaders,
             {"x-lhm": "POST", "content-type": "application/json"},
         )
-        """Get new story."""
         data = self.story.GetNewStory(
             **{"lastTimelineVisitTime": lastTimelineVisitTime}
         )
         url = self.server.urlEncode(
             self.LINE_HOST_DOMAIN, self.story.GetApiPath("story/newstory")
+        )
+        r = self.server.postContent(url, json=data, headers=hr)
+        return r.json()
+
+    @loggedIn
+    def fetchNewNotification(self, revision: int = 0):
+        params = {"serviceCode": "TL", "revision": revision}
+        hr = self.server.additionalHeaders(
+            self.server.timelineHeaders,
+            {"x-lhm": "POST", "X-Line-TL-Upstream-ID": "1583881852"},
+        )
+        data = {}
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, "/eg/lin/api/v1/notification/fetch/new", params
         )
         r = self.server.postContent(url, json=data, headers=hr)
         return r.json()
@@ -1425,17 +1439,16 @@ class Timeline:
                 # x-line-channeltoken: 1557852768
             },
         )
-        url = self.server.urlEncode("https://search.line.me", "/lnexearch", params)
+        url = self.server.urlEncode(self.LINE_SEARCH_DOMAIN, "/lnexearch", params)
         r = self.server.postContent(url, headers=hr)
         return r.json()
 
     """ Sc """
 
-    @loggedIn
     def getPageInfo(self, url):
         params = {"url": url, "caller": "TALK", "lang": self.LINE_LANGUAGE}
         hr = self.server.additionalHeaders(
-            self.server.timelineHeaders,
+            # self.server.timelineHeaders,
             {"x-lhm": "GET", "content-type": "application/json"},
         )
         url = self.server.urlEncode(

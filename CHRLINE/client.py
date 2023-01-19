@@ -46,6 +46,7 @@ class CHRLINE(
         region: str = None,
         forwardedIp: str = None,
         useThrift: bool = False,
+        forceTMCP: bool = False,
     ):
         """Use authToken or Email & Password to Login.
         phone + region to Login secondary devices (and Android).
@@ -79,6 +80,8 @@ class CHRLINE(
         useThrift: `bool`
             Set whether to use line thrift.
             If true, you must place line thrifts in `services\thrift`.
+        forceTMCP: `bool`
+            It will force the use of TMoreCompact protocol on TalkService.
         """
         self.encType = encType
         self.isDebug = debug
@@ -90,12 +93,13 @@ class CHRLINE(
         Thrift.__init__(self)
         self.is_login = False
         self.use_thrift = useThrift
+        self.force_tmore = forceTMCP
         if region is not None:
             self.LINE_SERVICE_REGION = region
 
         if authTokenOrEmail is not None and password is not None:
             email_func = self.requestEmailLogin
-            if device in self.LOGIN_V2_SUPPORT:
+            if device in self.TOKEN_V3_SUPPORT:
                 email_func = self.requestEmailLoginV2
             email_func(authTokenOrEmail, password)
         elif authTokenOrEmail:
@@ -105,7 +109,7 @@ class CHRLINE(
         else:
             if not noLogin:
                 sqr_func = self.requestSQR
-                if device in self.LOGIN_V2_SUPPORT:
+                if device in self.TOKEN_V3_SUPPORT:
                     sqr_func = self.requestSQR2
                 for b in sqr_func():
                     print(b)

@@ -19,7 +19,12 @@ from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
 from thrift.transport.TTransport import TMemoryBuffer
 from .exceptions import LineServiceException
-from .serializers.DummyProtocol import DummyProtocol, DummyProtocolData, DummyThrift
+from .serializers.DummyProtocol import (
+    DummyProtocol,
+    DummyProtocolData,
+    DummyProtocolSerializer,
+    DummyThrift,
+)
 
 from .services.thrift import *
 from .timeline import Timeline
@@ -282,14 +287,10 @@ class Models(object):
             t = 0 - (t - 1 ^ 255)
         return t
 
-    def generateDummyProtocol(self, name, params, type):
-        data = []
-        if type == 3:
-            data = [128, 1, 0, 1] + self.getStringBytes(name) + [0, 0, 0, 0]
-        elif type == 4:
-            data = [130, 33, 00] + self.getStringBytes(name, isCompact=True)
-        data += self.generateDummyProtocolField(params, type) + [0]
-        return data
+    def generateDummyProtocol(
+        self, name: str, params: list, _type: int
+    ) -> DummyProtocolSerializer:
+        return DummyProtocolSerializer(self, name, params, _type)
 
     def generateDummyProtocol2(
         self, params: DummyProtocol, type: int = 3, fixSuccessHeaders: bool = False
@@ -404,6 +405,15 @@ class Models(object):
             headers = self.server.Headers.copy()
         if access_token is None:
             access_token = self.authToken
+        if isinstance(bdata, DummyProtocolSerializer):
+            # Import DummyProtocolSerializer in v2.5.3,
+            # it can be change the protocol type.
+            if self.force_tmore:
+                # Force TMoreCompact
+                if path in [self.LINE_NORMAL_ENDPOINT, "/S4"]:
+                    path = "/S5"
+                    ttype = 5
+            bdata.protocol = ttype
         ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
         if ttype in [1, 2, 3, 4, 5]:
             headers["content-type"] = "application/x-thrift; protocol=" + ptype
@@ -417,19 +427,18 @@ class Models(object):
             headers[
                 "origin"
             ] = "chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released"
-
         self.log(
             f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}",
             True,
         )
         self.log(
-            f"--> {bdata}",
+            f"--> {bytes(bdata).hex()}",
             True,
         )
         if encType == 0:
             if conn is None:
                 conn = self.req_h2
-            data = bytes(bdata) if isinstance(bdata, list) else bdata
+            data = bytes(bdata)
             if "x-le" in headers:
                 del headers["x-le"]
                 del headers["x-lcs"]
@@ -455,9 +464,7 @@ class Models(object):
             else:
                 _headers = {"x-lpqs": path}
             a = self.encHeaders(_headers)
-            b = bdata
-            c = a + b
-            _data = bytes(c)
+            _data = bytes(a) + bytes(bdata)
             fix_bytes = False
             if (int(self.le) & 4) == 4:
                 _data = bytes([int(self.le)]) + _data
@@ -488,7 +495,7 @@ class Models(object):
         else:
             raise Exception(f"Unknown encType: {encType}")
         self.log(f"<--  {res.status_code}", True)
-        self.log(f"{data}", True)
+        self.log(f"{data.hex()}", True)
         if res.status_code in expectedRespCode:
             if (
                 res.headers.get("x-lc") is not None
@@ -501,9 +508,21 @@ class Models(object):
                 respHeaders = {}
             respHeaders.update(res.headers)
             self.log(f"RespHraders: {respHeaders}", True)
-            if "x-line-next-access" in respHeaders:
-                print(respHeaders)
-                self.handleNextToken(respHeaders["x-line-next-access"])
+            for _rh in respHeaders:
+                _rht = str(_rh)
+                if _rht == "x-line-next-access":
+                    self.handleNextToken(respHeaders[_rh])
+                elif _rht.startswith("x-"):
+                    if _rht not in [
+                        "x-ls",
+                        "x-lc",
+                        "x-le",
+                        "x-line-http",
+                        "x-lcr",
+                        "x-lts",
+                    ]:
+                        print(f"[HTTP] unhandled header:  {_rht} => {respHeaders[_rh]}")
+            # x-line-access-refresh-required
             conn_res = res
             res = None
             if ttype == -7:
@@ -601,7 +620,9 @@ class Models(object):
             self.is_login = False
         elif res.status_code == 410:
             return None
-        raise Exception(f"Invalid response status code: {res.status_code}")
+        raise Exception(
+            f"Invalid response status code: {res.status_code}, Headers: {res.headers}"
+        )
 
     def getCurrReqId(self):
         self._msgSeq = 0
