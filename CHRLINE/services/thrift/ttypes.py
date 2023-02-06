@@ -22917,6 +22917,217 @@ class FetchMyEventsResponse(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class GetSquareEmidResponse(object):
+    """
+    Attributes:
+     - squareEmid
+
+    """
+
+
+    def __init__(self, squareEmid=None,):
+        self.squareEmid = squareEmid
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.squareEmid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetSquareEmidResponse')
+        if self.squareEmid is not None:
+            oprot.writeFieldBegin('squareEmid', TType.STRING, 1)
+            oprot.writeString(self.squareEmid.encode('utf-8') if sys.version_info[0] == 2 else self.squareEmid)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetSquareMembersBySquareResponse(object):
+    """
+    Attributes:
+     - members
+
+    """
+
+
+    def __init__(self, members=None,):
+        self.members = members
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.members = []
+                    (_etype509, _size506) = iprot.readListBegin()
+                    for _i510 in range(_size506):
+                        _elem511 = SquareMember()
+                        _elem511.read(iprot)
+                        self.members.append(_elem511)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetSquareMembersBySquareResponse')
+        if self.members is not None:
+            oprot.writeFieldBegin('members', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.members))
+            for iter512 in self.members:
+                iter512.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ManualRepairResponse(object):
+    """
+    Attributes:
+     - events
+     - syncToken
+     - continuationToken
+
+    """
+
+
+    def __init__(self, events=None, syncToken=None, continuationToken=None,):
+        self.events = events
+        self.syncToken = syncToken
+        self.continuationToken = continuationToken
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.events = []
+                    (_etype516, _size513) = iprot.readListBegin()
+                    for _i517 in range(_size513):
+                        _elem518 = SquareEvent()
+                        _elem518.read(iprot)
+                        self.events.append(_elem518)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.syncToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.continuationToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('ManualRepairResponse')
+        if self.events is not None:
+            oprot.writeFieldBegin('events', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.events))
+            for iter519 in self.events:
+                iter519.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.syncToken is not None:
+            oprot.writeFieldBegin('syncToken', TType.STRING, 2)
+            oprot.writeString(self.syncToken.encode('utf-8') if sys.version_info[0] == 2 else self.syncToken)
+            oprot.writeFieldEnd()
+        if self.continuationToken is not None:
+            oprot.writeFieldBegin('continuationToken', TType.STRING, 3)
+            oprot.writeString(self.continuationToken.encode('utf-8') if sys.version_info[0] == 2 else self.continuationToken)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(TalkException)
 TalkException.thrift_spec = (
     None,  # 0
@@ -24692,6 +24903,23 @@ FetchMyEventsResponse.thrift_spec = (
     (2, TType.LIST, 'events', (TType.STRUCT, [SquareEvent, None], False), None, ),  # 2
     (3, TType.STRING, 'syncToken', 'UTF8', None, ),  # 3
     (4, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 4
+)
+all_structs.append(GetSquareEmidResponse)
+GetSquareEmidResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'squareEmid', 'UTF8', None, ),  # 1
+)
+all_structs.append(GetSquareMembersBySquareResponse)
+GetSquareMembersBySquareResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'members', (TType.STRUCT, [SquareMember, None], False), None, ),  # 1
+)
+all_structs.append(ManualRepairResponse)
+ManualRepairResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'events', (TType.STRUCT, [SquareEvent, None], False), None, ),  # 1
+    (2, TType.STRING, 'syncToken', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 3
 )
 fix_spec(all_structs)
 del all_structs
