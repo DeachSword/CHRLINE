@@ -49,6 +49,11 @@ class Timeline:
 
             # BIZ
             self.story = Story(8)
+
+            # OTO
+            self.otoMids = {}
+            self.syncOtoAccount()
+            print(self.otoMids)
         except Exception as e:
             self.log(f"can't use Timeline: {e}")
 
@@ -580,6 +585,20 @@ class Timeline:
             mediaObjectIds = []
         if mediaObjectTypes is None:
             mediaObjectTypes = []
+        if self.getToType(homeId) == 0:
+            self.log(f"Can't use mid {homeId} to create post, will be get oto mid...")
+            if homeId in self.otoMids:
+                homeId = self.otoMids[homeId]
+                self.log(f"Use oto mid {homeId} to create post...")
+            else:
+                self.log(f"Can't find oto mid: {homeId}, ready to create oto mid...")
+                otoRes = self.createOtoAccount(self.mid, homeId)
+                otoMid = otoRes.get("result", {}).get("groupId")
+                if otoMid is None:
+                    raise ValueError(f"Oto Mid is None: {otoRes}")
+                self.log(f"Created oto mid {otoMid} to create post...")
+                self.otoMids[homeId] = otoMid
+                homeId = otoMid
         params = {"homeId": homeId, "sourceType": sourceType}
         postInfo = {
             "readPermission": {"type": readPermissionType, "gids": readPermissionGids},
@@ -1460,16 +1479,43 @@ class Timeline:
     """ One to one """
 
     @loggedIn
-    def syncOtoAccount(self, userMid):
+    def syncOtoAccount(self, userMid: str = None):
+        """Sync oto accounts."""
+        if userMid is None:
+            userMid = self.mid
         params = {"userMid": userMid}
         hr = self.server.additionalHeaders(
             self.server.timelineHeaders,
             {"x-lhm": "GET", "content-type": "application/json"},
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v24/otoaccount/sync.json", params
+            self.LINE_HOST_DOMAIN, "/mh/api/v57/otoaccount/sync.json", params
         )
         r = self.server.postContent(url, headers=hr)
+        resp = r.json()
+        if userMid == self.mid:
+            # update oto accounts cache.
+            result = resp.get("result", {})
+            updated = result.get("updated", [])
+            for i in updated:
+                groupId = i.get("groupId")
+                userMid = i.get("userMid")
+                self.otoMids[userMid] = groupId
+            self.log(f"Oto accounts updated.", True)
+        return resp
+
+    @loggedIn
+    def createOtoAccount(self, userMid: str, friendMid: str):
+        """Create oto account."""
+        params = {"userMid": userMid, "friendMid": friendMid}
+        hr = self.server.additionalHeaders(
+            self.server.timelineHeaders,
+            {"x-lhm": "POST", "content-type": "application/json"},
+        )
+        url = self.server.urlEncode(
+            self.LINE_HOST_DOMAIN, "/mh/api/v57/otoaccount/create.json", params
+        )
+        r = self.server.postContent(url, json=params, headers=hr)
         return r.json()
 
     """ Keep """
