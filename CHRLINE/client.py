@@ -47,6 +47,7 @@ class CHRLINE(
         forwardedIp: str = None,
         useThrift: bool = False,
         forceTMCP: bool = False,
+        savePath: str = None,
     ):
         """Use authToken or Email & Password to Login.
         phone + region to Login secondary devices (and Android).
@@ -83,10 +84,11 @@ class CHRLINE(
         forceTMCP: `bool`
             It will force the use of TMoreCompact protocol on TalkService.
         """
+        self.savePath = savePath or os.path.dirname(os.path.realpath(__file__))
         self.encType = encType
         self.isDebug = debug
         self.customDataId = customDataId
-        Models.__init__(self)
+        Models.__init__(self, storePath)
         Config.__init__(self, device)
         self.initAppConfig(device, version, os_name, os_version)
         API.__init__(self, forwardedIp)
@@ -115,6 +117,12 @@ class CHRLINE(
                     print(b)
         if self.authToken:
             self.initAll()
+
+    def getSavePath(self, dirname: str):
+        savePath = os.path.join(self.savePath, dirname)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        return savePath
 
     def initAll(self):
         self.checkNextToken(False)

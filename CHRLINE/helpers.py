@@ -5,13 +5,18 @@ import os
 import qrcode
 import re
 import requests
+import abc
 
 from .exceptions import LineServiceException
 
 
-class Helpers(object):
+class Helpers(object, metaclass=abc.ABCMeta):
     def __init__(self):
         self.liff_token_cache = {}
+
+    @abc.abstractmethod
+    def getSavePath(self, dirname: str):
+        return NotImplemented
 
     def squareMemberIdIsMe(self, squareMemberId):
         if self.can_use_square:
@@ -302,9 +307,7 @@ class Helpers(object):
             output_char = ["　", "■"]
         if filename is None:
             filename = str(time.time())
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".images")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".images")
         savePath = savePath + f"/qr_{filename}.png"
         qr = qrcode.QRCode(
             version=1,
