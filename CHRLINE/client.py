@@ -88,7 +88,7 @@ class CHRLINE(
         self.encType = encType
         self.isDebug = debug
         self.customDataId = customDataId
-        Models.__init__(self, storePath)
+        Models.__init__(self)
         Config.__init__(self, device)
         self.initAppConfig(device, version, os_name, os_version)
         API.__init__(self, forwardedIp)
