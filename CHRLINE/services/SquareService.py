@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 from ast import Str
 import time
 import json
+from typing import TYPE_CHECKING
 
-from CHRLINE import CHRLINE
+if TYPE_CHECKING:
+    from CHRLINE import CHRLINE
 
 
 class SquareService(object):
