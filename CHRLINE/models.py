@@ -9,7 +9,6 @@ import urllib
 from base64 import b64encode
 from datetime import datetime
 from hashlib import md5
-import abc
 
 import axolotl_curve25519 as curve
 import Crypto.Cipher.PKCS1_OAEP as rsaenc
@@ -32,8 +31,9 @@ from .timeline import Timeline
 from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
 
 
-class Models(object, metaclass=abc.ABCMeta):
-    def __init__(self):
+class Models(object):
+    def __init__(self, savePath):
+        self.savePath = savePath or os.path.dirname(os.path.realpath(__file__))
         self.lcsStart = "0005"
         self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
@@ -53,9 +53,11 @@ class Models(object, metaclass=abc.ABCMeta):
 
         self.legyPushers = ConnManager(self)
 
-    @abc.abstractmethod
     def getSavePath(self, dirname: str):
-        return NotImplemented
+        savePath = os.path.join(self.savePath, dirname)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        return savePath
 
     def log(self, text, debugOnly=False):
         if debugOnly and not self.isDebug:
