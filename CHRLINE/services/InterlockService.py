@@ -5,8 +5,6 @@ Author: YinMo (WEDeach)
 Version: 1.0.5
 """
 
-from turtle import st
-
 
 class InterlockService(object):
     InterlockService_REQ_TYPE = 4  # BASE_VAL

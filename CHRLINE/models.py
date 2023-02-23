@@ -32,7 +32,8 @@ from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtoco
 
 
 class Models(object):
-    def __init__(self):
+    def __init__(self, savePath):
+        self.savePath = savePath or os.path.dirname(os.path.realpath(__file__))
         self.lcsStart = "0005"
         self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
@@ -51,6 +52,12 @@ class Models(object):
         from .dyher.connManager import ConnManager
 
         self.legyPushers = ConnManager(self)
+
+    def getSavePath(self, dirname: str):
+        savePath = os.path.join(self.savePath, dirname)
+        if not os.path.exists(savePath):
+            os.makedirs(savePath)
+        return savePath
 
     def log(self, text, debugOnly=False):
         if debugOnly and not self.isDebug:
@@ -78,9 +85,7 @@ class Models(object):
             return oldList
 
     def checkNextToken(self, log4NotDebug: bool = True):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".tokens")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".tokens")
         fn = md5(self.authToken.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.authToken = open(savePath + f"/{fn}", "r").read()
@@ -89,9 +94,7 @@ class Models(object):
         return self.authToken
 
     def handleNextToken(self, newToken):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".tokens")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".tokens")
         fn = md5(self.authToken.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(newToken)
         self.authToken = newToken
@@ -99,9 +102,7 @@ class Models(object):
         Timeline.__init__(self)
 
     def getCustomData(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = md5(self.customDataId.encode()).hexdigest()
         if os.path.exists(savePath + f"/{fn}"):
             self.custom_data = json.loads(open(savePath + f"/{fn}", "r").read())
@@ -109,43 +110,33 @@ class Models(object):
         return True
 
     def saveCustomData(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = md5(self.customDataId.encode()).hexdigest()
         open(savePath + f"/{fn}", "w").write(json.dumps(self.custom_data))
         return True
 
     def getSqrCert(self):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = "cert.pem"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
         return None
 
     def saveSqrCert(self, cert):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = "cert.pem"
         open(savePath + f"/{fn}", "w").write(cert)
         return True
 
     def getEmailCert(self, email):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = f"{email}.crt"
         if os.path.exists(savePath + f"/{fn}"):
             return open(savePath + f"/{fn}", "r").read()
         return None
 
     def saveEmailCert(self, email, cert):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), ".data")
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".data")
         fn = f"{email}.crt"
         open(savePath + f"/{fn}", "w").write(cert)
         return True
@@ -698,11 +689,7 @@ class Models(object):
         return [private_key, f"?secret={secret}&e2eeVersion={version}"]
 
     def getE2EESelfKeyData(self, mid):
-        savePath = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
-        )
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".e2eeKeys")
         fn = f"{mid}.json"
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
@@ -715,22 +702,14 @@ class Models(object):
         raise Exception("E2EE Key has not been saved, try register or use SQR Login")
 
     def getE2EESelfKeyDataByKeyId(self, keyId):
-        savePath = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
-        )
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".e2eeKeys")
         fn = f"key_{keyId}.json"
         if os.path.exists(savePath + f"/{fn}"):
             return json.loads(open(savePath + f"/{fn}", "r").read())
         return None
 
     def saveE2EESelfKeyData(self, mid, pubK, privK, kI, e2eeVersion):
-        savePath = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), ".e2eeKeys"
-        )
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(".e2eeKeys")
         fn = f"{mid}.json"
         fn2 = f"key_{kI}.json"
         data = json.dumps(
@@ -757,9 +736,7 @@ class Models(object):
         return self.saveE2EESelfKeyData(self.mid, pubK, privK, keyId, 1)
 
     def getCacheData(self, cT, cN, needHash=True, pathOnly=False):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(cT)
         fn = f"{cN}"
         if needHash:
             fn = md5(cN.encode()).hexdigest()
@@ -770,9 +747,7 @@ class Models(object):
         return None
 
     def saveCacheData(self, cT, cN, cD, needHash=True):
-        savePath = os.path.join(os.path.dirname(os.path.realpath(__file__)), cT)
-        if not os.path.exists(savePath):
-            os.makedirs(savePath)
+        savePath = self.getSavePath(cT)
         fn = f"{cN}"
         if needHash:
             fn = md5(cN.encode()).hexdigest()

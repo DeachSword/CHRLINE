@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing_extensions import Self
 from .services.TestService import TestService
 from .services.TalkService import TalkService
 from .services.SquareService import SquareService

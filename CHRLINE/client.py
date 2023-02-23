@@ -47,6 +47,7 @@ class CHRLINE(
         forwardedIp: str = None,
         useThrift: bool = False,
         forceTMCP: bool = False,
+        savePath: str = None,
     ):
         """Use authToken or Email & Password to Login.
         phone + region to Login secondary devices (and Android).
@@ -86,7 +87,7 @@ class CHRLINE(
         self.encType = encType
         self.isDebug = debug
         self.customDataId = customDataId
-        Models.__init__(self)
+        Models.__init__(self, savePath)
         Config.__init__(self, device)
         self.initAppConfig(device, version, os_name, os_version)
         API.__init__(self, forwardedIp)

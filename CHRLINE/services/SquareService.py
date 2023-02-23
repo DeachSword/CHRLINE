@@ -2,8 +2,10 @@
 from ast import Str
 import time
 import json
+from typing import TYPE_CHECKING
 
-from CHRLINE import CHRLINE
+if TYPE_CHECKING:
+    from CHRLINE import CHRLINE
 
 
 class SquareService(object):
@@ -1474,7 +1476,7 @@ class SquareServiceStruct(object):
         return __class__.BaseRequest([[11, 2, squareChatMid], [11, 3, messageId]])
 
     @staticmethod
-    def SendRequestByName(client: CHRLINE, name: str, request: str):
+    def SendRequestByName(client: 'CHRLINE', name: str, request: str):
         payload = __class__.BaseRequest(request)
         sqrd = client.generateDummyProtocol(
             name, payload, client.SquareService_REQ_TYPE
