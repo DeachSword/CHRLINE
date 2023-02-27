@@ -53,7 +53,6 @@ class Timeline:
             # OTO
             self.otoMids = {}
             self.syncOtoAccount()
-            print(self.otoMids)
         except Exception as e:
             self.log(f"can't use Timeline: {e}")
 
@@ -1495,13 +1494,16 @@ class Timeline:
         resp = r.json()
         if userMid == self.mid:
             # update oto accounts cache.
-            result = resp.get("result", {})
-            updated = result.get("updated", [])
-            for i in updated:
-                groupId = i.get("groupId")
-                userMid = i.get("userMid")
-                self.otoMids[userMid] = groupId
-            self.log(f"Oto accounts updated.", True)
+            result = resp.get("result")
+            if result is None:
+                self.log(f"Can't update oto accounts.")
+            else:
+                updated = result.get("updated", [])
+                for i in updated:
+                    groupId = i.get("groupId")
+                    userMid = i.get("userMid")
+                    self.otoMids[userMid] = groupId
+                self.log(f"Oto accounts updated.", True)
         return resp
 
     @loggedIn
