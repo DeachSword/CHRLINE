@@ -1,7 +1,9 @@
 import time
 import threading
 import struct
+
 from ..client import CHRLINE
+from ..services import *
 
 
 class ConnManager(object):
@@ -38,14 +40,13 @@ class ConnManager(object):
         """Init conn state and read data."""
         if not self.conns:
             raise ValueError("No valid connections found.")
+        cl = self.line_client
         _conn = self.conns[0]
         FLAG = 0
         _conn.wirteRequest(0, bytes([0, FLAG, self._pingInterval]))
-        self.line_client.log(
-            f"[PUSH] send status frame. flag:{FLAG}, pi:{self._pingInterval}"
-        )
+        cl.log(f"[PUSH] send status frame. flag:{FLAG}, pi:{self._pingInterval}")
         for service in initServices:
-            self.line_client.log(f"[PUSH] Init service: {service}")
+            cl.log(f"[PUSH] Init service: {service}")
             ex_val = {}
             if service == 3:
                 subscriptionId = int(time.time() * 1000)
@@ -54,14 +55,22 @@ class ConnManager(object):
                     "subscriptionId": subscriptionId,
                     "syncToken": syncToken,
                 }
-                self.line_client.log(
+                cl.log(
                     f"[SQ_FETCHER][SQ] request fetchMyEvent({subscriptionId}), syncToken:{syncToken}"
                 )
-            payload, _ = self.buildSignOnRequest(service, **ex_val)
-            _conn.wirteRequest(2, payload)
-        self.line_client.log(f"[PUSH] CONN start read push.")
+            elif service == 5:
+                ex_val = {
+                    "revision": -1,
+                    "count": 100,
+                    "globalRev": cl.globalRev,
+                    "individualRev": cl.individualRev,
+                    "fullSyncRequestReason": None,
+                    "lastPartialFullSyncs": None,
+                }
+            self.buildAndSendSignOnRequest(_conn, service, **ex_val)
+        cl.log(f"[PUSH] CONN start read push.")
         _conn.read()
-        self.line_client.log(f"[PUSH] CONN died on PingId={self.curr_ping_id}")
+        cl.log(f"[PUSH] CONN died on PingId={self.curr_ping_id}")
         self.conns.remove(_conn)
 
     def SendAndReadSignOnRequest(
@@ -89,8 +98,7 @@ class ConnManager(object):
                 if not c._closed:
                     _conn = c
                     break
-        payload, reqId = self.buildSignOnRequest(serviceType, **kwargs)
-        _conn.wirteRequest(2, payload)
+        _, reqId = self.buildAndSendSignOnRequest(_conn, serviceType, **kwargs)
         if waitAndReadResp:
             raise NotImplementedError()
 
@@ -104,26 +112,34 @@ class ConnManager(object):
         """Build request struct."""
         return struct.pack("!H", len(data)) + bytes([service]) + data
 
-    def buildSignOnRequest(self, serviceType, **kwargs):
+    def buildAndSendSignOnRequest(self, conn: any, serviceType: int, **kwargs):
         """
-        Build request for fetchMyEvents.
+        Build and send sign-on-request.
 
         ServiceType:
             - 3: fetchMyEvents
-            - 5: fecthOps
+            - 5: fecthOps / sync
         """
+        cl = self.line_client
         _id = len(self.SignOnRequests) + 1
         _payload = struct.pack("!H", _id)
         _req = None
+        serviceName = None
         methodName = None
         if serviceType == 1:
             raise NotImplementedError
         elif serviceType == 3:
+            serviceName = "Square"
             methodName = "fetchMyEvents"
             _req = self.buildFetchMyEventsRequest(**kwargs)
         elif serviceType == 5:
+            serviceName = "Talk"
             methodName = "fetchOps"
-            _req = self.buildFetchOpsRequest(**kwargs)
+            if cl.DEVICE_TYPE in cl.SYNC_SUPPORT:
+                methodName = "sync"
+                _req = self.buildServiceRequest(serviceName, methodName, **kwargs)
+            else:
+                _req = self.buildFetchOpsRequest(**kwargs)
         elif serviceType == 6:
             raise NotImplementedError
         elif serviceType == "sendMessage":
@@ -137,6 +153,11 @@ class ConnManager(object):
         _payload += struct.pack("!H", len(_req))
         _payload += _req
         self.SignOnRequests[_id] = [serviceType, methodName, None]
+        self.line_client.log(
+            f"[H2][PUSH] send sign-on-request. requestId:{_id}, service:{serviceType}",
+            True,
+        )
+        conn.wirteRequest(2, _payload)
         return _payload, _id
 
     def buildFetchMyEventsRequest(self, subscriptionId, syncToken):
@@ -155,26 +176,40 @@ class ConnManager(object):
         ]
         return bytes(cl.generateDummyProtocol("fetchMyEvents", params, 4))
 
-    def buildFetchOpsRequest(self, revision: int = -1):
+    def buildFetchOpsRequest(self, revision: int = -1, **kargs):
         """Build request for fetchOps."""
         cl = self.line_client
         if revision == -1:
             revision = cl.revision
         params = [
             [10, 2, revision],
-            [8, 3, 100],
+            [8, 3, 200],  # use 200.
             [10, 4, cl.globalRev],
             [10, 5, cl.individualRev],
         ]
         return bytes(cl.generateDummyProtocol("fetchOps", params, 4))
+
+    def buildServiceRequest(self, serviceName: str, methodName: str, **kargs):
+        """Build request for service."""
+        cl = self.line_client
+        service = f"{serviceName}Service"
+        serviceStruct = f"{service}.{service}Struct"
+        methodRequest = methodName.title() + "Request"
+        unitCalled = f"{serviceStruct}.{methodRequest}"
+        ins = eval(f"{unitCalled}")
+        payload = ins(**kargs)
+        data = cl.generateDummyProtocol(methodName, payload, 4)
+        cl.log(f"[buildServiceRequest] {data}")
+        return bytes(data)
 
     def _OnSignOnResponse(self, reqId, isFin, data):
         if reqId in self.SignOnRequests:
             serviceType = self.SignOnRequests[reqId][0]
             methodName = self.SignOnRequests[reqId][1]
             callback = self.SignOnRequests[reqId][2]
+            serviceName = "TalkService"
             cl = self.line_client
-            self.line_client.log(
+            cl.log(
                 f"[PUSH] receives sign-on-response frame. requestId:{reqId}, service:{serviceType}, isFin:{isFin}, payload:{data[:20].hex()}",
                 True,
             )
@@ -182,7 +217,7 @@ class ConnManager(object):
                 data = cl.TCompactProtocol(cl, data)
                 resp = data.res
                 if "error" in resp:
-                    self.line_client.log(
+                    cl.log(
                         f"[SQ_FETCHER][SQ] can't use PUSH for OpenChat:{resp['error']}"
                     )
                     return False
@@ -190,7 +225,7 @@ class ConnManager(object):
                 events = cl.checkAndGetValue(resp, "events", 2)
                 syncToken = cl.checkAndGetValue(resp, "syncToken", 3)
                 subscriptionId = cl.checkAndGetValue(subscription, "subscriptionId", 1)
-                self.line_client.log(
+                cl.log(
                     f"[SQ_FETCHER][SQ] response fetchMyEvent({subscriptionId}) events:{len(events)}, syncToken:{syncToken}"
                 )
                 cl.subscriptionId = subscriptionId
@@ -198,17 +233,51 @@ class ConnManager(object):
                     self.subscriptionIds[subscriptionId] = time.time()
                 if not self._eventSynced:
                     cl.setEventSyncToken(syncToken)
-                    self.line_client.log(
+                    cl.log(
                         f"[SQ_FETCHER][SQ] myEvents start({subscriptionId}) : syncToken:{cl.eventSyncToken}"
                     )
             elif serviceType == 5:
+                _conn = self.conns[0]
                 try:
                     data = cl.TMoreCompactProtocol(cl, data)
                     resp = data.res
+                    if methodName == "sync":
+                        serviceName = "SyncService"
                     if cl.use_thrift:
                         resp = cl.serializeDummyProtocolToThrift(
-                            data.dummyProtocol, readWith=f"TalkService.{methodName}")
-                    if methodName == "fetchOps":
+                            data.dummyProtocol, readWith=f"{serviceName}.{methodName}"
+                        )
+                    if methodName == "sync":
+                        ops = resp
+                        sht, shd = cl.talk_handler.SyncHandler(resp)
+                        ex_val = {
+                            "revision": cl.globalRev,
+                            "count": 100,
+                            "globalRev": cl.globalRev,
+                            "individualRev": cl.individualRev,
+                            "fullSyncRequestReason": None,
+                            "lastPartialFullSyncs": None,
+                        }
+                        if sht == 1:
+                            ops = shd
+                            cl.log(
+                                f"[POLLING][PUSH] response sync. operations:{len(ops)}",
+                                True,
+                            )
+                            for op in ops:
+                                self.hook_callback(cl, serviceType, op)
+                                revision = cl.checkAndGetValue(op, "revision", 1)
+                                cl.setRevision(
+                                    revision
+                                )
+                        elif sht == 2:
+                            cl.setRevision(shd)
+                        else:
+                            raise RuntimeError
+                        ex_val["revision"] = cl.revision
+                        self.buildAndSendSignOnRequest(_conn, serviceType, **ex_val)
+                        return
+                    elif methodName == "fetchOps":
                         ops = resp
                         cl.log(
                             f"[POLLING][PUSH] response fetchOps. operations:{len(ops)}",
@@ -226,21 +295,17 @@ class ConnManager(object):
                                     cl.globalRev = param2.split("\x1e")[0]
                                     cl.log(f"globalRev: {cl.globalRev}", True)
                             cl.setRevision(cl.checkAndGetValue(op, "revision", 1))
-                            self.hook_callback(self.line_client, serviceType, op)
+                            self.hook_callback(cl, serviceType, op)
                         # LOOP
-                        _conn = self.conns[0]
                         fetch_req_data = {"revision": cl.revision}
-                        payload, _ = self.buildSignOnRequest(5, **fetch_req_data)
-                        _conn.wirteRequest(2, payload)
+                        self.buildAndSendSignOnRequest(_conn, serviceType, **fetch_req_data)
                     else:
                         # TODO:
                         # Callback resp to ReqId
                         if callback is not None:
                             callback(self, reqId, resp)
                 except Exception as e:
-                    raise Exception(
-                        f"[PUSH] response {methodName} error: {e}"
-                    )
+                    raise Exception(f"[PUSH] response {methodName} error: {e}")
             else:
                 raise ValueError(
                     f"[PUSH] receives invalid sign-on-response frame. requestId:{reqId}, service:{serviceType}"
@@ -269,7 +334,7 @@ class ConnManager(object):
     def _OnPingCallback(self, pingId):
         cl = self.line_client
         self.curr_ping_id = pingId
-        
+
         # check subscriptionIds need refresh.
         # LOG:
         #   - 221227: change use ts.
@@ -282,4 +347,11 @@ class ConnManager(object):
                 refreshIds.append(subscriptionId)
         if refreshIds:
             cl.log(f"[SQ_FETCHER][PUSH] refresh subscriptionId: {refreshIds}")
-            self.line_client.refreshSquareSubscriptions(refreshIds)
+            cl.refreshSquareSubscriptions(refreshIds)
+
+        # when using the PUSH endpoint, you may not be able to update the AuthToken properly.
+        # because you can't get the `x-line-next-access` header on the socket connection.
+        # here use http protocol to check.
+        if pingId % 3 == 0:
+            cl.noop()
+            cl.log(f"[PUSH] check talk with PUSH: noop")

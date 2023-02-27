@@ -19,6 +19,10 @@ class Conn(object):
 
         self._last_send_time = 0
         self._closed = False
+    
+    @property
+    def client(self):
+        return self.manager.line_client
 
     def new(self, host, port, path, headers: dict = {}):
         ctx = ssl.create_default_context()
@@ -40,8 +44,10 @@ class Conn(object):
 
     def send(self):
         send_data = self.conn.data_to_send()
-        self.writer.sendall(send_data)
-        self._last_send_time = time.time()
+        if send_data:
+            self.client.log(f"[H2][PUSH] send data: {send_data.hex()}", True)
+            self.writer.sendall(send_data)
+            self._last_send_time = time.time()
 
     def writeByte(self, data: bytes):
         self.conn.send_data(stream_id=1, data=data, end_stream=False)
@@ -54,7 +60,7 @@ class Conn(object):
         try:
             response_stream_ended = False
             self.send()
-            while not response_stream_ended and self.manager.line_client.is_login:
+            while not response_stream_ended and self.client.is_login:
                 data = self.writer.recv(65536 * 1024)
                 if not data:
                     break
@@ -82,14 +88,14 @@ class Conn(object):
             self.conn.close_connection()
             self.send()
         except Exception as e:
-            self.manager.line_client.log(f"[CONN] task disconnect: {e}")
+            self.client.log(f"[CONN] task disconnect: {e}")
             raise e
         self._closed = True
         # close the socket
         self.writer.close()
 
     def IsAble2Request(self):
-        if self.manager.line_client.is_login and not self._closed:
+        if self.client.is_login and not self._closed:
             if time.time() - self._last_send_time > 0.5:
                 return True
         return False
@@ -106,6 +112,7 @@ class Conn(object):
             data = self.cache_data + data
 
         # more response body data received
+        self.client.log(f"[H2][PUSH] receives packet. raw:{data.hex()}", True)
         _dt, _dd, _dl = self.readPacketHeader(data)
         if _dl > len(_dd):
             self.is_not_finished = True
@@ -116,7 +123,7 @@ class Conn(object):
             if len(_dd) > _dl:
                 self.onPacketReceived(_dt, _dd[:_dl])
                 data = _dd[_dl:]
-                self.manager.line_client.log(
+                self.client.log(
                     f"[PUSH] extra data {data.hex()[:50]}...", True
                 )
                 return self.onDataReceived(data)
@@ -126,13 +133,13 @@ class Conn(object):
         if _dt == 1:
             _pingType = _dd[0]
             (_pingId,) = struct.unpack("!H", _dd[1:3])
-            self.manager.line_client.log(
+            self.client.log(
                 f"[PUSH] receives ping frame. pingId:{_pingId}", True
             )
 
             if _pingType == 2:
                 self.writeByte(bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId))
-                self.manager.line_client.log(
+                self.client.log(
                     f"[PUSH] send ping ack. pingId:{_pingId}", True
                 )
                 self.manager.OnPingCallback(_pingId)
@@ -152,7 +159,7 @@ class Conn(object):
                     del self.notFinPayloads[_requestId]
                 self.manager.OnSignOnResponse(_requestId, _isFin, _responsePayload)
             else:
-                self.manager.line_client.log(
+                self.client.log(
                     f"[PUSH] receives long data. requestId: {_requestId}, I={I}", True
                 )
                 if _requestId not in self.notFinPayloads:
@@ -162,7 +169,7 @@ class Conn(object):
             _pushType = _dd[0]
             _serviceType = _dd[1]
             (_pushId,) = struct.unpack("!i", _dd[2:6])
-            self.manager.line_client.log(
+            self.client.log(
                 f"[PUSH] receives push frame. service:{_serviceType}", True
             )
             if _pushType in [0, 2]:
@@ -175,7 +182,7 @@ class Conn(object):
                     )
                     _DATA = struct.pack("!H", len(_PushAck)) + bytes([4]) + _PushAck
                     self.conn.send_data(stream_id=1, data=_DATA, end_stream=False)
-                    self.manager.line_client.log(
+                    self.client.log(
                         f"[PUSH] send push ack. service:{_serviceType}", True
                     )
 
