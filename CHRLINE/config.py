@@ -145,7 +145,7 @@ class Config(object):
             self.APP_VER = "7.7.0.2698"
             self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
-            self.APP_VER = "2.5.5"
+            self.APP_VER = "2.5.11"
             self.SYSTEM_NAME = "Chrome OS"
             self.SYSTEM_VER = "1"
         # elif type == "ANDROIDLITE":
