@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from ast import Str
-import time
-import json
 from typing import TYPE_CHECKING
+from .BaseService import BaseService, BaseServiceStruct
 
 if TYPE_CHECKING:
     from CHRLINE import CHRLINE
 
 
-class SquareService(object):
+class SquareService(BaseService):
     SquareService_REQ_TYPE = 4
     SquareService_RES_TYPE = 4
     SquareService_API_PATH = "/SQS1"
@@ -18,159 +16,34 @@ class SquareService(object):
     def __init__(self):
         self.SquareService_API_PATH = self.LINE_SQUARE_ENDPOINT
 
-    def inviteIntoSquareChat(self, inviteeMids, squareChatMid):
-        sqrd = [
-            128,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            20,
-            105,
-            110,
-            118,
-            105,
-            116,
-            101,
-            73,
-            110,
-            116,
-            111,
-            83,
-            113,
-            117,
-            97,
-            114,
-            101,
-            67,
-            104,
-            97,
-            116,
-            0,
-            0,
-            0,
-            0,
-        ]
-        sqrd += [12, 0, 1]
-        sqrd += [15, 0, 1, 11, 0, 0, 0, len(inviteeMids)]
-        for mid in inviteeMids:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def inviteIntoSquareChat(self, inviteeMids: list, squareChatMid: str):
+        """Invite into square chat."""
+        METHOD_NAME = "inviteIntoSquareChat"
+        params = [[15, 1, [11, inviteeMids]], [11, 2, squareChatMid]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def inviteToSquare(self, squareMid, invitees, squareChatMid):
-        sqrd = [128, 1, 0, 1] + self.getStringBytes("inviteToSquare") + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2] + self.getStringBytes(squareMid)
-        sqrd += [15, 0, 3, 11, 0, 0, 0, len(invitees)]
-        for mid in invitees:
-            sqrd += [0, 0, 0, len(mid)]
-            for value in mid:
-                sqrd.append(ord(value))
-        sqrd += [11, 0, 4] + self.getStringBytes(squareChatMid)
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def inviteToSquare(self, squareMid: str, invitees: list, squareChatMid: str):
+        """Invite to square."""
+        METHOD_NAME = "inviteToSquare"
+        params = [[11, 2, squareMid], [15, 3, [11, invitees]], [11, 4, squareChatMid]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def getJoinedSquares(self, continuationToken=None, limit=50):
-        sqrd = [
-            128,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            16,
-            103,
-            101,
-            116,
-            74,
-            111,
-            105,
-            110,
-            101,
-            100,
-            83,
-            113,
-            117,
-            97,
-            114,
-            101,
-            115,
-            0,
-            0,
-            0,
-            0,
-        ]
-        sqrd += [12, 0, 1]
-        # sqrd += [11, 0, 2] + self.getStringBytes(continuationToken)
-        sqrd += [8, 0, 3] + self.getIntBytes(limit)
-        sqrd += [0, 0]
-        # sqr_rd = sqrd
-        # data = bytes(sqr_rd)
-        # res = self.req_h2.post(self.LINE_HOST_DOMAIN + self.LINE_SQUARE_QUERY_PATH, data=data, headers=self.square_headers)
-        # data = res.content
-        # return self.tryReadData(data, mode=0)['getJoinedSquares']
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def getJoinedSquares(self, continuationToken: str = None, limit: int = 50):
+        """Get joined squares."""
+        METHOD_NAME = "getJoinedSquares"
+        params = [[11, 2, continuationToken], [8, 3, limit]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def markAsRead(self, squareChatMid, messageId):
-        sqrd = [
-            128,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            10,
-            109,
-            97,
-            114,
-            107,
-            65,
-            115,
-            82,
-            101,
-            97,
-            100,
-            0,
-            0,
-            0,
-            0,
-        ]
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2, 0, 0, 0, len(squareChatMid)]
-        for value in squareChatMid:
-            sqrd.append(ord(value))
-        sqrd += [11, 0, 4, 0, 0, 0, len(messageId)]
-        for value in messageId:
-            sqrd.append(ord(value))
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def markAsRead(self, squareChatMid: str, messageId: str):
+        """Mark as read for square chat."""
+        METHOD_NAME = "markAsRead"
+        params = [[11, 2, squareChatMid], [11, 4, messageId]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def reactToMessage(self, squareChatMid, messageId, reactionType=2):
+    def reactToMessage(self, squareChatMid: str, messageId: str, reactionType: int = 2):
         """
+        React to message for square chat message.
+
         - reactionType
             ALL     = 0,
             UNDO    = 1,
@@ -181,33 +54,20 @@ class SquareService(object):
             SAD     = 6,
             OMG     = 7,
         """
-        sqrd = [128, 1, 0, 1] + self.getStringBytes("reactToMessage") + [0, 0, 0, 0]
-        sqrd += [12, 0, 1]
-        sqrd += [8, 0, 1] + self.getIntBytes(0)  # reqSeq
-        sqrd += [11, 0, 2] + self.getStringBytes(squareChatMid)
-        sqrd += [11, 0, 3] + self.getStringBytes(messageId)
-        sqrd += [8, 0, 4] + self.getIntBytes(reactionType)
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        METHOD_NAME = "reactToMessage"
+        params = [
+            [8, 1, 0],  # reqSeq
+            [11, 2, squareChatMid],
+            [11, 3, messageId],
+            [8, 4, reactionType],
+        ]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def findSquareByInvitationTicket(self, invitationTicket):
-        sqrd = (
-            [128, 1, 0, 1]
-            + self.getStringBytes("findSquareByInvitationTicket")
-            + [0, 0, 0, 0]
-        )
-        sqrd += [12, 0, 1]
-        sqrd += [11, 0, 2] + self.getStringBytes(invitationTicket)
-        sqrd += [0, 0]
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def findSquareByInvitationTicket(self, invitationTicket: str):
+        """Find square by invitation ticket."""
+        METHOD_NAME = "findSquareByInvitationTicket"
+        params = [[11, 2, invitationTicket]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def fetchMyEvents(
         self,
@@ -216,54 +76,39 @@ class SquareService(object):
         continuationToken: str = None,
         limit: int = 100,
     ):
-
+        """Fetch square events."""
         METHOD_NAME = "fetchMyEvents"
         params = [
-            [
-                12,
-                1,
-                [
-                    [10, 1, subscriptionId],
-                    [11, 2, syncToken],
-                    [8, 3, limit],
-                    [11, 4, continuationToken],
-                ],
-            ]
+            [10, 1, subscriptionId],
+            [11, 2, syncToken],
+            [8, 3, limit],
+            [11, 4, continuationToken],
         ]
-        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            baseException=SquareService.SQUARE_EXCEPTION,
-            readWith=f"SquareService.{METHOD_NAME}",
-        )
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def fetchSquareChatEvents(
-        self, squareChatMid, syncToken="", subscriptionId=0, limit=100
+        self,
+        squareChatMid: str,
+        syncToken: str = None,
+        continuationToken: str = None,
+        subscriptionId: int = 0,
+        limit: int = 100,
     ):
+        """Fetch square chat events."""
+        METHOD_NAME = "fetchSquareChatEvents"
+        fetchType = 1  # DEFAULT(1),PREFETCH_BY_SERVER(2),
+        # PREFETCH_BY_CLIENT(3);
         params = [
-            [
-                12,
-                1,
-                [
-                    [10, 1, subscriptionId],
-                    [11, 2, squareChatMid],
-                    # [11, 3, syncToken],
-                    [8, 4, limit],
-                    [8, 5, 1],  # direction
-                    [8, 6, 1],  # inclusive
-                    # [11, 7, continuationToken]
-                ],
-            ]
+            [10, 1, subscriptionId],
+            [11, 2, squareChatMid],
+            [11, 3, syncToken],
+            [8, 4, limit],
+            [8, 5, 1],  # direction
+            [8, 6, 1],  # inclusive
+            [11, 7, continuationToken],
+            [8, 8, fetchType],
         ]
-        sqrd = self.generateDummyProtocol("fetchSquareChatEvents", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def sendSquareMessage(
         self,
@@ -273,6 +118,8 @@ class SquareService(object):
         contentMetadata: dict = {},
         relatedMessageId: str = None,
     ):
+        """Send message for square chat (OLD)."""
+        METHOD_NAME = "sendMessage"
         message = [
             # [11, 1, _from],
             [11, 2, squareChatMid],
@@ -287,39 +134,22 @@ class SquareService(object):
                     8,
                     22,
                     3,
-                ]  # messageRelationType; FORWARD(0), AUTO_REPLY(1), SUBORDINATE(2), REPLY(3);
+                ]
             )
-            message.append(
-                [8, 24, 2]  # relatedMessageServiceCode; 1 for Talk 2 for Square
-            )
+            message.append([8, 24, 2])
         params = [
+            [8, 1, self.getCurrReqId()],
+            [11, 2, squareChatMid],
             [
                 12,
-                1,
+                3,
                 [
-                    [8, 1, self.getCurrReqId()],  # reqSeq
-                    [11, 2, squareChatMid],
-                    [
-                        12,
-                        3,
-                        [
-                            [12, 1, message],
-                            [8, 3, 4],  # fromType
-                            # [10, 4, 0],  # squareMessageRevision
-                            # [8, 5, 1]
-                        ],
-                    ],
+                    [12, 1, message],
+                    [8, 3, 4],
                 ],
-            ]
+            ],
         ]
-        sqrd = self.generateDummyProtocol("sendMessage", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            encType=0,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def sendSquareTextMessage(
         self,
@@ -332,29 +162,19 @@ class SquareService(object):
             squareChatMid, text, 0, contentMetadata, relatedMessageId
         )
 
-    def getSquare(self, squareMid):
-        params = [[12, 1, [[11, 2, squareMid]]]]
-        sqrd = self.generateDummyProtocol("getSquare", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            encType=0,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def getSquare(self, squareMid: str):
+        """Get square."""
+        METHOD_NAME = "getSquare"
+        params = [[11, 2, squareMid]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
-    def getJoinableSquareChats(self, squareMid, continuationToken=None):
-        params = [
-            [12, 1, [[11, 2, squareMid], [11, 10, continuationToken], [8, 11, 100]]]
-        ]
-        sqrd = self.generateDummyProtocol("getJoinableSquareChats", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            encType=0,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def getJoinableSquareChats(
+        self, squareMid: str, continuationToken: str = None, limit: int = 100
+    ):
+        """Get joinable square chats."""
+        METHOD_NAME = "getJoinableSquareChats"
+        params = [[11, 1, squareMid], [11, 10, continuationToken], [8, 11, limit]]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def createSquare(
         self,
@@ -366,74 +186,53 @@ class SquareService(object):
         SquareJoinMethodType: int = 0,
     ):
         """
+        Create square.
+
         - SquareJoinMethodType
             NONE(0),
             APPROVAL(1),
             CODE(2);
         """
+        METHOD_NAME = "createSquare"
         params = [
+            [8, 2, self.getCurrReqId()],
             [
                 12,
-                1,
+                2,
                 [
-                    [8, 2, self.getCurrReqId()],
-                    [
-                        12,
-                        2,
-                        [
-                            [11, 2, name],
-                            [11, 4, profileImageObsHash],
-                            [11, 5, desc],
-                            [2, 6, searchable],
-                            [8, 7, 1],  # type
-                            [8, 8, 1],  # categoryId
-                            [10, 10, 0],  # revision
-                            [2, 11, True],  # ableToUseInvitationTicket
-                            [12, 14, [[8, 1, SquareJoinMethodType]]],
-                            [2, 15, False],  # adultOnly
-                            [15, 16, [11, []]],  # svcTags
-                        ],
-                    ],
-                    [
-                        12,
-                        3,
-                        [
-                            [11, 3, displayName],
-                            # [11, 4, profileImageObsHash],
-                            [2, 5, True],  # ableToReceiveMessage
-                            [10, 9, 0],  # revision
-                        ],
-                    ],
+                    [11, 2, name],
+                    [11, 4, profileImageObsHash],
+                    [11, 5, desc],
+                    [2, 6, searchable],
+                    [8, 7, 1],  # type
+                    [8, 8, 1],  # categoryId
+                    [10, 10, 0],  # revision
+                    [2, 11, True],  # ableToUseInvitationTicket
+                    [12, 14, [[8, 1, SquareJoinMethodType]]],
+                    [2, 15, False],  # adultOnly
+                    [15, 16, [11, []]],  # svcTags
                 ],
-            ]
+            ],
+            [
+                12,
+                3,
+                [
+                    [11, 3, displayName],
+                    # [11, 4, profileImageObsHash],
+                    [2, 5, True],  # ableToReceiveMessage
+                    [10, 9, 0],  # revision
+                ],
+            ],
         ]
-        sqrd = self.generateDummyProtocol("createSquare", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            encType=0,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def getSquareChatAnnouncements(self, squareMid: str):
+        """Get square chat announcements."""
+        METHOD_NAME = "getSquareChatAnnouncements"
         params = [
-            [
-                12,
-                1,
-                [
-                    [11, 2, squareMid],
-                ],
-            ]
+            [11, 2, squareMid],
         ]
-        sqrd = self.generateDummyProtocol("getSquareChatAnnouncements", params, 4)
-        return self.postPackDataAndGetUnpackRespData(
-            self.LINE_SQUARE_ENDPOINT,
-            sqrd,
-            4,
-            encType=0,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def leaveSquareChat(self):
         """
@@ -976,20 +775,75 @@ class SquareService(object):
             baseException=SquareService.SQUARE_EXCEPTION,
         )
 
-    def updateSquareMember(self):
+    def updateSquareMember(
+        self,
+        updatedAttrs: list,
+        updatedPreferenceAttrs: list,
+        squareMemberMid: str,
+        squareMid: str,
+        revision: int,
+        displayName: str = None,
+        membershipState: int = None,
+        role: int = None,
+    ):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        Update square member.
+
+        SquareMemberAttribute:
+            DISPLAY_NAME(1),
+            PROFILE_IMAGE(2),
+            ABLE_TO_RECEIVE_MESSAGE(3),
+            MEMBERSHIP_STATE(5),
+            ROLE(6),
+            PREFERENCE(7);
+        SquareMembershipState:
+            JOIN_REQUESTED(1),
+            JOINED(2),
+            REJECTED(3),
+            LEFT(4),
+            KICK_OUT(5),
+            BANNED(6),
+            DELETED(7);
         """
-        raise Exception("updateSquareMember is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "updateSquareMember", params, self.SquareService_REQ_TYPE
-        )
-        return self.postPackDataAndGetUnpackRespData(
-            self.SquareService_API_PATH,
-            sqrd,
-            self.SquareService_RES_TYPE,
-            baseException=SquareService.SQUARE_EXCEPTION,
+        METHOD_NAME = "updateSquareMember"
+        squareMember = [[11, 1, squareMemberMid], [11, 2, squareMid]]
+        if 1 in updatedAttrs:
+            if displayName is None:
+                raise ValueError("displayName is None")
+            squareMember.append([11, 3, displayName])
+        if 5 in updatedAttrs:
+            if membershipState is None:
+                raise ValueError("membershipState is None")
+            squareMember.append([8, 7, membershipState])
+        if 6 in updatedAttrs:
+            if role is None:
+                raise ValueError("role is None")
+            squareMember.append([8, 8, role])
+        squareMember.append([10, 9, revision])
+        params = [
+            [14, 2, [8, updatedAttrs]],
+            [14, 3, [8, updatedPreferenceAttrs]],
+            [12, 4, squareMember],
+        ]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
+
+    # https://discord.com/channels/466066749440393216/1076212330620256296
+    def deleteOtherFromSquare(self, sid: str, pid: str):
+        """Kick out member for square."""
+        UPDATE_PREF_ATTRS = []
+        UPDATE_ATTRS = [5]
+        MEMBERSHIP_STATE = 5
+        getSquareMemberResp = self.getSquareMember(pid)
+        squareMember = self.checkAndGetValue(getSquareMemberResp, "squareMember", 1)
+        squareMemberRevision = self.checkAndGetValue(squareMember, "revision", 9)
+        revision = squareMemberRevision
+        self.updateSquareMember(
+            UPDATE_ATTRS,
+            UPDATE_PREF_ATTRS,
+            pid,
+            sid,
+            revision,
+            membershipState=MEMBERSHIP_STATE,
         )
 
     def updateSquare(self):
@@ -1431,9 +1285,7 @@ class SquareService(object):
         DATETIME: 02/03/2023, 23:02:07
         """
         METHOD_NAME = "getSquareEmid"
-        params = [
-            [11, 1, squareMid]
-        ]
+        params = [[11, 1, squareMid]]
         return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def getSquareMembersBySquare(self, squareMid: str, squareMemberMids: list):
@@ -1466,17 +1318,13 @@ class SquareService(object):
         return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
 
-class SquareServiceStruct(object):
-    @staticmethod
-    def BaseRequest(request: list):
-        return [[12, 1, request]]
-
+class SquareServiceStruct(BaseServiceStruct):
     @staticmethod
     def UnsendMessageRequest(squareChatMid: str, messageId: str):
         return __class__.BaseRequest([[11, 2, squareChatMid], [11, 3, messageId]])
 
     @staticmethod
-    def SendRequestByName(client: 'CHRLINE', name: str, request: str):
+    def SendRequestByName(client: "CHRLINE", name: str, request: str):
         payload = __class__.BaseRequest(request)
         sqrd = client.generateDummyProtocol(
             name, payload, client.SquareService_REQ_TYPE

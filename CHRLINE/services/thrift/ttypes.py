@@ -3391,6 +3391,15 @@ class MessageReactionType(object):
     }
 
 
+class SquareChatAnnouncementType(object):
+
+    _VALUES_TO_NAMES = {
+    }
+
+    _NAMES_TO_VALUES = {
+    }
+
+
 class SquareMessageState(object):
     SENT = 1
     DELETED = 2
@@ -23128,6 +23137,1417 @@ class ManualRepairResponse(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class InviteIntoSquareChatResponse(object):
+    """
+    Attributes:
+     - inviteeMids
+
+    """
+
+
+    def __init__(self, inviteeMids=None,):
+        self.inviteeMids = inviteeMids
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.inviteeMids = []
+                    (_etype523, _size520) = iprot.readListBegin()
+                    for _i524 in range(_size520):
+                        _elem525 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        self.inviteeMids.append(_elem525)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteIntoSquareChatResponse')
+        if self.inviteeMids is not None:
+            oprot.writeFieldBegin('inviteeMids', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRING, len(self.inviteeMids))
+            for iter526 in self.inviteeMids:
+                oprot.writeString(iter526.encode('utf-8') if sys.version_info[0] == 2 else iter526)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class InviteToSquareResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteToSquareResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetJoinedSquaresResponse(object):
+    """
+    Attributes:
+     - squares
+     - members
+     - authorities
+     - statuses
+     - continuationToken
+     - noteStatuses
+
+    """
+
+
+    def __init__(self, squares=None, members=None, authorities=None, statuses=None, continuationToken=None, noteStatuses=None,):
+        self.squares = squares
+        self.members = members
+        self.authorities = authorities
+        self.statuses = statuses
+        self.continuationToken = continuationToken
+        self.noteStatuses = noteStatuses
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.squares = []
+                    (_etype530, _size527) = iprot.readListBegin()
+                    for _i531 in range(_size527):
+                        _elem532 = Square()
+                        _elem532.read(iprot)
+                        self.squares.append(_elem532)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.MAP:
+                    self.members = {}
+                    (_ktype534, _vtype535, _size533) = iprot.readMapBegin()
+                    for _i537 in range(_size533):
+                        _key538 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        _val539 = SquareMember()
+                        _val539.read(iprot)
+                        self.members[_key538] = _val539
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.MAP:
+                    self.authorities = {}
+                    (_ktype541, _vtype542, _size540) = iprot.readMapBegin()
+                    for _i544 in range(_size540):
+                        _key545 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        _val546 = SquareAuthority()
+                        _val546.read(iprot)
+                        self.authorities[_key545] = _val546
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.MAP:
+                    self.statuses = {}
+                    (_ktype548, _vtype549, _size547) = iprot.readMapBegin()
+                    for _i551 in range(_size547):
+                        _key552 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        _val553 = SquareStatus()
+                        _val553.read(iprot)
+                        self.statuses[_key552] = _val553
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.continuationToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.MAP:
+                    self.noteStatuses = {}
+                    (_ktype555, _vtype556, _size554) = iprot.readMapBegin()
+                    for _i558 in range(_size554):
+                        _key559 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        _val560 = NoteStatus()
+                        _val560.read(iprot)
+                        self.noteStatuses[_key559] = _val560
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetJoinedSquaresResponse')
+        if self.squares is not None:
+            oprot.writeFieldBegin('squares', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.squares))
+            for iter561 in self.squares:
+                iter561.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.members is not None:
+            oprot.writeFieldBegin('members', TType.MAP, 2)
+            oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.members))
+            for kiter562, viter563 in self.members.items():
+                oprot.writeString(kiter562.encode('utf-8') if sys.version_info[0] == 2 else kiter562)
+                viter563.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.authorities is not None:
+            oprot.writeFieldBegin('authorities', TType.MAP, 3)
+            oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.authorities))
+            for kiter564, viter565 in self.authorities.items():
+                oprot.writeString(kiter564.encode('utf-8') if sys.version_info[0] == 2 else kiter564)
+                viter565.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.statuses is not None:
+            oprot.writeFieldBegin('statuses', TType.MAP, 4)
+            oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.statuses))
+            for kiter566, viter567 in self.statuses.items():
+                oprot.writeString(kiter566.encode('utf-8') if sys.version_info[0] == 2 else kiter566)
+                viter567.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.continuationToken is not None:
+            oprot.writeFieldBegin('continuationToken', TType.STRING, 5)
+            oprot.writeString(self.continuationToken.encode('utf-8') if sys.version_info[0] == 2 else self.continuationToken)
+            oprot.writeFieldEnd()
+        if self.noteStatuses is not None:
+            oprot.writeFieldBegin('noteStatuses', TType.MAP, 6)
+            oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.noteStatuses))
+            for kiter568, viter569 in self.noteStatuses.items():
+                oprot.writeString(kiter568.encode('utf-8') if sys.version_info[0] == 2 else kiter568)
+                viter569.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class MarkAsReadResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('MarkAsReadResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ReactToMessageResponse(object):
+    """
+    Attributes:
+     - reaction
+     - status
+
+    """
+
+
+    def __init__(self, reaction=None, status=None,):
+        self.reaction = reaction
+        self.status = status
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.reaction = SquareMessageReaction()
+                    self.reaction.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.status = SquareMessageReactionStatus()
+                    self.status.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('ReactToMessageResponse')
+        if self.reaction is not None:
+            oprot.writeFieldBegin('reaction', TType.STRUCT, 1)
+            self.reaction.write(oprot)
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.STRUCT, 2)
+            self.status.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FindSquareByInvitationTicketResponse(object):
+    """
+    Attributes:
+     - square
+     - myMembership
+     - squareAuthority
+     - squareStatus
+     - squareFeatureSet
+     - noteStatus
+     - chat
+     - chatStatus
+
+    """
+
+
+    def __init__(self, square=None, myMembership=None, squareAuthority=None, squareStatus=None, squareFeatureSet=None, noteStatus=None, chat=None, chatStatus=None,):
+        self.square = square
+        self.myMembership = myMembership
+        self.squareAuthority = squareAuthority
+        self.squareStatus = squareStatus
+        self.squareFeatureSet = squareFeatureSet
+        self.noteStatus = noteStatus
+        self.chat = chat
+        self.chatStatus = chatStatus
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.square = Square()
+                    self.square.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.myMembership = SquareMember()
+                    self.myMembership.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.squareAuthority = SquareAuthority()
+                    self.squareAuthority.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.squareStatus = SquareStatus()
+                    self.squareStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.squareFeatureSet = SquareFeatureSet()
+                    self.squareFeatureSet.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRUCT:
+                    self.noteStatus = NoteStatus()
+                    self.noteStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.STRUCT:
+                    self.chat = SquareChat()
+                    self.chat.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.STRUCT:
+                    self.chatStatus = SquareChatStatus()
+                    self.chatStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FindSquareByInvitationTicketResponse')
+        if self.square is not None:
+            oprot.writeFieldBegin('square', TType.STRUCT, 1)
+            self.square.write(oprot)
+            oprot.writeFieldEnd()
+        if self.myMembership is not None:
+            oprot.writeFieldBegin('myMembership', TType.STRUCT, 2)
+            self.myMembership.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareAuthority is not None:
+            oprot.writeFieldBegin('squareAuthority', TType.STRUCT, 3)
+            self.squareAuthority.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareStatus is not None:
+            oprot.writeFieldBegin('squareStatus', TType.STRUCT, 4)
+            self.squareStatus.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareFeatureSet is not None:
+            oprot.writeFieldBegin('squareFeatureSet', TType.STRUCT, 5)
+            self.squareFeatureSet.write(oprot)
+            oprot.writeFieldEnd()
+        if self.noteStatus is not None:
+            oprot.writeFieldBegin('noteStatus', TType.STRUCT, 6)
+            self.noteStatus.write(oprot)
+            oprot.writeFieldEnd()
+        if self.chat is not None:
+            oprot.writeFieldBegin('chat', TType.STRUCT, 7)
+            self.chat.write(oprot)
+            oprot.writeFieldEnd()
+        if self.chatStatus is not None:
+            oprot.writeFieldBegin('chatStatus', TType.STRUCT, 8)
+            self.chatStatus.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SubscriptionState(object):
+    """
+    Attributes:
+     - subscriptionId
+     - ttlMillis
+
+    """
+
+
+    def __init__(self, subscriptionId=None, ttlMillis=None,):
+        self.subscriptionId = subscriptionId
+        self.ttlMillis = ttlMillis
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.subscriptionId = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I64:
+                    self.ttlMillis = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SubscriptionState')
+        if self.subscriptionId is not None:
+            oprot.writeFieldBegin('subscriptionId', TType.I64, 1)
+            oprot.writeI64(self.subscriptionId)
+            oprot.writeFieldEnd()
+        if self.ttlMillis is not None:
+            oprot.writeFieldBegin('ttlMillis', TType.I64, 2)
+            oprot.writeI64(self.ttlMillis)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FetchSquareChatEventsResponse(object):
+    """
+    Attributes:
+     - subscription
+     - events
+     - syncToken
+     - continuationToken
+
+    """
+
+
+    def __init__(self, subscription=None, events=None, syncToken=None, continuationToken=None,):
+        self.subscription = subscription
+        self.events = events
+        self.syncToken = syncToken
+        self.continuationToken = continuationToken
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.subscription = SubscriptionState()
+                    self.subscription.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.events = []
+                    (_etype573, _size570) = iprot.readListBegin()
+                    for _i574 in range(_size570):
+                        _elem575 = SquareEvent()
+                        _elem575.read(iprot)
+                        self.events.append(_elem575)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.syncToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.continuationToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FetchSquareChatEventsResponse')
+        if self.subscription is not None:
+            oprot.writeFieldBegin('subscription', TType.STRUCT, 1)
+            self.subscription.write(oprot)
+            oprot.writeFieldEnd()
+        if self.events is not None:
+            oprot.writeFieldBegin('events', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRUCT, len(self.events))
+            for iter576 in self.events:
+                iter576.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.syncToken is not None:
+            oprot.writeFieldBegin('syncToken', TType.STRING, 3)
+            oprot.writeString(self.syncToken.encode('utf-8') if sys.version_info[0] == 2 else self.syncToken)
+            oprot.writeFieldEnd()
+        if self.continuationToken is not None:
+            oprot.writeFieldBegin('continuationToken', TType.STRING, 4)
+            oprot.writeString(self.continuationToken.encode('utf-8') if sys.version_info[0] == 2 else self.continuationToken)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetSquareResponse(object):
+    """
+    Attributes:
+     - square
+     - myMembership
+     - squareAuthority
+     - squareStatus
+     - squareFeatureSet
+     - noteStatus
+
+    """
+
+
+    def __init__(self, square=None, myMembership=None, squareAuthority=None, squareStatus=None, squareFeatureSet=None, noteStatus=None,):
+        self.square = square
+        self.myMembership = myMembership
+        self.squareAuthority = squareAuthority
+        self.squareStatus = squareStatus
+        self.squareFeatureSet = squareFeatureSet
+        self.noteStatus = noteStatus
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.square = Square()
+                    self.square.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.myMembership = SquareMember()
+                    self.myMembership.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.squareAuthority = SquareAuthority()
+                    self.squareAuthority.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.squareStatus = SquareStatus()
+                    self.squareStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.squareFeatureSet = SquareFeatureSet()
+                    self.squareFeatureSet.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRUCT:
+                    self.noteStatus = NoteStatus()
+                    self.noteStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetSquareResponse')
+        if self.square is not None:
+            oprot.writeFieldBegin('square', TType.STRUCT, 1)
+            self.square.write(oprot)
+            oprot.writeFieldEnd()
+        if self.myMembership is not None:
+            oprot.writeFieldBegin('myMembership', TType.STRUCT, 2)
+            self.myMembership.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareAuthority is not None:
+            oprot.writeFieldBegin('squareAuthority', TType.STRUCT, 3)
+            self.squareAuthority.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareStatus is not None:
+            oprot.writeFieldBegin('squareStatus', TType.STRUCT, 4)
+            self.squareStatus.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareFeatureSet is not None:
+            oprot.writeFieldBegin('squareFeatureSet', TType.STRUCT, 5)
+            self.squareFeatureSet.write(oprot)
+            oprot.writeFieldEnd()
+        if self.noteStatus is not None:
+            oprot.writeFieldBegin('noteStatus', TType.STRUCT, 6)
+            self.noteStatus.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetJoinableSquareChatsResponse(object):
+    """
+    Attributes:
+     - squareChats
+     - continuationToken
+     - totalSquareChatCount
+     - squareChatStatuses
+
+    """
+
+
+    def __init__(self, squareChats=None, continuationToken=None, totalSquareChatCount=None, squareChatStatuses=None,):
+        self.squareChats = squareChats
+        self.continuationToken = continuationToken
+        self.totalSquareChatCount = totalSquareChatCount
+        self.squareChatStatuses = squareChatStatuses
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.squareChats = []
+                    (_etype580, _size577) = iprot.readListBegin()
+                    for _i581 in range(_size577):
+                        _elem582 = SquareChat()
+                        _elem582.read(iprot)
+                        self.squareChats.append(_elem582)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.continuationToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.totalSquareChatCount = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.MAP:
+                    self.squareChatStatuses = {}
+                    (_ktype584, _vtype585, _size583) = iprot.readMapBegin()
+                    for _i587 in range(_size583):
+                        _key588 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                        _val589 = SquareChatStatus()
+                        _val589.read(iprot)
+                        self.squareChatStatuses[_key588] = _val589
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetJoinableSquareChatsResponse')
+        if self.squareChats is not None:
+            oprot.writeFieldBegin('squareChats', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.squareChats))
+            for iter590 in self.squareChats:
+                iter590.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.continuationToken is not None:
+            oprot.writeFieldBegin('continuationToken', TType.STRING, 2)
+            oprot.writeString(self.continuationToken.encode('utf-8') if sys.version_info[0] == 2 else self.continuationToken)
+            oprot.writeFieldEnd()
+        if self.totalSquareChatCount is not None:
+            oprot.writeFieldBegin('totalSquareChatCount', TType.I32, 3)
+            oprot.writeI32(self.totalSquareChatCount)
+            oprot.writeFieldEnd()
+        if self.squareChatStatuses is not None:
+            oprot.writeFieldBegin('squareChatStatuses', TType.MAP, 4)
+            oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.squareChatStatuses))
+            for kiter591, viter592 in self.squareChatStatuses.items():
+                oprot.writeString(kiter591.encode('utf-8') if sys.version_info[0] == 2 else kiter591)
+                viter592.write(oprot)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class CreateSquareResponse(object):
+    """
+    Attributes:
+     - square
+     - creator
+     - authority
+     - status
+     - featureSet
+     - noteStatus
+     - squareChat
+     - squareChatStatus
+     - squareChatMember
+     - squareChatFeatureSet
+
+    """
+
+
+    def __init__(self, square=None, creator=None, authority=None, status=None, featureSet=None, noteStatus=None, squareChat=None, squareChatStatus=None, squareChatMember=None, squareChatFeatureSet=None,):
+        self.square = square
+        self.creator = creator
+        self.authority = authority
+        self.status = status
+        self.featureSet = featureSet
+        self.noteStatus = noteStatus
+        self.squareChat = squareChat
+        self.squareChatStatus = squareChatStatus
+        self.squareChatMember = squareChatMember
+        self.squareChatFeatureSet = squareChatFeatureSet
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.square = Square()
+                    self.square.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.creator = SquareMember()
+                    self.creator.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.authority = SquareAuthority()
+                    self.authority.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.status = SquareStatus()
+                    self.status.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.featureSet = SquareFeatureSet()
+                    self.featureSet.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRUCT:
+                    self.noteStatus = NoteStatus()
+                    self.noteStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.STRUCT:
+                    self.squareChat = SquareChat()
+                    self.squareChat.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.STRUCT:
+                    self.squareChatStatus = SquareChatStatus()
+                    self.squareChatStatus.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.STRUCT:
+                    self.squareChatMember = SquareChatMember()
+                    self.squareChatMember.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.STRUCT:
+                    self.squareChatFeatureSet = SquareChatFeatureSet()
+                    self.squareChatFeatureSet.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('CreateSquareResponse')
+        if self.square is not None:
+            oprot.writeFieldBegin('square', TType.STRUCT, 1)
+            self.square.write(oprot)
+            oprot.writeFieldEnd()
+        if self.creator is not None:
+            oprot.writeFieldBegin('creator', TType.STRUCT, 2)
+            self.creator.write(oprot)
+            oprot.writeFieldEnd()
+        if self.authority is not None:
+            oprot.writeFieldBegin('authority', TType.STRUCT, 3)
+            self.authority.write(oprot)
+            oprot.writeFieldEnd()
+        if self.status is not None:
+            oprot.writeFieldBegin('status', TType.STRUCT, 4)
+            self.status.write(oprot)
+            oprot.writeFieldEnd()
+        if self.featureSet is not None:
+            oprot.writeFieldBegin('featureSet', TType.STRUCT, 5)
+            self.featureSet.write(oprot)
+            oprot.writeFieldEnd()
+        if self.noteStatus is not None:
+            oprot.writeFieldBegin('noteStatus', TType.STRUCT, 6)
+            self.noteStatus.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareChat is not None:
+            oprot.writeFieldBegin('squareChat', TType.STRUCT, 7)
+            self.squareChat.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareChatStatus is not None:
+            oprot.writeFieldBegin('squareChatStatus', TType.STRUCT, 8)
+            self.squareChatStatus.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareChatMember is not None:
+            oprot.writeFieldBegin('squareChatMember', TType.STRUCT, 9)
+            self.squareChatMember.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareChatFeatureSet is not None:
+            oprot.writeFieldBegin('squareChatFeatureSet', TType.STRUCT, 10)
+            self.squareChatFeatureSet.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class TextMessageAnnouncementContents(object):
+    """
+    Attributes:
+     - messageId
+     - text
+     - senderSquareMemberMid
+     - createdAt
+     - senderMid
+
+    """
+
+
+    def __init__(self, messageId=None, text=None, senderSquareMemberMid=None, createdAt=None, senderMid=None,):
+        self.messageId = messageId
+        self.text = text
+        self.senderSquareMemberMid = senderSquareMemberMid
+        self.createdAt = createdAt
+        self.senderMid = senderMid
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.messageId = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.text = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.senderSquareMemberMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.createdAt = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.senderMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('TextMessageAnnouncementContents')
+        if self.messageId is not None:
+            oprot.writeFieldBegin('messageId', TType.STRING, 1)
+            oprot.writeString(self.messageId.encode('utf-8') if sys.version_info[0] == 2 else self.messageId)
+            oprot.writeFieldEnd()
+        if self.text is not None:
+            oprot.writeFieldBegin('text', TType.STRING, 2)
+            oprot.writeString(self.text.encode('utf-8') if sys.version_info[0] == 2 else self.text)
+            oprot.writeFieldEnd()
+        if self.senderSquareMemberMid is not None:
+            oprot.writeFieldBegin('senderSquareMemberMid', TType.STRING, 3)
+            oprot.writeString(self.senderSquareMemberMid.encode('utf-8') if sys.version_info[0] == 2 else self.senderSquareMemberMid)
+            oprot.writeFieldEnd()
+        if self.createdAt is not None:
+            oprot.writeFieldBegin('createdAt', TType.I64, 4)
+            oprot.writeI64(self.createdAt)
+            oprot.writeFieldEnd()
+        if self.senderMid is not None:
+            oprot.writeFieldBegin('senderMid', TType.STRING, 5)
+            oprot.writeString(self.senderMid.encode('utf-8') if sys.version_info[0] == 2 else self.senderMid)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SquareChatAnnouncementContents(object):
+    """
+    Attributes:
+     - textMessageAnnouncementContents
+
+    """
+
+
+    def __init__(self, textMessageAnnouncementContents=None,):
+        self.textMessageAnnouncementContents = textMessageAnnouncementContents
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.textMessageAnnouncementContents = TextMessageAnnouncementContents()
+                    self.textMessageAnnouncementContents.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SquareChatAnnouncementContents')
+        if self.textMessageAnnouncementContents is not None:
+            oprot.writeFieldBegin('textMessageAnnouncementContents', TType.STRUCT, 1)
+            self.textMessageAnnouncementContents.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class SquareChatAnnouncement(object):
+    """
+    Attributes:
+     - announcementSeq
+     - type
+     - contents
+     - createdAt
+     - creator
+
+    """
+
+
+    def __init__(self, announcementSeq=None, type=None, contents=None, createdAt=None, creator=None,):
+        self.announcementSeq = announcementSeq
+        self.type = type
+        self.contents = contents
+        self.createdAt = createdAt
+        self.creator = creator
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I64:
+                    self.announcementSeq = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I32:
+                    self.type = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.contents = SquareChatAnnouncementContents()
+                    self.contents.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I64:
+                    self.createdAt = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.creator = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('SquareChatAnnouncement')
+        if self.announcementSeq is not None:
+            oprot.writeFieldBegin('announcementSeq', TType.I64, 1)
+            oprot.writeI64(self.announcementSeq)
+            oprot.writeFieldEnd()
+        if self.type is not None:
+            oprot.writeFieldBegin('type', TType.I32, 2)
+            oprot.writeI32(self.type)
+            oprot.writeFieldEnd()
+        if self.contents is not None:
+            oprot.writeFieldBegin('contents', TType.STRUCT, 3)
+            self.contents.write(oprot)
+            oprot.writeFieldEnd()
+        if self.createdAt is not None:
+            oprot.writeFieldBegin('createdAt', TType.I64, 4)
+            oprot.writeI64(self.createdAt)
+            oprot.writeFieldEnd()
+        if self.creator is not None:
+            oprot.writeFieldBegin('creator', TType.STRING, 5)
+            oprot.writeString(self.creator.encode('utf-8') if sys.version_info[0] == 2 else self.creator)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetSquareChatAnnouncementsResponse(object):
+    """
+    Attributes:
+     - announcements
+
+    """
+
+
+    def __init__(self, announcements=None,):
+        self.announcements = announcements
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.announcements = []
+                    (_etype596, _size593) = iprot.readListBegin()
+                    for _i597 in range(_size593):
+                        _elem598 = SquareChatAnnouncement()
+                        _elem598.read(iprot)
+                        self.announcements.append(_elem598)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetSquareChatAnnouncementsResponse')
+        if self.announcements is not None:
+            oprot.writeFieldBegin('announcements', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.announcements))
+            for iter599 in self.announcements:
+                iter599.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(TalkException)
 TalkException.thrift_spec = (
     None,  # 0
@@ -24920,6 +26340,119 @@ ManualRepairResponse.thrift_spec = (
     (1, TType.LIST, 'events', (TType.STRUCT, [SquareEvent, None], False), None, ),  # 1
     (2, TType.STRING, 'syncToken', 'UTF8', None, ),  # 2
     (3, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 3
+)
+all_structs.append(InviteIntoSquareChatResponse)
+InviteIntoSquareChatResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'inviteeMids', (TType.STRING, 'UTF8', False), None, ),  # 1
+)
+all_structs.append(InviteToSquareResponse)
+InviteToSquareResponse.thrift_spec = (
+)
+all_structs.append(GetJoinedSquaresResponse)
+GetJoinedSquaresResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'squares', (TType.STRUCT, [Square, None], False), None, ),  # 1
+    (2, TType.MAP, 'members', (TType.STRING, 'UTF8', TType.STRUCT, [SquareMember, None], False), None, ),  # 2
+    (3, TType.MAP, 'authorities', (TType.STRING, 'UTF8', TType.STRUCT, [SquareAuthority, None], False), None, ),  # 3
+    (4, TType.MAP, 'statuses', (TType.STRING, 'UTF8', TType.STRUCT, [SquareStatus, None], False), None, ),  # 4
+    (5, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 5
+    (6, TType.MAP, 'noteStatuses', (TType.STRING, 'UTF8', TType.STRUCT, [NoteStatus, None], False), None, ),  # 6
+)
+all_structs.append(MarkAsReadResponse)
+MarkAsReadResponse.thrift_spec = (
+)
+all_structs.append(ReactToMessageResponse)
+ReactToMessageResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'reaction', [SquareMessageReaction, None], None, ),  # 1
+    (2, TType.STRUCT, 'status', [SquareMessageReactionStatus, None], None, ),  # 2
+)
+all_structs.append(FindSquareByInvitationTicketResponse)
+FindSquareByInvitationTicketResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'square', [Square, None], None, ),  # 1
+    (2, TType.STRUCT, 'myMembership', [SquareMember, None], None, ),  # 2
+    (3, TType.STRUCT, 'squareAuthority', [SquareAuthority, None], None, ),  # 3
+    (4, TType.STRUCT, 'squareStatus', [SquareStatus, None], None, ),  # 4
+    (5, TType.STRUCT, 'squareFeatureSet', [SquareFeatureSet, None], None, ),  # 5
+    (6, TType.STRUCT, 'noteStatus', [NoteStatus, None], None, ),  # 6
+    (7, TType.STRUCT, 'chat', [SquareChat, None], None, ),  # 7
+    (8, TType.STRUCT, 'chatStatus', [SquareChatStatus, None], None, ),  # 8
+)
+all_structs.append(SubscriptionState)
+SubscriptionState.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'subscriptionId', None, None, ),  # 1
+    (2, TType.I64, 'ttlMillis', None, None, ),  # 2
+)
+all_structs.append(FetchSquareChatEventsResponse)
+FetchSquareChatEventsResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'subscription', [SubscriptionState, None], None, ),  # 1
+    (2, TType.LIST, 'events', (TType.STRUCT, [SquareEvent, None], False), None, ),  # 2
+    (3, TType.STRING, 'syncToken', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 4
+)
+all_structs.append(GetSquareResponse)
+GetSquareResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'square', [Square, None], None, ),  # 1
+    (2, TType.STRUCT, 'myMembership', [SquareMember, None], None, ),  # 2
+    (3, TType.STRUCT, 'squareAuthority', [SquareAuthority, None], None, ),  # 3
+    (4, TType.STRUCT, 'squareStatus', [SquareStatus, None], None, ),  # 4
+    (5, TType.STRUCT, 'squareFeatureSet', [SquareFeatureSet, None], None, ),  # 5
+    (6, TType.STRUCT, 'noteStatus', [NoteStatus, None], None, ),  # 6
+)
+all_structs.append(GetJoinableSquareChatsResponse)
+GetJoinableSquareChatsResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'squareChats', (TType.STRUCT, [SquareChat, None], False), None, ),  # 1
+    (2, TType.STRING, 'continuationToken', 'UTF8', None, ),  # 2
+    (3, TType.I32, 'totalSquareChatCount', None, None, ),  # 3
+    (4, TType.MAP, 'squareChatStatuses', (TType.STRING, 'UTF8', TType.STRUCT, [SquareChatStatus, None], False), None, ),  # 4
+)
+all_structs.append(CreateSquareResponse)
+CreateSquareResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'square', [Square, None], None, ),  # 1
+    (2, TType.STRUCT, 'creator', [SquareMember, None], None, ),  # 2
+    (3, TType.STRUCT, 'authority', [SquareAuthority, None], None, ),  # 3
+    (4, TType.STRUCT, 'status', [SquareStatus, None], None, ),  # 4
+    (5, TType.STRUCT, 'featureSet', [SquareFeatureSet, None], None, ),  # 5
+    (6, TType.STRUCT, 'noteStatus', [NoteStatus, None], None, ),  # 6
+    (7, TType.STRUCT, 'squareChat', [SquareChat, None], None, ),  # 7
+    (8, TType.STRUCT, 'squareChatStatus', [SquareChatStatus, None], None, ),  # 8
+    (9, TType.STRUCT, 'squareChatMember', [SquareChatMember, None], None, ),  # 9
+    (10, TType.STRUCT, 'squareChatFeatureSet', [SquareChatFeatureSet, None], None, ),  # 10
+)
+all_structs.append(TextMessageAnnouncementContents)
+TextMessageAnnouncementContents.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'messageId', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'text', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'senderSquareMemberMid', 'UTF8', None, ),  # 3
+    (4, TType.I64, 'createdAt', None, None, ),  # 4
+    (5, TType.STRING, 'senderMid', 'UTF8', None, ),  # 5
+)
+all_structs.append(SquareChatAnnouncementContents)
+SquareChatAnnouncementContents.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'textMessageAnnouncementContents', [TextMessageAnnouncementContents, None], None, ),  # 1
+)
+all_structs.append(SquareChatAnnouncement)
+SquareChatAnnouncement.thrift_spec = (
+    None,  # 0
+    (1, TType.I64, 'announcementSeq', None, None, ),  # 1
+    (2, TType.I32, 'type', None, None, ),  # 2
+    (3, TType.STRUCT, 'contents', [SquareChatAnnouncementContents, None], None, ),  # 3
+    (4, TType.I64, 'createdAt', None, None, ),  # 4
+    (5, TType.STRING, 'creator', 'UTF8', None, ),  # 5
+)
+all_structs.append(GetSquareChatAnnouncementsResponse)
+GetSquareChatAnnouncementsResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'announcements', (TType.STRUCT, [SquareChatAnnouncement, None], False), None, ),  # 1
 )
 fix_spec(all_structs)
 del all_structs

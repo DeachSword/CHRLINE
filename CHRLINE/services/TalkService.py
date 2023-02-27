@@ -1,8 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 from typing import List
 import httpx
-import requests
 from random import randint
+
+from .BaseService import BaseService, BaseServiceHandler, BaseServiceStruct
 
 try:
     from ..exceptions import LineServiceException
@@ -10,14 +11,15 @@ except:
     pass
 
 
-class TalkService:
+class TalkService(BaseService):
     url = "https://ga2.line.naver.jp/enc"
     TalkService_REQ_TYPE = 4
     TalkService_RES_TYPE = 4
     TalkService_API_PATH = "/S4"
 
     def __init__(self):
-        self.testPollConn = requests.session()
+        self.sync_conn = httpx.Client(http2=True)
+        self.talk_handler = TalkServiceHandler(self)
 
     def sendMessage(
         self,
@@ -1890,72 +1892,6 @@ class TalkService:
             pass
         return []
 
-    def fetchOpsOld(self, revision, count=100):
-        METHOD_NAME = "fetchOps"
-        _headers = {"X-Line-Access": self.authToken, "x-lpqs": "/P3"}
-        a = self.encHeaders(_headers)
-        sqrd = [
-            128,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            8,
-            102,
-            101,
-            116,
-            99,
-            104,
-            79,
-            112,
-            115,
-            0,
-            0,
-            0,
-            0,
-        ]
-        sqrd += [10, 0, 2] + self.getIntBytes(revision, 8)
-        sqrd += [8, 0, 3] + self.getIntBytes(count)
-        sqrd += [10, 0, 4] + self.getIntBytes(self.globalRev, 8)
-        sqrd += [10, 0, 5] + self.getIntBytes(self.individualRev, 8)
-        sqrd += [0]
-        sqr_rd = a + sqrd
-        _data = bytes(sqr_rd)
-        data = self.encData(_data)
-        hr = self.server.additionalHeaders(
-            self.server.Headers,
-            {
-                "x-lst": "110000",
-            },
-        )
-        try:
-            res = self.testPollConn.post(
-                "https://gf.line.naver.jp/enc", data=data, headers=hr, timeout=180
-            )
-            if res.status_code == 200:
-                data = self.decData(res.content)
-                data = self.tryReadData(data)
-                if "fetchOps" in data:
-                    for op in data["fetchOps"]:
-                        if op[3] == 0:
-                            if 10 in op:
-                                a = op[10].split("\x1e")
-                                self.individualRev = a[0]
-                                self.log(f"individualRev: {self.individualRev}")
-                            if 11 in op:
-                                b = op[11].split("\x1e")
-                                self.globalRev = b[0]
-                                self.log(f"globalRev: {self.globalRev}")
-                    return data["fetchOps"]
-                else:
-                    raise Exception(f"no data")
-        except Exception as e:
-            print(f"[fetchOps]{e}")
-            return self.fetchOps(revision, count)
-        return []
-
     def fetchOperations(self, localRev, count=100):
         METHOD_NAME = "fetchOperations"
         params = [
@@ -2833,64 +2769,33 @@ class TalkService:
         self.log(f"Using sync() for {self.DEVICE_TYPE}...", isDebugOnly)
         self.log(f"globalRev: {self.globalRev}", isDebugOnly)
         self.log(f"individualRev: {self.individualRev}", isDebugOnly)
-        params = [
-            [
-                12,
-                1,
-                [
-                    [10, 1, revision],
-                    [8, 2, count],
-                    [10, 3, self.globalRev],
-                    [10, 4, self.individualRev],
-                    [8, 5, fullSyncRequestReason],
-                    [13, 6, [8, 10, lastPartialFullSyncs]],
-                ],
-            ]
-        ]
+        params = TalkServiceStruct.SyncRequest(
+            revision,
+            count,
+            self.globalRev,
+            self.individualRev,
+            fullSyncRequestReason,
+            lastPartialFullSyncs,
+        )
         sqrd = self.generateDummyProtocol("sync", params, 4)
+        self.log(f"start postPackDataAndGetUnpackRespData")
         res = self.postPackDataAndGetUnpackRespData(
-            "/SYNC5", sqrd, 5, readWith=f"SyncService.{METHOD_NAME}", timeout=180
+            "/SYNC5",
+            sqrd,
+            5,
+            readWith=f"SyncService.{METHOD_NAME}",
+            timeout=180,
+            conn=self.sync_conn,
         )
-        if res is None:
-            return []
-        operationResponse = self.checkAndGetValue(res, "operationResponse", 1)
-        fullSyncResponse = self.checkAndGetValue(res, "fullSyncResponse", 2)
-        partialFullSyncResponse = self.checkAndGetValue(
-            res, "partialFullSyncResponse", 2
-        )
-        self.log(f"Resp: {res}", isDebugOnly)
-        if operationResponse is not None:
-            ops = self.checkAndGetValue(operationResponse, "operations", 1)
-            hasMoreOps = self.checkAndGetValue(operationResponse, "hasMoreOps", 2)
-            globalEvents = self.checkAndGetValue(operationResponse, "globalEvents", 3)
-            individualEvents = self.checkAndGetValue(
-                operationResponse, "individualEvents", 4
-            )
-            if globalEvents is not None:
-                events = self.checkAndGetValue(globalEvents, "events", 1)
-                lastRevision = self.checkAndGetValue(globalEvents, "lastRevision", 2)
-                self.globalRev = lastRevision
-                self.log(f"new globalRev: {self.globalRev}", isDebugOnly)
-                self.log(f"globalEvents: {events}", isDebugOnly)
-
-            if individualEvents is not None:
-                events = self.checkAndGetValue(individualEvents, "events", 1)
-                lastRevision = self.checkAndGetValue(
-                    individualEvents, "lastRevision", 2
-                )
-                self.individualRev = lastRevision
-                self.log(f"new individualRev: {self.individualRev}", isDebugOnly)
-                self.log(f"individualEvents: {events}", isDebugOnly)
-            self.log(f"operations: {ops}", isDebugOnly)
-            return ops
-        elif fullSyncResponse is not None:
-            # revision - 1 for sync revision on next req
-            reasons = self.checkAndGetValue(fullSyncResponse, "reasons", 1)
-            syncRevision = self.checkAndGetValue(fullSyncResponse, "nextRevision", 2)
-            self.log(f"[ sync ] got fullSyncResponse: {reasons}")
-            return self.sync(syncRevision - 1, count)
-        else:
-            raise EOFError(f"sync failed, unknown response: {res}")
+        self.log(f"end postPackDataAndGetUnpackRespData")
+        self.log(f"start SyncHandler")
+        sht, shd = self.talk_handler.SyncHandler(res)
+        self.log(f"end SyncHandler: {sht}, {shd}")
+        if sht == 1:
+            return shd
+        elif sht == 2:
+            return self.sync(shd, count)
+        raise RuntimeError
 
     def updateChatRoomAnnouncement(
         self, gid: str, announcementId: int, messageLink: str, text: str, imgLink: str
@@ -6753,11 +6658,7 @@ class TalkService:
         )
 
 
-class TalkServiceStruct(object):
-    @staticmethod
-    def BaseRequest(request: list):
-        return [[12, 1, request]]
-
+class TalkServiceStruct(BaseServiceStruct):
     @staticmethod
     def CancelReactionRequest(messageId: int):
         return __class__.BaseRequest([[10, 2, messageId]])
@@ -6765,3 +6666,78 @@ class TalkServiceStruct(object):
     @staticmethod
     def DetermineMediaMessageFlowRequest(chatMid: str):
         return __class__.BaseRequest([[11, 1, chatMid]])
+
+    @staticmethod
+    def DetermineMediaMessageFlowRequest(chatMid: str):
+        return __class__.BaseRequest([[11, 1, chatMid]])
+
+    @staticmethod
+    def SyncRequest(
+        revision: int,
+        count: int,
+        globalRev: int,
+        individualRev: int,
+        fullSyncRequestReason: int,
+        lastPartialFullSyncs: dict,
+    ):
+        params = [
+            [10, 1, revision],
+            [8, 2, count],
+            [10, 3, globalRev],
+            [10, 4, individualRev],
+            [8, 5, fullSyncRequestReason],
+            [13, 6, [8, 10, lastPartialFullSyncs]],
+        ]
+        return __class__.BaseRequest(params)
+
+
+class TalkServiceHandler(BaseServiceHandler):
+    def SyncHandler(self, res: any):
+        """
+        Sync handler.
+
+        To simplify some checks, it will respond with (type, data).
+        - type:
+            1: success, and return ops.
+            2: need re-sync, return new one revision.
+        """
+        if res is None:
+            return 1, []
+        cl = self.cl
+        isDebugOnly = True
+        operationResponse = cl.checkAndGetValue(res, "operationResponse", 1)
+        fullSyncResponse = cl.checkAndGetValue(res, "fullSyncResponse", 2)
+        partialFullSyncResponse = cl.checkAndGetValue(res, "partialFullSyncResponse", 2)
+        cl.log(f"[SyncHandler] Resp: {res}", isDebugOnly)
+        if operationResponse is not None:
+            ops = cl.checkAndGetValue(operationResponse, "operations", 1)
+            hasMoreOps = cl.checkAndGetValue(operationResponse, "hasMoreOps", 2)
+            globalEvents = cl.checkAndGetValue(operationResponse, "globalEvents", 3)
+            individualEvents = cl.checkAndGetValue(
+                operationResponse, "individualEvents", 4
+            )
+            if globalEvents is not None:
+                events = cl.checkAndGetValue(globalEvents, "events", 1)
+                lastRevision = cl.checkAndGetValue(globalEvents, "lastRevision", 2)
+                cl.globalRev = lastRevision
+                cl.log(f"[SyncHandler] new globalRev: {cl.globalRev}", isDebugOnly)
+                cl.log(f"[SyncHandler] globalEvents: {events}", isDebugOnly)
+
+            if individualEvents is not None:
+                events = cl.checkAndGetValue(individualEvents, "events", 1)
+                lastRevision = cl.checkAndGetValue(individualEvents, "lastRevision", 2)
+                cl.individualRev = lastRevision
+                cl.log(
+                    f"[SyncHandler] new individualRev: {cl.individualRev}", isDebugOnly
+                )
+                cl.log(f"[SyncHandler] individualEvents: {events}", isDebugOnly)
+            cl.log(f"[SyncHandler] operations: {ops}", isDebugOnly)
+            return 1, ops
+        elif fullSyncResponse is not None:
+            # revision - 1 for sync revision on next req
+            reasons = cl.checkAndGetValue(fullSyncResponse, "reasons", 1)
+            syncRevision = cl.checkAndGetValue(fullSyncResponse, "nextRevision", 2)
+            cl.log(f"[SyncHandler] got fullSyncResponse: {reasons}")
+            return 2, syncRevision - 1
+        else:
+            raise EOFError(f"[SyncHandler] sync failed, unknown response: {res}")

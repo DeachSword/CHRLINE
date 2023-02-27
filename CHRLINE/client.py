@@ -49,7 +49,10 @@ class CHRLINE(
         forceTMCP: bool = False,
         savePath: str = None,
     ):
-        """Use authToken or Email & Password to Login.
+        r"""
+        Line client for CHRLINE.
+        
+        Use authToken or Email & Password to Login
         phone + region to Login secondary devices (and Android).
 
         ------------------------
@@ -83,6 +86,8 @@ class CHRLINE(
             If true, you must place line thrifts in `services\thrift`.
         forceTMCP: `bool`
             It will force the use of TMoreCompact protocol on TalkService.
+        savePath: `str`
+            Set base-save dir path.
         """
         self.encType = encType
         self.isDebug = debug
@@ -132,7 +137,7 @@ class CHRLINE(
             return self.initAll()
         self.mid = self.checkAndGetValue(self.profile, "mid", 1)
         __displayName = self.checkAndGetValue(self.profile, "displayName", 20)
-        self.log(f"[{__displayName}] 登入成功 ({self.mid})")
+        self.log(f"[{__displayName}] 登入成功 ({self.mid}) / {self.DEVICE_TYPE}")
         if self.customDataId is None:
             self.customDataId = self.mid
         try:
