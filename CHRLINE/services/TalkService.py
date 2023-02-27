@@ -2778,7 +2778,6 @@ class TalkService(BaseService):
             lastPartialFullSyncs,
         )
         sqrd = self.generateDummyProtocol("sync", params, 4)
-        self.log(f"start postPackDataAndGetUnpackRespData")
         res = self.postPackDataAndGetUnpackRespData(
             "/SYNC5",
             sqrd,
@@ -2787,10 +2786,7 @@ class TalkService(BaseService):
             timeout=180,
             conn=self.sync_conn,
         )
-        self.log(f"end postPackDataAndGetUnpackRespData")
-        self.log(f"start SyncHandler")
         sht, shd = self.talk_handler.SyncHandler(res)
-        self.log(f"end SyncHandler: {sht}, {shd}")
         if sht == 1:
             return shd
         elif sht == 2:

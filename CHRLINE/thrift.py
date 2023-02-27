@@ -498,7 +498,7 @@ class Thrift(object):
             subType = None
             if ftype == 0:
                 pass
-            if ftype == 1:
+            elif ftype == 1:
                 data = True
             elif ftype == 2:
                 data = False

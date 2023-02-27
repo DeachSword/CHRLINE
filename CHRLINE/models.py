@@ -5,6 +5,7 @@ import json
 import os
 import struct
 import time
+import requests
 import urllib
 from base64 import b64encode
 from datetime import datetime
@@ -185,11 +186,11 @@ class Models(object):
         tbin.data = data
         dataLen = tbin.readI16() + 2
         headerLen = tbin.readI16()
-        for i in range(headerLen):
+        for _ in range(headerLen):
             size = tbin.readI16()
-            _k = tbin.y(size)
+            _k = tbin.y(size).decode()
             size = tbin.readI16()
-            _v = tbin.y(size)
+            _v = tbin.y(size).decode()
             headers[_k] = _v
         return headers, data[dataLen:]
 
@@ -418,18 +419,24 @@ class Models(object):
             headers[
                 "origin"
             ] = "chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released"
+
+        data = bdata
+        if type(data) in [DummyProtocolSerializer, list]:
+            data = bdata = bytes(bdata)
+        elif not isinstance(bdata, bytes):
+            bdata = str(bdata).encode()
+        self.log(f"----------------- START POST", True)
         self.log(
             f"--> POST {path} {f'({self.LINE_ENCRYPTION_ENDPOINT})' if encType == 1 else ''}",
             True,
         )
         self.log(
-            f"--> {bytes(bdata).hex()}",
+            f"--> {bdata.hex()}",
             True,
         )
         if encType == 0:
             if conn is None:
                 conn = self.req_h2
-            data = bytes(bdata)
             if "x-le" in headers:
                 del headers["x-le"]
                 del headers["x-lcs"]
@@ -511,6 +518,12 @@ class Models(object):
                         "x-line-http",
                         "x-lcr",
                         "x-lts",
+                        "x-obs-oid",
+                        "x-obs-hash",
+                        "x-obs-debug-object-location",
+                        "x-obs-debug-id",
+                        "x-obs-content-type",
+                        # "x-line-next-access-max-age",
                     ]:
                         print(f"[HTTP] unhandled header:  {_rht} => {respHeaders[_rh]}")
             # x-line-access-refresh-required
@@ -606,6 +619,8 @@ class Models(object):
                         )
                     self.log(f"LOGIN OUT: {resMsg}")
                 raise LineServiceException(res["error"])
+            self.log(f"Result: {res}", True)
+            self.log(f"----------------- END POST", True)
             return res
         elif res.status_code in [400, 401, 403]:
             self.is_login = False
@@ -986,7 +1001,7 @@ def doLoopReq(
     except httpx.ConnectTimeout as ex:
         doRetry = True
         e = ex
-    except httpx.ReadTimeout as ex:
+    except (httpx.ReadTimeout, requests.exceptions.ReadTimeout) as ex:
         currCount -= 1
         doRetry = True
         e = ex
