@@ -397,19 +397,19 @@ class Models(object):
             headers = self.server.Headers.copy()
         if access_token is None:
             access_token = self.authToken
-        if isinstance(bdata, DummyProtocolSerializer):
-            # Import DummyProtocolSerializer in v2.5.3,
-            # it can be change the protocol type.
-            if self.force_tmore:
-                # Force TMoreCompact
-                if path in [self.LINE_NORMAL_ENDPOINT, "/S4"]:
-                    path = "/S5"
-                    ttype = 5
-            bdata.protocol = ttype
         ptype = "TBINARY" if ttype == 3 else "TCOMPACT"
         if ttype in [1, 2, 3, 4, 5]:
             headers["content-type"] = "application/x-thrift; protocol=" + ptype
             headers["accept"] = "application/x-thrift"
+            if isinstance(bdata, DummyProtocolSerializer):
+                # Import DummyProtocolSerializer in v2.5.3,
+                # it can be change the protocol type.
+                if self.force_tmore:
+                    # Force TMoreCompact
+                    if path in [self.LINE_NORMAL_ENDPOINT, "/S4"]:
+                        path = "/S5"
+                        ttype = 5
+                bdata.protocol = ttype
         headers["x-lal"] = self.LINE_LANGUAGE
         if encType is None:
             encType = self.encType
@@ -549,6 +549,9 @@ class Models(object):
             elif ttype == -3:
                 # JSON RAW
                 return json.loads(data)
+            elif ttype == -1:
+                # CONTENT RAW
+                return data
             elif ttype == 0:
                 # RESP
                 return conn_res
