@@ -3871,6 +3871,60 @@ class NotificationPostType(object):
     }
 
 
+class LiveTalkEventType(object):
+    NOTIFIED_UPDATE_LIVE_TALK_TITLE = 1
+    NOTIFIED_UPDATE_LIVE_TALK_SPEAKER_SETTING = 2
+    NOTIFIED_UPDATE_LIVE_TALK_ANNOUNCEMENT = 3
+    NOTIFIED_UPDATE_SQUARE_MEMBER_ROLE = 4
+    NOTIFIED_UPDATE_LIVE_TALK_ALLOW_REQUEST_TO_SPEAK = 5
+
+    _VALUES_TO_NAMES = {
+        1: "NOTIFIED_UPDATE_LIVE_TALK_TITLE",
+        2: "NOTIFIED_UPDATE_LIVE_TALK_SPEAKER_SETTING",
+        3: "NOTIFIED_UPDATE_LIVE_TALK_ANNOUNCEMENT",
+        4: "NOTIFIED_UPDATE_SQUARE_MEMBER_ROLE",
+        5: "NOTIFIED_UPDATE_LIVE_TALK_ALLOW_REQUEST_TO_SPEAK",
+    }
+
+    _NAMES_TO_VALUES = {
+        "NOTIFIED_UPDATE_LIVE_TALK_TITLE": 1,
+        "NOTIFIED_UPDATE_LIVE_TALK_SPEAKER_SETTING": 2,
+        "NOTIFIED_UPDATE_LIVE_TALK_ANNOUNCEMENT": 3,
+        "NOTIFIED_UPDATE_SQUARE_MEMBER_ROLE": 4,
+        "NOTIFIED_UPDATE_LIVE_TALK_ALLOW_REQUEST_TO_SPEAK": 5,
+    }
+
+
+class LiveTalkSpeakerSetting(object):
+    LIMITED_SPEAKERS = 1
+    ALL_AS_SPEAKERS = 2
+
+    _VALUES_TO_NAMES = {
+        1: "LIMITED_SPEAKERS",
+        2: "ALL_AS_SPEAKERS",
+    }
+
+    _NAMES_TO_VALUES = {
+        "LIMITED_SPEAKERS": 1,
+        "ALL_AS_SPEAKERS": 2,
+    }
+
+
+class LiveTalkType(object):
+    PUBLIC = 1
+    PRIVATE = 2
+
+    _VALUES_TO_NAMES = {
+        1: "PUBLIC",
+        2: "PRIVATE",
+    }
+
+    _NAMES_TO_VALUES = {
+        "PUBLIC": 1,
+        "PRIVATE": 2,
+    }
+
+
 class TalkException(TException):
     """
     Attributes:
@@ -24548,6 +24602,2252 @@ class GetSquareChatAnnouncementsResponse(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+
+class AcceptSpeakersResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('AcceptSpeakersResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class AcceptToChangeRoleResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('AcceptToChangeRoleResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class AcceptToListenResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('AcceptToListenResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class AcceptToSpeakResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('AcceptToSpeakResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class CancelToSpeakResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('CancelToSpeakResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class EndLiveTalkResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('EndLiveTalkResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventNotifiedUpdateLiveTalkTitle(object):
+    """
+    Attributes:
+     - title
+
+    """
+
+
+    def __init__(self, title=None,):
+        self.title = title
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.title = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventNotifiedUpdateLiveTalkTitle')
+        if self.title is not None:
+            oprot.writeFieldBegin('title', TType.STRING, 1)
+            oprot.writeString(self.title.encode('utf-8') if sys.version_info[0] == 2 else self.title)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting(object):
+    """
+    Attributes:
+     - speakerSetting
+
+    """
+
+
+    def __init__(self, speakerSetting=None,):
+        self.speakerSetting = speakerSetting
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.speakerSetting = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting')
+        if self.speakerSetting is not None:
+            oprot.writeFieldBegin('speakerSetting', TType.I32, 1)
+            oprot.writeI32(self.speakerSetting)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventNotifiedUpdateLiveTalkAnnouncement(object):
+    """
+    Attributes:
+     - announcement
+
+    """
+
+
+    def __init__(self, announcement=None,):
+        self.announcement = announcement
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.announcement = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventNotifiedUpdateLiveTalkAnnouncement')
+        if self.announcement is not None:
+            oprot.writeFieldBegin('announcement', TType.STRING, 1)
+            oprot.writeString(self.announcement.encode('utf-8') if sys.version_info[0] == 2 else self.announcement)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventNotifiedUpdateSquareMemberRole(object):
+    """
+    Attributes:
+     - squareMemberMid
+     - role
+
+    """
+
+
+    def __init__(self, squareMemberMid=None, role=None,):
+        self.squareMemberMid = squareMemberMid
+        self.role = role
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.squareMemberMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.I32:
+                    self.role = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventNotifiedUpdateSquareMemberRole')
+        if self.squareMemberMid is not None:
+            oprot.writeFieldBegin('squareMemberMid', TType.STRING, 1)
+            oprot.writeString(self.squareMemberMid.encode('utf-8') if sys.version_info[0] == 2 else self.squareMemberMid)
+            oprot.writeFieldEnd()
+        if self.role is not None:
+            oprot.writeFieldBegin('role', TType.I32, 2)
+            oprot.writeI32(self.role)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak(object):
+    """
+    Attributes:
+     - allowRequestToSpeak
+
+    """
+
+
+    def __init__(self, allowRequestToSpeak=None,):
+        self.allowRequestToSpeak = allowRequestToSpeak
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.BOOL:
+                    self.allowRequestToSpeak = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak')
+        if self.allowRequestToSpeak is not None:
+            oprot.writeFieldBegin('allowRequestToSpeak', TType.BOOL, 1)
+            oprot.writeBool(self.allowRequestToSpeak)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEventPayload(object):
+    """
+    Attributes:
+     - notifiedUpdateLiveTalkTitle
+     - notifiedUpdateLiveTalkSpeakerSetting
+     - notifiedUpdateLiveTalkAnnouncement
+     - notifiedUpdateSquareMemberRole
+     - notifiedUpdateLiveTalkAllowRequestToSpeak
+
+    """
+
+
+    def __init__(self, notifiedUpdateLiveTalkTitle=None, notifiedUpdateLiveTalkSpeakerSetting=None, notifiedUpdateLiveTalkAnnouncement=None, notifiedUpdateSquareMemberRole=None, notifiedUpdateLiveTalkAllowRequestToSpeak=None,):
+        self.notifiedUpdateLiveTalkTitle = notifiedUpdateLiveTalkTitle
+        self.notifiedUpdateLiveTalkSpeakerSetting = notifiedUpdateLiveTalkSpeakerSetting
+        self.notifiedUpdateLiveTalkAnnouncement = notifiedUpdateLiveTalkAnnouncement
+        self.notifiedUpdateSquareMemberRole = notifiedUpdateSquareMemberRole
+        self.notifiedUpdateLiveTalkAllowRequestToSpeak = notifiedUpdateLiveTalkAllowRequestToSpeak
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.notifiedUpdateLiveTalkTitle = LiveTalkEventNotifiedUpdateLiveTalkTitle()
+                    self.notifiedUpdateLiveTalkTitle.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.notifiedUpdateLiveTalkSpeakerSetting = LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting()
+                    self.notifiedUpdateLiveTalkSpeakerSetting.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.notifiedUpdateLiveTalkAnnouncement = LiveTalkEventNotifiedUpdateLiveTalkAnnouncement()
+                    self.notifiedUpdateLiveTalkAnnouncement.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.notifiedUpdateSquareMemberRole = LiveTalkEventNotifiedUpdateSquareMemberRole()
+                    self.notifiedUpdateSquareMemberRole.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRUCT:
+                    self.notifiedUpdateLiveTalkAllowRequestToSpeak = LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak()
+                    self.notifiedUpdateLiveTalkAllowRequestToSpeak.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEventPayload')
+        if self.notifiedUpdateLiveTalkTitle is not None:
+            oprot.writeFieldBegin('notifiedUpdateLiveTalkTitle', TType.STRUCT, 1)
+            self.notifiedUpdateLiveTalkTitle.write(oprot)
+            oprot.writeFieldEnd()
+        if self.notifiedUpdateLiveTalkSpeakerSetting is not None:
+            oprot.writeFieldBegin('notifiedUpdateLiveTalkSpeakerSetting', TType.STRUCT, 2)
+            self.notifiedUpdateLiveTalkSpeakerSetting.write(oprot)
+            oprot.writeFieldEnd()
+        if self.notifiedUpdateLiveTalkAnnouncement is not None:
+            oprot.writeFieldBegin('notifiedUpdateLiveTalkAnnouncement', TType.STRUCT, 3)
+            self.notifiedUpdateLiveTalkAnnouncement.write(oprot)
+            oprot.writeFieldEnd()
+        if self.notifiedUpdateSquareMemberRole is not None:
+            oprot.writeFieldBegin('notifiedUpdateSquareMemberRole', TType.STRUCT, 4)
+            self.notifiedUpdateSquareMemberRole.write(oprot)
+            oprot.writeFieldEnd()
+        if self.notifiedUpdateLiveTalkAllowRequestToSpeak is not None:
+            oprot.writeFieldBegin('notifiedUpdateLiveTalkAllowRequestToSpeak', TType.STRUCT, 5)
+            self.notifiedUpdateLiveTalkAllowRequestToSpeak.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkEvent(object):
+    """
+    Attributes:
+     - type
+     - payload
+     - syncToken
+
+    """
+
+
+    def __init__(self, type=None, payload=None, syncToken=None,):
+        self.type = type
+        self.payload = payload
+        self.syncToken = syncToken
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.type = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.payload = LiveTalkEventPayload()
+                    self.payload.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.syncToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkEvent')
+        if self.type is not None:
+            oprot.writeFieldBegin('type', TType.I32, 1)
+            oprot.writeI32(self.type)
+            oprot.writeFieldEnd()
+        if self.payload is not None:
+            oprot.writeFieldBegin('payload', TType.STRUCT, 2)
+            self.payload.write(oprot)
+            oprot.writeFieldEnd()
+        if self.syncToken is not None:
+            oprot.writeFieldBegin('syncToken', TType.STRING, 3)
+            oprot.writeString(self.syncToken.encode('utf-8') if sys.version_info[0] == 2 else self.syncToken)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FetchLiveTalkEventsResponse(object):
+    """
+    Attributes:
+     - events
+     - syncToken
+     - hasMore
+
+    """
+
+
+    def __init__(self, events=None, syncToken=None, hasMore=None,):
+        self.events = events
+        self.syncToken = syncToken
+        self.hasMore = hasMore
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.events = []
+                    (_etype603, _size600) = iprot.readListBegin()
+                    for _i604 in range(_size600):
+                        _elem605 = LiveTalkEvent()
+                        _elem605.read(iprot)
+                        self.events.append(_elem605)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.syncToken = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.hasMore = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FetchLiveTalkEventsResponse')
+        if self.events is not None:
+            oprot.writeFieldBegin('events', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.events))
+            for iter606 in self.events:
+                iter606.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.syncToken is not None:
+            oprot.writeFieldBegin('syncToken', TType.STRING, 2)
+            oprot.writeString(self.syncToken.encode('utf-8') if sys.version_info[0] == 2 else self.syncToken)
+            oprot.writeFieldEnd()
+        if self.hasMore is not None:
+            oprot.writeFieldBegin('hasMore', TType.BOOL, 3)
+            oprot.writeBool(self.hasMore)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalk(object):
+    """
+    Attributes:
+     - squareChatMid
+     - sessionId
+     - title
+     - type
+     - speakerSetting
+     - allowRequestToSpeak
+     - announcement
+     - participantCount
+     - revision
+     - startedAt
+
+    """
+
+
+    def __init__(self, squareChatMid=None, sessionId=None, title=None, type=None, speakerSetting=None, allowRequestToSpeak=None, announcement=None, participantCount=None, revision=None, startedAt=None,):
+        self.squareChatMid = squareChatMid
+        self.sessionId = sessionId
+        self.title = title
+        self.type = type
+        self.speakerSetting = speakerSetting
+        self.allowRequestToSpeak = allowRequestToSpeak
+        self.announcement = announcement
+        self.participantCount = participantCount
+        self.revision = revision
+        self.startedAt = startedAt
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.squareChatMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.sessionId = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.title = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.I32:
+                    self.type = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I32:
+                    self.speakerSetting = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.BOOL:
+                    self.allowRequestToSpeak = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.STRING:
+                    self.announcement = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.I32:
+                    self.participantCount = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.I64:
+                    self.revision = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.I64:
+                    self.startedAt = iprot.readI64()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalk')
+        if self.squareChatMid is not None:
+            oprot.writeFieldBegin('squareChatMid', TType.STRING, 1)
+            oprot.writeString(self.squareChatMid.encode('utf-8') if sys.version_info[0] == 2 else self.squareChatMid)
+            oprot.writeFieldEnd()
+        if self.sessionId is not None:
+            oprot.writeFieldBegin('sessionId', TType.STRING, 2)
+            oprot.writeString(self.sessionId.encode('utf-8') if sys.version_info[0] == 2 else self.sessionId)
+            oprot.writeFieldEnd()
+        if self.title is not None:
+            oprot.writeFieldBegin('title', TType.STRING, 3)
+            oprot.writeString(self.title.encode('utf-8') if sys.version_info[0] == 2 else self.title)
+            oprot.writeFieldEnd()
+        if self.type is not None:
+            oprot.writeFieldBegin('type', TType.I32, 4)
+            oprot.writeI32(self.type)
+            oprot.writeFieldEnd()
+        if self.speakerSetting is not None:
+            oprot.writeFieldBegin('speakerSetting', TType.I32, 5)
+            oprot.writeI32(self.speakerSetting)
+            oprot.writeFieldEnd()
+        if self.allowRequestToSpeak is not None:
+            oprot.writeFieldBegin('allowRequestToSpeak', TType.BOOL, 6)
+            oprot.writeBool(self.allowRequestToSpeak)
+            oprot.writeFieldEnd()
+        if self.announcement is not None:
+            oprot.writeFieldBegin('announcement', TType.STRING, 7)
+            oprot.writeString(self.announcement.encode('utf-8') if sys.version_info[0] == 2 else self.announcement)
+            oprot.writeFieldEnd()
+        if self.participantCount is not None:
+            oprot.writeFieldBegin('participantCount', TType.I32, 8)
+            oprot.writeI32(self.participantCount)
+            oprot.writeFieldEnd()
+        if self.revision is not None:
+            oprot.writeFieldBegin('revision', TType.I64, 9)
+            oprot.writeI64(self.revision)
+            oprot.writeFieldEnd()
+        if self.startedAt is not None:
+            oprot.writeFieldBegin('startedAt', TType.I64, 10)
+            oprot.writeI64(self.startedAt)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class FindLiveTalkByInvitationTicketResponse(object):
+    """
+    Attributes:
+     - chatInvitationTicket
+     - liveTalk
+     - chat
+     - squareMember
+     - chatMembershipState
+
+    """
+
+
+    def __init__(self, chatInvitationTicket=None, liveTalk=None, chat=None, squareMember=None, chatMembershipState=None,):
+        self.chatInvitationTicket = chatInvitationTicket
+        self.liveTalk = liveTalk
+        self.chat = chat
+        self.squareMember = squareMember
+        self.chatMembershipState = chatMembershipState
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.chatInvitationTicket = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.liveTalk = LiveTalk()
+                    self.liveTalk.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRUCT:
+                    self.chat = SquareChat()
+                    self.chat.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRUCT:
+                    self.squareMember = SquareMember()
+                    self.squareMember.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I32:
+                    self.chatMembershipState = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('FindLiveTalkByInvitationTicketResponse')
+        if self.chatInvitationTicket is not None:
+            oprot.writeFieldBegin('chatInvitationTicket', TType.STRING, 1)
+            oprot.writeString(self.chatInvitationTicket.encode('utf-8') if sys.version_info[0] == 2 else self.chatInvitationTicket)
+            oprot.writeFieldEnd()
+        if self.liveTalk is not None:
+            oprot.writeFieldBegin('liveTalk', TType.STRUCT, 2)
+            self.liveTalk.write(oprot)
+            oprot.writeFieldEnd()
+        if self.chat is not None:
+            oprot.writeFieldBegin('chat', TType.STRUCT, 3)
+            self.chat.write(oprot)
+            oprot.writeFieldEnd()
+        if self.squareMember is not None:
+            oprot.writeFieldBegin('squareMember', TType.STRUCT, 4)
+            self.squareMember.write(oprot)
+            oprot.writeFieldEnd()
+        if self.chatMembershipState is not None:
+            oprot.writeFieldBegin('chatMembershipState', TType.I32, 5)
+            oprot.writeI32(self.chatMembershipState)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ForceEndLiveTalkResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('ForceEndLiveTalkResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class LiveTalkSpeaker(object):
+    """
+    Attributes:
+     - displayName
+     - profileImageObsHash
+     - role
+
+    """
+
+
+    def __init__(self, displayName=None, profileImageObsHash=None, role=None,):
+        self.displayName = displayName
+        self.profileImageObsHash = profileImageObsHash
+        self.role = role
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.displayName = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.profileImageObsHash = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.role = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('LiveTalkSpeaker')
+        if self.displayName is not None:
+            oprot.writeFieldBegin('displayName', TType.STRING, 1)
+            oprot.writeString(self.displayName.encode('utf-8') if sys.version_info[0] == 2 else self.displayName)
+            oprot.writeFieldEnd()
+        if self.profileImageObsHash is not None:
+            oprot.writeFieldBegin('profileImageObsHash', TType.STRING, 2)
+            oprot.writeString(self.profileImageObsHash.encode('utf-8') if sys.version_info[0] == 2 else self.profileImageObsHash)
+            oprot.writeFieldEnd()
+        if self.role is not None:
+            oprot.writeFieldBegin('role', TType.I32, 3)
+            oprot.writeI32(self.role)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetLiveTalkInfoForNonMemberResponse(object):
+    """
+    Attributes:
+     - chatName
+     - liveTalk
+     - speakers
+     - chatInvitationUrl
+
+    """
+
+
+    def __init__(self, chatName=None, liveTalk=None, speakers=None, chatInvitationUrl=None,):
+        self.chatName = chatName
+        self.liveTalk = liveTalk
+        self.speakers = speakers
+        self.chatInvitationUrl = chatInvitationUrl
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.chatName = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRUCT:
+                    self.liveTalk = LiveTalk()
+                    self.liveTalk.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.LIST:
+                    self.speakers = []
+                    (_etype610, _size607) = iprot.readListBegin()
+                    for _i611 in range(_size607):
+                        _elem612 = LiveTalkSpeaker()
+                        _elem612.read(iprot)
+                        self.speakers.append(_elem612)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.chatInvitationUrl = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetLiveTalkInfoForNonMemberResponse')
+        if self.chatName is not None:
+            oprot.writeFieldBegin('chatName', TType.STRING, 1)
+            oprot.writeString(self.chatName.encode('utf-8') if sys.version_info[0] == 2 else self.chatName)
+            oprot.writeFieldEnd()
+        if self.liveTalk is not None:
+            oprot.writeFieldBegin('liveTalk', TType.STRUCT, 2)
+            self.liveTalk.write(oprot)
+            oprot.writeFieldEnd()
+        if self.speakers is not None:
+            oprot.writeFieldBegin('speakers', TType.LIST, 3)
+            oprot.writeListBegin(TType.STRUCT, len(self.speakers))
+            for iter613 in self.speakers:
+                iter613.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.chatInvitationUrl is not None:
+            oprot.writeFieldBegin('chatInvitationUrl', TType.STRING, 4)
+            oprot.writeString(self.chatInvitationUrl.encode('utf-8') if sys.version_info[0] == 2 else self.chatInvitationUrl)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetLiveTalkInvitationUrlResponse(object):
+    """
+    Attributes:
+     - invitationUrl
+
+    """
+
+
+    def __init__(self, invitationUrl=None,):
+        self.invitationUrl = invitationUrl
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.invitationUrl = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetLiveTalkInvitationUrlResponse')
+        if self.invitationUrl is not None:
+            oprot.writeFieldBegin('invitationUrl', TType.STRING, 1)
+            oprot.writeString(self.invitationUrl.encode('utf-8') if sys.version_info[0] == 2 else self.invitationUrl)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetLiveTalkSpeakersForNonMemberResponse(object):
+    """
+    Attributes:
+     - speakers
+
+    """
+
+
+    def __init__(self, speakers=None,):
+        self.speakers = speakers
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.LIST:
+                    self.speakers = []
+                    (_etype617, _size614) = iprot.readListBegin()
+                    for _i618 in range(_size614):
+                        _elem619 = LiveTalkSpeaker()
+                        _elem619.read(iprot)
+                        self.speakers.append(_elem619)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetLiveTalkSpeakersForNonMemberResponse')
+        if self.speakers is not None:
+            oprot.writeFieldBegin('speakers', TType.LIST, 1)
+            oprot.writeListBegin(TType.STRUCT, len(self.speakers))
+            for iter620 in self.speakers:
+                iter620.write(oprot)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class GetSquareInfoByChatMidResponse(object):
+    """
+    Attributes:
+     - defaultChatMid
+     - squareName
+     - squareDesc
+
+    """
+
+
+    def __init__(self, defaultChatMid=None, squareName=None, squareDesc=None,):
+        self.defaultChatMid = defaultChatMid
+        self.squareName = squareName
+        self.squareDesc = squareDesc
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.defaultChatMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.squareName = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.squareDesc = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('GetSquareInfoByChatMidResponse')
+        if self.defaultChatMid is not None:
+            oprot.writeFieldBegin('defaultChatMid', TType.STRING, 1)
+            oprot.writeString(self.defaultChatMid.encode('utf-8') if sys.version_info[0] == 2 else self.defaultChatMid)
+            oprot.writeFieldEnd()
+        if self.squareName is not None:
+            oprot.writeFieldBegin('squareName', TType.STRING, 2)
+            oprot.writeString(self.squareName.encode('utf-8') if sys.version_info[0] == 2 else self.squareName)
+            oprot.writeFieldEnd()
+        if self.squareDesc is not None:
+            oprot.writeFieldBegin('squareDesc', TType.STRING, 3)
+            oprot.writeString(self.squareDesc.encode('utf-8') if sys.version_info[0] == 2 else self.squareDesc)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class InviteToChangeRoleResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteToChangeRoleResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class InviteToListenResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteToListenResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class InviteToLiveTalkResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteToLiveTalkResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class InviteToSpeakResponse(object):
+    """
+    Attributes:
+     - inviteRequestId
+
+    """
+
+
+    def __init__(self, inviteRequestId=None,):
+        self.inviteRequestId = inviteRequestId
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.inviteRequestId = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('InviteToSpeakResponse')
+        if self.inviteRequestId is not None:
+            oprot.writeFieldBegin('inviteRequestId', TType.STRING, 1)
+            oprot.writeString(self.inviteRequestId.encode('utf-8') if sys.version_info[0] == 2 else self.inviteRequestId)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class JoinLiveTalkResponse(object):
+    """
+    Attributes:
+     - hostMemberMid
+     - memberSessionId
+     - token
+     - proto
+     - voipAddress
+     - voipAddress6
+     - voipUdpPort
+     - voipTcpPort
+     - fromZone
+     - commParam
+     - orionAddress
+     - polarisAddress
+     - polarisZone
+     - polarisUdpPort
+
+    """
+
+
+    def __init__(self, hostMemberMid=None, memberSessionId=None, token=None, proto=None, voipAddress=None, voipAddress6=None, voipUdpPort=None, voipTcpPort=None, fromZone=None, commParam=None, orionAddress=None, polarisAddress=None, polarisZone=None, polarisUdpPort=None,):
+        self.hostMemberMid = hostMemberMid
+        self.memberSessionId = memberSessionId
+        self.token = token
+        self.proto = proto
+        self.voipAddress = voipAddress
+        self.voipAddress6 = voipAddress6
+        self.voipUdpPort = voipUdpPort
+        self.voipTcpPort = voipTcpPort
+        self.fromZone = fromZone
+        self.commParam = commParam
+        self.orionAddress = orionAddress
+        self.polarisAddress = polarisAddress
+        self.polarisZone = polarisZone
+        self.polarisUdpPort = polarisUdpPort
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.hostMemberMid = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.memberSessionId = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.STRING:
+                    self.token = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.STRING:
+                    self.proto = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.STRING:
+                    self.voipAddress = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.STRING:
+                    self.voipAddress6 = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
+                if ftype == TType.I32:
+                    self.voipUdpPort = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 8:
+                if ftype == TType.I32:
+                    self.voipTcpPort = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 9:
+                if ftype == TType.STRING:
+                    self.fromZone = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 10:
+                if ftype == TType.STRING:
+                    self.commParam = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 11:
+                if ftype == TType.STRING:
+                    self.orionAddress = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 12:
+                if ftype == TType.STRING:
+                    self.polarisAddress = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 13:
+                if ftype == TType.STRING:
+                    self.polarisZone = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 14:
+                if ftype == TType.I32:
+                    self.polarisUdpPort = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('JoinLiveTalkResponse')
+        if self.hostMemberMid is not None:
+            oprot.writeFieldBegin('hostMemberMid', TType.STRING, 1)
+            oprot.writeString(self.hostMemberMid.encode('utf-8') if sys.version_info[0] == 2 else self.hostMemberMid)
+            oprot.writeFieldEnd()
+        if self.memberSessionId is not None:
+            oprot.writeFieldBegin('memberSessionId', TType.STRING, 2)
+            oprot.writeString(self.memberSessionId.encode('utf-8') if sys.version_info[0] == 2 else self.memberSessionId)
+            oprot.writeFieldEnd()
+        if self.token is not None:
+            oprot.writeFieldBegin('token', TType.STRING, 3)
+            oprot.writeString(self.token.encode('utf-8') if sys.version_info[0] == 2 else self.token)
+            oprot.writeFieldEnd()
+        if self.proto is not None:
+            oprot.writeFieldBegin('proto', TType.STRING, 4)
+            oprot.writeString(self.proto.encode('utf-8') if sys.version_info[0] == 2 else self.proto)
+            oprot.writeFieldEnd()
+        if self.voipAddress is not None:
+            oprot.writeFieldBegin('voipAddress', TType.STRING, 5)
+            oprot.writeString(self.voipAddress.encode('utf-8') if sys.version_info[0] == 2 else self.voipAddress)
+            oprot.writeFieldEnd()
+        if self.voipAddress6 is not None:
+            oprot.writeFieldBegin('voipAddress6', TType.STRING, 6)
+            oprot.writeString(self.voipAddress6.encode('utf-8') if sys.version_info[0] == 2 else self.voipAddress6)
+            oprot.writeFieldEnd()
+        if self.voipUdpPort is not None:
+            oprot.writeFieldBegin('voipUdpPort', TType.I32, 7)
+            oprot.writeI32(self.voipUdpPort)
+            oprot.writeFieldEnd()
+        if self.voipTcpPort is not None:
+            oprot.writeFieldBegin('voipTcpPort', TType.I32, 8)
+            oprot.writeI32(self.voipTcpPort)
+            oprot.writeFieldEnd()
+        if self.fromZone is not None:
+            oprot.writeFieldBegin('fromZone', TType.STRING, 9)
+            oprot.writeString(self.fromZone.encode('utf-8') if sys.version_info[0] == 2 else self.fromZone)
+            oprot.writeFieldEnd()
+        if self.commParam is not None:
+            oprot.writeFieldBegin('commParam', TType.STRING, 10)
+            oprot.writeString(self.commParam.encode('utf-8') if sys.version_info[0] == 2 else self.commParam)
+            oprot.writeFieldEnd()
+        if self.orionAddress is not None:
+            oprot.writeFieldBegin('orionAddress', TType.STRING, 11)
+            oprot.writeString(self.orionAddress.encode('utf-8') if sys.version_info[0] == 2 else self.orionAddress)
+            oprot.writeFieldEnd()
+        if self.polarisAddress is not None:
+            oprot.writeFieldBegin('polarisAddress', TType.STRING, 12)
+            oprot.writeString(self.polarisAddress.encode('utf-8') if sys.version_info[0] == 2 else self.polarisAddress)
+            oprot.writeFieldEnd()
+        if self.polarisZone is not None:
+            oprot.writeFieldBegin('polarisZone', TType.STRING, 13)
+            oprot.writeString(self.polarisZone.encode('utf-8') if sys.version_info[0] == 2 else self.polarisZone)
+            oprot.writeFieldEnd()
+        if self.polarisUdpPort is not None:
+            oprot.writeFieldBegin('polarisUdpPort', TType.I32, 14)
+            oprot.writeI32(self.polarisUdpPort)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class KickOutLiveTalkParticipantsResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('KickOutLiveTalkParticipantsResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class RejectSpeakersResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('RejectSpeakersResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class RejectToSpeakResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('RejectToSpeakResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ReportLiveTalkResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('ReportLiveTalkResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class ReportLiveTalkSpeakerResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('ReportLiveTalkSpeakerResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class RequestToListenResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('RequestToListenResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class RequestToSpeakResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('RequestToSpeakResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class StartLiveTalkResponse(object):
+    """
+    Attributes:
+     - liveTalk
+
+    """
+
+
+    def __init__(self, liveTalk=None,):
+        self.liveTalk = liveTalk
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRUCT:
+                    self.liveTalk = LiveTalk()
+                    self.liveTalk.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('StartLiveTalkResponse')
+        if self.liveTalk is not None:
+            oprot.writeFieldBegin('liveTalk', TType.STRUCT, 1)
+            self.liveTalk.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class UpdateLiveTalkAttrsResponse(object):
+
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('UpdateLiveTalkAttrsResponse')
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
 all_structs.append(TalkException)
 TalkException.thrift_spec = (
     None,  # 0
@@ -26453,6 +28753,192 @@ all_structs.append(GetSquareChatAnnouncementsResponse)
 GetSquareChatAnnouncementsResponse.thrift_spec = (
     None,  # 0
     (1, TType.LIST, 'announcements', (TType.STRUCT, [SquareChatAnnouncement, None], False), None, ),  # 1
+)
+all_structs.append(AcceptSpeakersResponse)
+AcceptSpeakersResponse.thrift_spec = (
+)
+all_structs.append(AcceptToChangeRoleResponse)
+AcceptToChangeRoleResponse.thrift_spec = (
+)
+all_structs.append(AcceptToListenResponse)
+AcceptToListenResponse.thrift_spec = (
+)
+all_structs.append(AcceptToSpeakResponse)
+AcceptToSpeakResponse.thrift_spec = (
+)
+all_structs.append(CancelToSpeakResponse)
+CancelToSpeakResponse.thrift_spec = (
+)
+all_structs.append(EndLiveTalkResponse)
+EndLiveTalkResponse.thrift_spec = (
+)
+all_structs.append(LiveTalkEventNotifiedUpdateLiveTalkTitle)
+LiveTalkEventNotifiedUpdateLiveTalkTitle.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'title', 'UTF8', None, ),  # 1
+)
+all_structs.append(LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting)
+LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'speakerSetting', None, None, ),  # 1
+)
+all_structs.append(LiveTalkEventNotifiedUpdateLiveTalkAnnouncement)
+LiveTalkEventNotifiedUpdateLiveTalkAnnouncement.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'announcement', 'UTF8', None, ),  # 1
+)
+all_structs.append(LiveTalkEventNotifiedUpdateSquareMemberRole)
+LiveTalkEventNotifiedUpdateSquareMemberRole.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'squareMemberMid', 'UTF8', None, ),  # 1
+    (2, TType.I32, 'role', None, None, ),  # 2
+)
+all_structs.append(LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak)
+LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak.thrift_spec = (
+    None,  # 0
+    (1, TType.BOOL, 'allowRequestToSpeak', None, None, ),  # 1
+)
+all_structs.append(LiveTalkEventPayload)
+LiveTalkEventPayload.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'notifiedUpdateLiveTalkTitle', [LiveTalkEventNotifiedUpdateLiveTalkTitle, None], None, ),  # 1
+    (2, TType.STRUCT, 'notifiedUpdateLiveTalkSpeakerSetting', [LiveTalkEventNotifiedUpdateLiveTalkSpeakerSetting, None], None, ),  # 2
+    (3, TType.STRUCT, 'notifiedUpdateLiveTalkAnnouncement', [LiveTalkEventNotifiedUpdateLiveTalkAnnouncement, None], None, ),  # 3
+    (4, TType.STRUCT, 'notifiedUpdateSquareMemberRole', [LiveTalkEventNotifiedUpdateSquareMemberRole, None], None, ),  # 4
+    (5, TType.STRUCT, 'notifiedUpdateLiveTalkAllowRequestToSpeak', [LiveTalkEventNotifiedUpdateLiveTalkAllowRequestToSpeak, None], None, ),  # 5
+)
+all_structs.append(LiveTalkEvent)
+LiveTalkEvent.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'type', None, None, ),  # 1
+    (2, TType.STRUCT, 'payload', [LiveTalkEventPayload, None], None, ),  # 2
+    (3, TType.STRING, 'syncToken', 'UTF8', None, ),  # 3
+)
+all_structs.append(FetchLiveTalkEventsResponse)
+FetchLiveTalkEventsResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'events', (TType.STRUCT, [LiveTalkEvent, None], False), None, ),  # 1
+    (2, TType.STRING, 'syncToken', 'UTF8', None, ),  # 2
+    (3, TType.BOOL, 'hasMore', None, None, ),  # 3
+)
+all_structs.append(LiveTalk)
+LiveTalk.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'squareChatMid', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'sessionId', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'title', 'UTF8', None, ),  # 3
+    (4, TType.I32, 'type', None, None, ),  # 4
+    (5, TType.I32, 'speakerSetting', None, None, ),  # 5
+    (6, TType.BOOL, 'allowRequestToSpeak', None, None, ),  # 6
+    (7, TType.STRING, 'announcement', 'UTF8', None, ),  # 7
+    (8, TType.I32, 'participantCount', None, None, ),  # 8
+    (9, TType.I64, 'revision', None, None, ),  # 9
+    (10, TType.I64, 'startedAt', None, None, ),  # 10
+)
+all_structs.append(FindLiveTalkByInvitationTicketResponse)
+FindLiveTalkByInvitationTicketResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'chatInvitationTicket', 'UTF8', None, ),  # 1
+    (2, TType.STRUCT, 'liveTalk', [LiveTalk, None], None, ),  # 2
+    (3, TType.STRUCT, 'chat', [SquareChat, None], None, ),  # 3
+    (4, TType.STRUCT, 'squareMember', [SquareMember, None], None, ),  # 4
+    (5, TType.I32, 'chatMembershipState', None, None, ),  # 5
+)
+all_structs.append(ForceEndLiveTalkResponse)
+ForceEndLiveTalkResponse.thrift_spec = (
+)
+all_structs.append(LiveTalkSpeaker)
+LiveTalkSpeaker.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'displayName', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'profileImageObsHash', 'UTF8', None, ),  # 2
+    (3, TType.I32, 'role', None, None, ),  # 3
+)
+all_structs.append(GetLiveTalkInfoForNonMemberResponse)
+GetLiveTalkInfoForNonMemberResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'chatName', 'UTF8', None, ),  # 1
+    (2, TType.STRUCT, 'liveTalk', [LiveTalk, None], None, ),  # 2
+    (3, TType.LIST, 'speakers', (TType.STRUCT, [LiveTalkSpeaker, None], False), None, ),  # 3
+    (4, TType.STRING, 'chatInvitationUrl', 'UTF8', None, ),  # 4
+)
+all_structs.append(GetLiveTalkInvitationUrlResponse)
+GetLiveTalkInvitationUrlResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'invitationUrl', 'UTF8', None, ),  # 1
+)
+all_structs.append(GetLiveTalkSpeakersForNonMemberResponse)
+GetLiveTalkSpeakersForNonMemberResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.LIST, 'speakers', (TType.STRUCT, [LiveTalkSpeaker, None], False), None, ),  # 1
+)
+all_structs.append(GetSquareInfoByChatMidResponse)
+GetSquareInfoByChatMidResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'defaultChatMid', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'squareName', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'squareDesc', 'UTF8', None, ),  # 3
+)
+all_structs.append(InviteToChangeRoleResponse)
+InviteToChangeRoleResponse.thrift_spec = (
+)
+all_structs.append(InviteToListenResponse)
+InviteToListenResponse.thrift_spec = (
+)
+all_structs.append(InviteToLiveTalkResponse)
+InviteToLiveTalkResponse.thrift_spec = (
+)
+all_structs.append(InviteToSpeakResponse)
+InviteToSpeakResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'inviteRequestId', 'UTF8', None, ),  # 1
+)
+all_structs.append(JoinLiveTalkResponse)
+JoinLiveTalkResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'hostMemberMid', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'memberSessionId', 'UTF8', None, ),  # 2
+    (3, TType.STRING, 'token', 'UTF8', None, ),  # 3
+    (4, TType.STRING, 'proto', 'UTF8', None, ),  # 4
+    (5, TType.STRING, 'voipAddress', 'UTF8', None, ),  # 5
+    (6, TType.STRING, 'voipAddress6', 'UTF8', None, ),  # 6
+    (7, TType.I32, 'voipUdpPort', None, None, ),  # 7
+    (8, TType.I32, 'voipTcpPort', None, None, ),  # 8
+    (9, TType.STRING, 'fromZone', 'UTF8', None, ),  # 9
+    (10, TType.STRING, 'commParam', 'UTF8', None, ),  # 10
+    (11, TType.STRING, 'orionAddress', 'UTF8', None, ),  # 11
+    (12, TType.STRING, 'polarisAddress', 'UTF8', None, ),  # 12
+    (13, TType.STRING, 'polarisZone', 'UTF8', None, ),  # 13
+    (14, TType.I32, 'polarisUdpPort', None, None, ),  # 14
+)
+all_structs.append(KickOutLiveTalkParticipantsResponse)
+KickOutLiveTalkParticipantsResponse.thrift_spec = (
+)
+all_structs.append(RejectSpeakersResponse)
+RejectSpeakersResponse.thrift_spec = (
+)
+all_structs.append(RejectToSpeakResponse)
+RejectToSpeakResponse.thrift_spec = (
+)
+all_structs.append(ReportLiveTalkResponse)
+ReportLiveTalkResponse.thrift_spec = (
+)
+all_structs.append(ReportLiveTalkSpeakerResponse)
+ReportLiveTalkSpeakerResponse.thrift_spec = (
+)
+all_structs.append(RequestToListenResponse)
+RequestToListenResponse.thrift_spec = (
+)
+all_structs.append(RequestToSpeakResponse)
+RequestToSpeakResponse.thrift_spec = (
+)
+all_structs.append(StartLiveTalkResponse)
+StartLiveTalkResponse.thrift_spec = (
+    None,  # 0
+    (1, TType.STRUCT, 'liveTalk', [LiveTalk, None], None, ),  # 1
+)
+all_structs.append(UpdateLiveTalkAttrsResponse)
+UpdateLiveTalkAttrsResponse.thrift_spec = (
 )
 fix_spec(all_structs)
 del all_structs
