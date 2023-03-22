@@ -29,7 +29,7 @@ from .serializers.DummyProtocol import (
 
 from .services.thrift import *
 from .timeline import Timeline
-from .services.thrift.ap.TCompactProtocol import TCompactProtocol as testProtocol
+from .services.thrift.ap.TCompactProtocol import TCompactProtocol as tcProtocol
 
 
 class Models(object):
@@ -287,15 +287,15 @@ class Models(object):
         return DummyProtocolSerializer(self, name, params, _type)
 
     def generateDummyProtocol2(
-        self, params: DummyProtocol, type: int = 3, fixSuccessHeaders: bool = False
+        self, params: DummyProtocol, proto: int = 3, fixSuccessHeaders: bool = False
     ):
         newParams = []
         d = params.data
         if d is not None:
             newParams.append(thrift2dummy(d))
-        return bytes(self.generateDummyProtocolField(newParams, type) + [0])
+        return bytes(self.generateDummyProtocolField(newParams, proto) + [0])
 
-    def generateDummyProtocolField(self, params, type):
+    def generateDummyProtocolField(self, params, proto):
         isCompact = False
         data = []
         tcp = self.TCompactProtocol(self)
@@ -312,10 +312,10 @@ class Models(object):
             elif _type in [14, 15]:
                 if _data[1] is None:
                     continue
-            if type == 3:
+            if proto == 3:
                 data += [_type, 0, _id]
                 isCompact = False
-            elif type == 4:
+            elif proto == 4:
                 if _type == 2:
                     data += tcp.getFieldHeader(0x01 if _data else 0x02, _id)
                     continue
@@ -324,34 +324,35 @@ class Models(object):
             data += self.generateDummyProtocolData(_data, _type, isCompact)
         return data
 
-    def generateDummyProtocolData(self, _data, type, isCompact=False):
+    def generateDummyProtocolData(self, _data, ttype, isCompact=False):
         data = []
         tbp = self.TBinaryProtocol(self)
         tcp = self.TCompactProtocol(self)
-        ttype = 4 if isCompact else 3
-        if type == 2:
+        proto = 4 if isCompact else 3
+        if ttype == 2:
             if isCompact:
-                pass  # FIXED
+                # CONTAINER_WRITE
+                data += tcp.writeByte(0x01 if _data else 0x02)
             else:
                 data += [1] if _data is True else [0]
-        elif type == 3:
+        elif ttype == 3:
             if isCompact:
                 data += tcp.writeByte(_data)
             else:
                 data += tbp.writeByte(_data)
-        elif type == 4:
+        elif ttype == 4:
             data = self.getFloatBytes(_data, isCompact=isCompact)
-        elif type == 8:
+        elif ttype == 8:
             data += self.getIntBytes(_data, isCompact=isCompact)
-        elif type == 10:
+        elif ttype == 10:
             data += self.getIntBytes(_data, 8, isCompact=isCompact)
-        elif type == 11:
+        elif ttype == 11:
             data += self.getStringBytes(_data, isCompact=isCompact)
-        elif type == 12:
+        elif ttype == 12:
             if isinstance(_data, DummyProtocolData):
                 _data = thrift2dummy(_data)
-            data += self.generateDummyProtocolField(_data, ttype) + [0]
-        elif type == 13:
+            data += self.generateDummyProtocolField(_data, proto) + [0]
+        elif ttype == 13:
             _ktype = _data[0]
             _vtype = _data[1]
             _vdata = _data[2]
@@ -364,7 +365,7 @@ class Models(object):
             for vd in _vdata:
                 data += self.generateDummyProtocolData(vd, _ktype, isCompact)
                 data += self.generateDummyProtocolData(_vdata[vd], _vtype, isCompact)
-        elif type == 14 or type == 15:
+        elif ttype == 14 or ttype == 15:
             # [11, targetUserMids]
             _vtype = _data[0]
             _vdata = _data[1]
@@ -623,6 +624,7 @@ class Models(object):
                             path, bdata, ttype, encType, headers
                         )
                     self.log(f"LOGIN OUT: {resMsg}")
+                print(res)
                 raise LineServiceException(res["error"])
             self.log(f"Result: {res}", True)
             self.log(f"----------------- END POST", True)
@@ -775,7 +777,7 @@ class Models(object):
         open(savePath + f"/{fn}", "w").write(data)
         return True
 
-    def decodeE2EEKeyV1(self, data, secret, mid=None):
+    def decodeE2EEKeyV1(self, data: dict, secret: bytes, mid: str = None):
         if "encryptedKeyChain" in data:
             print("Try to decode E2EE Key")
             encryptedKeyChain = base64.b64decode(data["encryptedKeyChain"])
@@ -855,17 +857,13 @@ class Models(object):
             except NameError:
                 a = None
             if a is not None:
-                e = TMemoryBuffer()
-                f = testProtocol(e)
-                e._buffer = io.BytesIO(new1)
+                e = TMemoryBuffer(new1)
+                f = tcProtocol(e)
                 a.read(f)
                 if getattr(a, "success", None) is not None:
                     return a.success
                 if getattr(a, "e", None) is not None:
-                    code = getattr(a.e, "code", None)
-                    reason = getattr(a.e, "reason", None)
-                    parameterMap = getattr(a.e, "parameterMap", None)
-                    raise LineServiceException({}, code, reason, parameterMap, a.e)
+                    raise a.e
                 return None
 
         def _gen():
