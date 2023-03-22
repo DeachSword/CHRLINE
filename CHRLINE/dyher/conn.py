@@ -19,7 +19,7 @@ class Conn(object):
 
         self._last_send_time = 0
         self._closed = False
-    
+
     @property
     def client(self):
         return self.manager.line_client
@@ -58,7 +58,7 @@ class Conn(object):
 
     def read(self):
         try:
-            response_stream_ended = False
+            response_stream_ended = self._closed
             self.send()
             while not response_stream_ended and self.client.is_login:
                 data = self.writer.recv(65536 * 1024)
@@ -74,7 +74,7 @@ class Conn(object):
 
                         _data = event.data
                         if len(_data) < 4:
-                            print(f"[CONN] Invalid Packet: {_data.hex()}")
+                            self.client.log(f"[CONN] Invalid Packet: {_data.hex()}")
                             continue
                         self.onDataReceived(_data)
                     elif isinstance(event, h2.events.StreamEnded):
@@ -89,7 +89,10 @@ class Conn(object):
             self.send()
         except Exception as e:
             self.client.log(f"[CONN] task disconnect: {e}")
-            raise e
+            if isinstance(e, OSError):
+                pass
+            else:
+                raise e
         self._closed = True
         # close the socket
         self.writer.close()
@@ -123,9 +126,7 @@ class Conn(object):
             if len(_dd) > _dl:
                 self.onPacketReceived(_dt, _dd[:_dl])
                 data = _dd[_dl:]
-                self.client.log(
-                    f"[PUSH] extra data {data.hex()[:50]}...", True
-                )
+                self.client.log(f"[PUSH] extra data {data.hex()[:50]}...", True)
                 return self.onDataReceived(data)
         self.onPacketReceived(_dt, _dd)
 
@@ -133,15 +134,11 @@ class Conn(object):
         if _dt == 1:
             _pingType = _dd[0]
             (_pingId,) = struct.unpack("!H", _dd[1:3])
-            self.client.log(
-                f"[PUSH] receives ping frame. pingId:{_pingId}", True
-            )
+            self.client.log(f"[PUSH] receives ping frame. pingId:{_pingId}", True)
 
             if _pingType == 2:
                 self.writeByte(bytes([0, 3, 1, 1]) + struct.pack("!H", _pingId))
-                self.client.log(
-                    f"[PUSH] send ping ack. pingId:{_pingId}", True
-                )
+                self.client.log(f"[PUSH] send ping ack. pingId:{_pingId}", True)
                 self.manager.OnPingCallback(_pingId)
             else:
                 raise NotImplementedError(f"ping type not Implemented: {_pingType}")
@@ -169,9 +166,7 @@ class Conn(object):
             _pushType = _dd[0]
             _serviceType = _dd[1]
             (_pushId,) = struct.unpack("!i", _dd[2:6])
-            self.client.log(
-                f"[PUSH] receives push frame. service:{_serviceType}", True
-            )
+            self.client.log(f"[PUSH] receives push frame. service:{_serviceType}", True)
             if _pushType in [0, 2]:
                 _pushPayload = _dd[6:]
 
@@ -194,3 +189,13 @@ class Conn(object):
             raise NotImplementedError(
                 f"PUSH not Implemented: type:{_dt}, payloads:{_dd[:30]}, len:{len(_dd)}"
             )
+
+    def close(self):
+        """Close conn."""
+        self._closed = True
+        # write close packet
+        self.conn.close_connection()
+        self.send()
+        # close the socket
+        self.writer.shutdown(socket.SHUT_RDWR)
+        self.writer.close()

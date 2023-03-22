@@ -30,6 +30,8 @@ from .services.PrimaryQrCodeMigrationPreparationService import (
 )
 from .services.LoginService import LoginService
 from .services.InterlockService import InterlockService
+from .services.RelationService import RelationService
+from .services.SquareLiveTalkService import SquareLiveTalkService
 from .server import Server
 from .exceptions import LineServiceException
 import rsa
@@ -63,6 +65,8 @@ class API(
     PrimaryQrCodeMigrationPreparationService,
     LoginService,
     InterlockService,
+    RelationService,
+    SquareLiveTalkService
 ):
     _msgSeq = 0
     url = "https://gf.line.naver.jp/enc"
@@ -116,6 +120,8 @@ class API(
         PrimaryQrCodeMigrationPreparationService.__init__(self)
         LoginService.__init__(self)
         InterlockService.__init__(self)
+        RelationService.__init__(self)
+        SquareLiveTalkService.__init__(self)
 
     def requestPwlessLogin(self, phone, pw):
         pwless_code = self.checkAndGetValue(self.createPwlessSession(phone), 1, "val_1")

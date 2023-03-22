@@ -22,16 +22,27 @@ class ConnManager(object):
         self._eventSynced = False
         self._revisionSynced = False
         self._pingInterval = 30
+        self._access_token = None
+    
+    @property
+    def accessToken(self):
+        return self._access_token
+    
+    @accessToken.setter
+    def accessToken(self, newToken):
+        self._access_token = newToken
 
-    def initializeConn(self):
+    def initializeConn(self, state: int = 1):
         """Create new conn and return it."""
         from .conn import Conn
 
         _conn = Conn(self)
-        self.conns.append(_conn)
+        if state == 1:
+            self.conns.append(_conn)
+            self.accessToken = self.line_client.authToken
         tosend_headers = {
             "x-line-application": self.line_client.server.Headers["x-line-application"],
-            "x-line-access": self.line_client.authToken,
+            "x-line-access": self.accessToken,
         }
         _conn.new("gw.line.naver.jp", 443, "/PUSH/1/subs?m=20", tosend_headers)
         return _conn
@@ -60,7 +71,7 @@ class ConnManager(object):
                 )
             elif service == 5:
                 ex_val = {
-                    "revision": -1,
+                    "revision": self.line_client.revision,
                     "count": 100,
                     "globalRev": cl.globalRev,
                     "individualRev": cl.individualRev,
@@ -199,7 +210,6 @@ class ConnManager(object):
         ins = eval(f"{unitCalled}")
         payload = ins(**kargs)
         data = cl.generateDummyProtocol(methodName, payload, 4)
-        cl.log(f"[buildServiceRequest] {data}")
         return bytes(data)
 
     def _OnSignOnResponse(self, reqId, isFin, data):
@@ -354,4 +364,10 @@ class ConnManager(object):
         # here use http protocol to check.
         if pingId % 3 == 0:
             cl.noop()
-            cl.log(f"[PUSH] check talk with PUSH: noop")
+            oldToken = self.accessToken
+            newToken = self.line_client.authToken
+            if oldToken != newToken:
+                cl.log(f"[PUSH] renew push conn for new authToken...")
+                self.accessToken = newToken
+                self.conns[0].close()
+

@@ -39,7 +39,7 @@ class Models(object):
         self.le = "18"
         self.PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LRokSkGDo8G5ObFfyKiIdPAU5iOpj+UT+A3AcDxLuePyDt8IVp9HpOsJlf8uVk3Wr9fs+8y7cnF3WiY6Ro526hy3fbWR4HiD0FaIRCOTbgRlsoGNC2rthp2uxYad5up78krSDXNKBab8t1PteCmOq84TpDCRmainaZQN9QxzaSvYWUICVv27Kk97y2j3LS3H64NCqjS88XacAieivELfMr6rT2GutRshKeNSZOUR3YROV4THa77USBQwRI7ZZTe6GUFazpocTN58QY8jFYODzfhdyoiym6rXJNNnUKatiSC/hmzdpX8/h4Y98KaGAZaatLAgPMRCe582q4JwHg7rwIDAQAB\n-----END PUBLIC KEY-----"
         self.key = RSA.importKey(self.PUBLIC_KEY)
-        self.encryptKey = b"DearSakura+2021/"
+        self.encryptKey = os.urandom(16)
         self.IV = bytes(
             [78, 9, 72, 62, 56, 245, 255, 114, 128, 18, 123, 158, 251, 92, 45, 51]
         )
@@ -88,10 +88,12 @@ class Models(object):
     def checkNextToken(self, log4NotDebug: bool = True):
         savePath = self.getSavePath(".tokens")
         fn = md5(self.authToken.encode()).hexdigest()
+        old = self.authToken
         if os.path.exists(savePath + f"/{fn}"):
             self.authToken = open(savePath + f"/{fn}", "r").read()
-            self.log(f"New Token: {self.authToken}", not log4NotDebug)
-            self.checkNextToken(log4NotDebug)
+            if old != self.authToken:
+                self.log(f"New Token: {self.authToken}", not log4NotDebug)
+                self.checkNextToken(log4NotDebug)
         return self.authToken
 
     def handleNextToken(self, newToken):
@@ -931,7 +933,8 @@ class Models(object):
                 self.checkAndGetValue(a.val_1, f"val_{_emeta}"),
                 a.val_1,
             )
-        print(a)
+        # no vals
+        # eg. noop()
         return None
 
 
@@ -959,38 +962,8 @@ def thrift2dummy(a):
         if a.id is not None:
             return [a.type, a.id, b]
         return b
-        return (
-            [a.type, a.id, a.data]
-            if a.type in [2, 3, 4, 6, 8, 10, 11]
-            else (
-                a.subType + [[thrift2dummy(a2) for a2 in a.data]]
-                if a.subType
-                else [thrift2dummy(a2) for a2 in a.data]
-            )
-            if a.id is None
-            else [a.type, a.id, [thrift2dummy(a2) for a2 in a.data]]
-            if a.type in [12]
-            else [a.type, a.id, [a.subType[0], a.subType[1], thrift2dummy(a.data)]]
-            if a.type == 13
-            else [
-                a.type,
-                a.id,
-                [
-                    a.subType[0],
-                    [
-                        thrift2dummy(a2)
-                        if isinstance(a2, DummyProtocolData) and a2.type == 12
-                        else a2.data
-                        for a2 in a.data
-                    ],
-                ],
-            ]
-            if a.type in [14, 15]
-            else (_ for _ in ()).throw(ValueError(f"不支持{a.type}"))
-        )
     else:
-        # return a
-        raise ValueError(f"不支持 `{type(a)}`: {a}")
+        raise ValueError(f"[thrift2dummy] not support `{type(a)}`: {a}")
 
 
 def doLoopReq(
