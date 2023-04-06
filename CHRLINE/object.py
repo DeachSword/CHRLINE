@@ -69,7 +69,9 @@ class Object(object):
 
     def updateProfileImage(self, path, storyShare=False, type="p", mid: str = None):
         """
-        use `mid` for square member
+        Update profile image.
+
+        use `mid` for square member.
         """
         if mid is None:
             mid = self.mid
@@ -103,7 +105,7 @@ class Object(object):
                 path, oType, obsPath, "1341209850", params, talkMeta, filename
             )
         except Exception as e:
-            raise Exception(f"updateProfileImage failure: {e}")
+            raise e
         return True
 
     def updateProfileCover(self, path, storyShare=False):
@@ -128,7 +130,9 @@ class Object(object):
             raise Exception(e)
         if is_video:
             _url, _vc_url, _objId, _vc_objId = self.getProfileCoverObjIdAndUrl(self.mid)
-            home = self.updateProfileCoverById(_objId, f"{objId}/vp", storyShare=storyShare)
+            home = self.updateProfileCoverById(
+                _objId, f"{objId}/vp", storyShare=storyShare
+            )
         else:
             home = self.updateProfileCoverById(objId, storyShare=storyShare)
         return home
@@ -161,7 +165,7 @@ class Object(object):
         updateAlbum: bool = True,
     ):
         """
-        Upload Object to Album Obs
+        Upload Object to Album Obs.
 
         will use `updateAlbum` to update the album, if content uploads success.
         ---------------
@@ -469,6 +473,7 @@ class Object(object):
         return self.downloadObjectForService(objId, path, obs_path)
 
     def downloadAlbumImage(self, oid: str, path: str):
+        """Download album image."""
         obs_path = f"/album/a/download.nhn?ver=1.0&oid={oid}"
         r = self.server.getContent(
             self.LINE_OBS_DOMAIN + obs_path, headers=self.server.timelineHeaders
@@ -476,6 +481,19 @@ class Object(object):
         with open(path, "wb") as f:
             f.write(r.content)
         return r.content
+
+    def downloadAlbumImageV2(
+        self, _from: str, albumId: str, oid: str, savePath: str = None
+    ):
+        """Download album image v2."""
+        ext = {"X-Line-Album": str(albumId), "X-Line-Mid": _from}
+        return self.downloadObjectForService(
+            oid,
+            savePath,
+            "album/a",
+            issueToken4ChannelId="1375220249",
+            additionalHeaders=ext,
+        )
 
     def downloadProfileImage(self, mid: str, base_path: str, video: bool = False):
         url = self.LINE_OBS_DOMAIN + f"/r/talk/p/{mid}"
@@ -522,6 +540,7 @@ class Object(object):
         suffix=None,
         issueToken4ChannelId: str = None,
         params: dict = None,
+        additionalHeaders: dict = None,
     ):
         obs_path = f"/r/{obsPathPrefix}/{objId}"
         if params is None:
@@ -552,6 +571,8 @@ class Object(object):
                     ),
                 },
             )
+        if additionalHeaders is not None:
+            hr.update(additionalHeaders)
         isDebugOnly = True
         self.log(f"Starting downloadObjectForService...", isDebugOnly)
         self.log(f"obsPath: {obs_path}", isDebugOnly)

@@ -131,18 +131,18 @@ class Config(object):
     )
 
     TOKEN_V3_SUPPORT = ["DESKTOPWIN", "DESKTOPMAC"]
-    SYNC_SUPPORT = ["IOS", "IOSIPAD"]
+    SYNC_SUPPORT = ["IOS", "IOSIPAD", "ANDROID"]
 
     def __init__(self, type="CHROME"):
         self.APP_NAME = None
         self.DEVICE_TYPE = type
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "7.7.0.2698"
+            self.APP_VER = "7.16.1.3000"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER = "10.0.0-NT-x64"
         elif type == "DESKTOPMAC":
-            self.APP_VER = "7.7.0.2698"
+            self.APP_VER = "7.16.1.3000"
             self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
             self.APP_VER = "2.5.11"
@@ -153,19 +153,19 @@ class Config(object):
         # self.SYSTEM_NAME = "Android OS"
         # self.isSecondary = True
         elif type in ["ANDROID", "ANDROIDSECONDARY"]:
-            self.APP_VER = "12.6.1"
+            self.APP_VER = "13.4.1"
             self.SYSTEM_NAME = "Android OS"
         elif type == "IOS":
-            self.APP_VER = "12.4.0"
+            self.APP_VER = "13.3.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "IOSIPAD":
-            self.APP_VER = "11.19.2"
+            self.APP_VER = "13.3.0"
             self.SYSTEM_NAME = "iOS"
         elif type == "WATCHOS":
-            self.APP_VER = "11.19.2"
+            self.APP_VER = "13.3.0"
             self.SYSTEM_NAME = "Watch OS"
         elif type == "WEAROS":
-            self.APP_VER = "11.19.2"
+            self.APP_VER = "13.4.1"
             self.SYSTEM_NAME = "Wear OS"
         elif type == "OPENCHAT_PLUS":
             pass
