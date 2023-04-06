@@ -334,15 +334,15 @@ class API(
                 self.checkPinCodeVerified(sqr)
             try:
                 e = self.qrCodeLoginV2(sqr, self.APP_TYPE, self.SYSTEM_NAME, True)
-                cert = e[1]
+                cert = self.checkAndGetValue(e, 1)
                 self.saveSqrCert(cert)
-                tokenV3Info = e[3]
-                _mid = e[4]
-                bT = e[9]
-                metadata = e[10]
+                tokenV3Info = self.checkAndGetValue(e, 3)
+                _mid = self.checkAndGetValue(e, 4)
+                bT = self.checkAndGetValue(e, 9)
+                metadata = self.checkAndGetValue(e, 10)
                 e2eeKeyInfo = self.decodeE2EEKeyV1(metadata, secret)
-                authToken = tokenV3Info[1]
-                refreshToken = tokenV3Info[2]
+                authToken = self.checkAndGetValue(tokenV3Info, 1)
+                refreshToken = self.checkAndGetValue(tokenV3Info, 2)
                 self.saveCacheData(".refreshToken", authToken, refreshToken)
                 print(f"AuthToken: {authToken}")
                 print(f"RefreshToken: {refreshToken}")
@@ -356,6 +356,50 @@ class API(
                     yield _
             return
             raise Exception("can not check pin code, try again?")
+        raise Exception("can not check qr code, try again?")
+
+    def requestSQR3(self, isSelf=True):
+        """
+        Request Secondary QrCode Login for secure.
+        
+        Source: https://github.com/DeachSword/CHRLINE/blob/445e433b1fbe9a020f6bc1cbd0eb7af3f75ce196/examples/test_sqr_4_secure.py
+        """
+        log4Debug = False
+        sqr = self.checkAndGetValue(self.createSession(), 1)
+        qr4s = self.createQrCodeForSecure(sqr)
+        self.log(qr4s, log4Debug)
+        url = self.checkAndGetValue(qr4s, 'callbackUrl', 1)
+        nonce = self.checkAndGetValue(qr4s, 'nonce', 4)
+        self.log(f"nonce: {nonce}", log4Debug)
+        secret, secretUrl = self.createSqrSecret()
+        url = url + secretUrl
+        imgPath = self.genQrcodeImageAndPrint(url)
+        yield f"URL: {url}"
+        yield f"IMG: {imgPath}"
+        if self.checkQrCodeVerified(sqr):
+            try:
+                self.verifyCertificate(sqr, self.getSqrCert())
+            except:
+                c = self.createPinCode(sqr)
+                yield f"請輸入pincode: {c}"
+                self.checkPinCodeVerified(sqr)
+            e = self.qrCodeLoginV2ForSecure(sqr, self.APP_TYPE, self.SYSTEM_NAME, nonce)
+            self.log(e, log4Debug)
+            cert = self.checkAndGetValue(e, 'certificate', 1)
+            self.saveSqrCert(cert)
+            tokenV3Info = self.checkAndGetValue(e, 'tokenV3IssueResult', 3)
+            _mid = self.checkAndGetValue(e, 'mid', 4)
+            metadata = self.checkAndGetValue(e, 'metaData', 10)
+            self.decodeE2EEKeyV1(metadata, secret, _mid)
+            authToken = self.checkAndGetValue(tokenV3Info, 'accessToken', 1)
+            refreshToken = self.checkAndGetValue(tokenV3Info, 'refreshToken', 2)
+            self.saveCacheData(".refreshToken", authToken, refreshToken)
+            print(f"AuthToken: {authToken}")
+            print(f"RefreshToken: {refreshToken}")
+            if isSelf:
+                self.authToken = authToken
+            yield authToken
+            return
         raise Exception("can not check qr code, try again?")
 
     def createSession(self):
