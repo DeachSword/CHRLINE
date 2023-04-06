@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 from .BaseService import BaseService, BaseServiceStruct
 
 if TYPE_CHECKING:
@@ -282,21 +282,37 @@ class SquareService(BaseService):
             baseException=SquareService.SQUARE_EXCEPTION,
         )
 
-    def updateSquareFeatureSet(self):
+    def updateSquareFeatureSet(self, updateAttributes: List[int], squareMid: str, revision: int, creatingSecretSquareChat: int = 0):
         """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
+        Update square feature set.
+
+        - updateAttributes:
+            CREATING_SECRET_SQUARE_CHAT(1),
+            INVITING_INTO_OPEN_SQUARE_CHAT(2),
+            CREATING_SQUARE_CHAT(3),
+            READONLY_DEFAULT_CHAT(4),
+            SHOWING_ADVERTISEMENT(5),
+            DELEGATE_JOIN_TO_PLUG(6),
+            DELEGATE_KICK_OUT_TO_PLUG(7),
+            DISABLE_UPDATE_JOIN_METHOD(8),
+            DISABLE_TRANSFER_ADMIN(9),
+            CREATING_LIVE_TALK(10);
         """
-        raise Exception("updateSquareFeatureSet is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "updateSquareFeatureSet", params, self.SquareService_REQ_TYPE
-        )
-        return self.postPackDataAndGetUnpackRespData(
-            self.SquareService_API_PATH,
-            sqrd,
-            self.SquareService_RES_TYPE,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+        METHOD_NAME = "updateSquareFeatureSet"
+        SquareFeatureSet = [
+            [11, 1, squareMid],
+            [10, 2, revision],
+        ]
+        if creatingSecretSquareChat != 0:
+            SquareFeatureSet.append([12, 11, [
+                [8, 1, 1],
+                [8, 2, creatingSecretSquareChat]
+            ]])
+        params = [
+            [14, 2, [8, updateAttributes]],
+            [12, 3, SquareFeatureSet]
+        ]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def joinSquare(
         self,
@@ -634,21 +650,13 @@ class SquareService(BaseService):
             baseException=SquareService.SQUARE_EXCEPTION,
         )
 
-    def getSquareFeatureSet(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getSquareFeatureSet is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "getSquareFeatureSet", params, self.SquareService_REQ_TYPE
-        )
-        return self.postPackDataAndGetUnpackRespData(
-            self.SquareService_API_PATH,
-            sqrd,
-            self.SquareService_RES_TYPE,
-            baseException=SquareService.SQUARE_EXCEPTION,
-        )
+    def getSquareFeatureSet(self, squareMid: str):
+        """Get square feature set."""
+        METHOD_NAME = "getSquareFeatureSet"
+        params = [
+            [11, 2, squareMid],
+        ]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def updateSquareAuthority(self):
         """
@@ -1264,18 +1272,13 @@ class SquareService(BaseService):
             baseException=SquareService.SQUARE_EXCEPTION,
         )
 
-    def getSquareChatFeatureSet(self):
-        """
-        AUTO_GENERATED_CODE! DONT_USE_THIS_FUNC!!
-        """
-        raise Exception("getSquareChatFeatureSet is not implemented")
-        params = []
-        sqrd = self.generateDummyProtocol(
-            "getSquareChatFeatureSet", params, self.SquareService_REQ_TYPE
-        )
-        return self.postPackDataAndGetUnpackRespData(
-            self.SquareService_API_PATH, sqrd, self.SquareService_RES_TYPE
-        )
+    def getSquareChatFeatureSet(self, squareChatMid: str):
+        """Get square chat feature set."""
+        METHOD_NAME = "getSquareChatFeatureSet"
+        params = [
+            [11, 2, squareChatMid],
+        ]
+        return SquareServiceStruct.SendRequestByName(self, METHOD_NAME, params)
 
     def getSquareEmid(self, squareMid: str):
         """
