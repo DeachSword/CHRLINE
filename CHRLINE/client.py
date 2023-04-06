@@ -1,5 +1,7 @@
 import gevent.monkey
 
+from .services.thrift.ttypes import SquareException
+
 gevent.monkey.patch_all()
 
 from .exceptions import LineServiceException
@@ -51,7 +53,7 @@ class CHRLINE(
     ):
         r"""
         Line client for CHRLINE.
-        
+
         Use authToken or Email & Password to Login
         phone + region to Login secondary devices (and Android).
 
@@ -169,6 +171,8 @@ class CHRLINE(
             _squares = self.getJoinedSquares()
             self.can_use_square = True
             self.squares = _squares
+        except SquareException as e:
+            self.log(f"Not support Square: {e.reason}")
         except LineServiceException as e:
             self.log(f"Not support Square: {e.message}")
 

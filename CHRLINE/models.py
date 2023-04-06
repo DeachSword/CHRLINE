@@ -1,6 +1,5 @@
 import base64
 import binascii
-import io
 import json
 import os
 import struct
@@ -19,6 +18,8 @@ from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto.Util.Padding import pad, unpad
 from thrift.transport.TTransport import TMemoryBuffer
+
+from .services.thrift.ttypes import TalkException
 from .exceptions import LineServiceException
 from .serializers.DummyProtocol import (
     DummyProtocol,
@@ -103,6 +104,20 @@ class Models(object):
         self.authToken = newToken
         self.log(f"New Token: {newToken}")
         Timeline.__init__(self)
+
+    def tryRefreshToken(self):
+        """Try to refresh token."""
+        refreshToken = self.getCacheData(".refreshToken", self.authToken)
+        self.log(f"try to refresh access token... {refreshToken}")
+        if refreshToken is not None:
+            RATR = self.refreshAccessToken(refreshToken)
+            token = self.checkAndGetValue(RATR, "accessToken", 1)
+            # refreshToken = self.checkAndGetValue(RATR, 'refreshToken', 5)
+            self.handleNextToken(token)
+            self.saveCacheData(".refreshToken", token, refreshToken)
+        else:
+            raise ValueError("RefreshToken missing.")
+        return True
 
     def getCustomData(self):
         savePath = self.getSavePath(".data")
@@ -528,7 +543,9 @@ class Models(object):
                         "x-obs-content-type",
                         # "x-line-next-access-max-age",
                     ]:
-                        print(f"[HTTP] unhandled header:  {_rht} => {respHeaders[_rh]}")
+                        self.log(
+                            f"[HTTP] unhandled header:  {_rht} => {respHeaders[_rh]}"
+                        )
             # x-line-access-refresh-required
             conn_res = res
             res = None
@@ -585,14 +602,26 @@ class Models(object):
                         )
                     else:
                         res = res.res
-                except LineServiceException as e:
-                    res = {
-                        "error": {
-                            "code": e.code,
-                            "message": e.message,
-                            "metadata": e.metadata,
-                        }
+                except Exception as e:
+                    _err = {
+                        "code": None,
+                        "message": None,
+                        "metadata": None,
+                        "raw": None,
                     }
+                    if isinstance(e, LineServiceException):
+                        _err["code"] = e.code
+                        _err["message"] = e.message
+                        _err["metadata"] = e.metadata
+                    elif isinstance(e, TalkException):
+                        _err["code"] = e.code
+                        _err["message"] = e.reason
+                        _err["metadata"] = e.parameterMap
+                        _err["raw"] = e
+                    else:
+                        # non handler
+                        raise e
+                    res = {"error": _err}
             if type(res) == dict and "error" in res:
                 # idk why it got int on sometime
                 resMsg = str(res["error"]["message"])
@@ -612,14 +641,7 @@ class Models(object):
                     self.is_login = False
                     self.log(f"LOGIN OUT: {resMsg}")
                 elif res["error"]["code"] == 119:
-                    refreshToken = self.getCacheData(".refreshToken", self.authToken)
-                    print(f"try to refresh access token... {refreshToken}")
-                    if refreshToken is not None:
-                        RATR = self.refreshAccessToken(refreshToken)
-                        token = self.checkAndGetValue(RATR, "accessToken", 1)
-                        # refreshToken = self.checkAndGetValue(RATR, 'refreshToken', 5)
-                        self.handleNextToken(token)
-                        self.saveCacheData(".refreshToken", token, refreshToken)
+                    if self.tryRefreshToken():
                         return self.postPackDataAndGetUnpackRespData(
                             path, bdata, ttype, encType, headers
                         )
