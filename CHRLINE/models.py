@@ -659,12 +659,13 @@ class Models(object):
             f"Invalid response status code: {res.status_code}, Headers: {res.headers}"
         )
 
-    def getCurrReqId(self):
+    def getCurrReqId(self, whatFor: str = ''):
         self._msgSeq = 0
-        if "_reqseq" in self.custom_data:
-            self._msgSeq = self.custom_data["_reqseq"]
+        unitKey = f"{whatFor}_reqseq"
+        if unitKey in self.custom_data:
+            self._msgSeq = self.custom_data[unitKey]
         self._msgSeq += 1
-        self.custom_data["_reqseq"] = self._msgSeq
+        self.custom_data[unitKey] = self._msgSeq
         self.saveCustomData()
         return self._msgSeq
 
