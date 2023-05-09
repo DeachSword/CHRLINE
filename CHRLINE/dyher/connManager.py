@@ -62,6 +62,8 @@ class ConnManager(object):
             if service == 3:
                 subscriptionId = int(time.time() * 1000)
                 syncToken = ""
+                if self.line_client.eventSyncToken is not None:
+                    syncToken = str(self.line_client.eventSyncToken)
                 ex_val = {
                     "subscriptionId": subscriptionId,
                     "syncToken": syncToken,
@@ -69,6 +71,7 @@ class ConnManager(object):
                 cl.log(
                     f"[SQ_FETCHER][SQ] request fetchMyEvent({subscriptionId}), syncToken:{syncToken}"
                 )
+                self.subscriptionIds = {}  # clear
             elif service == 5:
                 ex_val = {
                     "revision": self.line_client.revision,
@@ -78,6 +81,7 @@ class ConnManager(object):
                     "fullSyncRequestReason": None,
                     "lastPartialFullSyncs": None,
                 }
+                cl.log(f"[FETCHER] request talk fetcher: {ex_val}")
             self.buildAndSendSignOnRequest(_conn, service, **ex_val)
         cl.log(f"[PUSH] CONN start read push.")
         _conn.read()
@@ -331,6 +335,11 @@ class ConnManager(object):
             True,
         )
         if serviceType == 3:
+            if cl.subscriptionId != subscriptionId:
+                cl.log(
+                    f"[SQ_FETCHER][PUSH] subscriptionId not sync: {cl.subscriptionId} -> {subscriptionId},",
+                )
+                cl.subscriptionId = subscriptionId
             for event in self.line_client._Poll__fetchMyEvents():
                 _type = cl.checkAndGetValue(event, "type", 3)
                 cl.log(
@@ -352,7 +361,7 @@ class ConnManager(object):
         t1 = time.time()
         for subscriptionId in self.subscriptionIds.keys():
             t2 = self.subscriptionIds[subscriptionId]
-            if (t1 - t2) >= 3600:
+            if (t1 - t2) >= 3000:
                 self.subscriptionIds[subscriptionId] = time.time()
                 refreshIds.append(subscriptionId)
         if refreshIds:
