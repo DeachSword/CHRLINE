@@ -1562,97 +1562,57 @@ class TalkService(BaseService):
             self.LINE_NORMAL_ENDPOINT, sqrd, readWith=f"TalkService.{METHOD_NAME}"
         )
 
-    def getChatRoomAnnouncements(self, chatRoomMid):
+    def getChatRoomAnnouncements(self, chatRoomMid: str):
+        """Get chat room announcements."""
         METHOD_NAME = "getChatRoomAnnouncements"
-        sqrd = (
-            [128, 1, 0, 1]
-            + self.getStringBytes("getChatRoomAnnouncements")
-            + [0, 0, 0, 0]
-        )
-        sqrd += [11, 0, 2] + self.getStringBytes(chatRoomMid)
-        sqrd += [0]
+        params = [[11, 2, chatRoomMid]]
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
         return self.postPackDataAndGetUnpackRespData(
             self.LINE_NORMAL_ENDPOINT, sqrd, readWith=f"TalkService.{METHOD_NAME}"
         )
 
-    def removeChatRoomAnnouncement(self, chatRoomMid, announcementSeq):
+    def removeChatRoomAnnouncement(self, chatRoomMid: str, announcementSeq: int):
+        """Remove chat room announcement."""
         METHOD_NAME = "removeChatRoomAnnouncement"
-        sqrd = [
-            128,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0,
-            26,
-            114,
-            101,
-            109,
-            111,
-            118,
-            101,
-            67,
-            104,
-            97,
-            116,
-            82,
-            111,
-            111,
-            109,
-            65,
-            110,
-            110,
-            111,
-            117,
-            110,
-            99,
-            101,
-            109,
-            101,
-            110,
-            116,
-            0,
-            0,
-            0,
-            0,
+        params = [
+            [8, 1, 0],
+            [11, 2, chatRoomMid],
+            [10, 3, announcementSeq],
         ]
-        sqrd += [8, 0, 1, 0, 0, 0, 0]
-        sqrd += [11, 0, 2, 0, len(chatRoomMid)]
-        for value in chatRoomMid:
-            sqrd.append(ord(value))
-        sqrd += [10, 0, 3] + self.getIntBytes(int(announcementSeq), 8)
-        sqrd += [0]
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
         return self.postPackDataAndGetUnpackRespData(
             self.LINE_NORMAL_ENDPOINT, sqrd, readWith=f"TalkService.{METHOD_NAME}"
         )
 
     def createChatRoomAnnouncement(
         self,
-        chatRoomMid,
-        text,
-        link="",
-        thumbnail="",
-        type=0,
-        displayFields=5,
-        contentMetadata=None,
+        chatRoomMid: str,
+        text: str,
+        link: str,
+        thumbnail: str = None,
+        type: int = 0,
+        displayFields: int = 5,
+        contentMetadata: str = None,
+        replace: str = None,
+        sticonOwnership: str = None,
+        postNotificationMetadata: str = None,
     ):
+        """Create chat room announcement."""
         METHOD_NAME = "createChatRoomAnnouncement"
-        sqrd = (
-            [128, 1, 0, 1]
-            + self.getStringBytes("createChatRoomAnnouncement")
-            + [0, 0, 0, 0]
-        )
-        sqrd += [8, 0, 1] + self.getIntBytes(0)  # reqSeq
-        sqrd += [11, 0, 2] + self.getStringBytes(chatRoomMid)
-        sqrd += [8, 0, 3] + self.getIntBytes(type)
-        sqrd += [12, 0, 4]
-        sqrd += [8, 0, 1] + self.getIntBytes(displayFields)
-        sqrd += [11, 0, 2] + self.getStringBytes(text)
-        sqrd += [11, 0, 3] + self.getStringBytes(link)
-        sqrd += [11, 0, 4] + self.getStringBytes(thumbnail)
-        # sqrd += [12, 0, 5] #contentMetadata
-        sqrd += [0, 0]
+        contentMetadata = [
+            [11, 1, replace],
+            [11, 2, sticonOwnership],
+            [11, 3, postNotificationMetadata],
+        ]
+        contents = [
+            [8, 1, displayFields],
+            [11, 2, text],
+            [11, 3, link],
+            [11, 4, thumbnail],
+            [12, 5, contentMetadata],
+        ]
+        params = [[8, 1, 0], [11, 2, chatRoomMid], [8, 3, type], [12, 4, contents]]
+        sqrd = self.generateDummyProtocol(METHOD_NAME, params, 4)
         return self.postPackDataAndGetUnpackRespData(
             self.LINE_NORMAL_ENDPOINT, sqrd, readWith=f"TalkService.{METHOD_NAME}"
         )
