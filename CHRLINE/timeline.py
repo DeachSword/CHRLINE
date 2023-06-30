@@ -549,6 +549,7 @@ class Timeline:
         mediaObjectIds: list = None,
         mediaObjectTypes: list = None,
         sourceType: str = "TIMELINE",
+        textMeta: list = []
     ):
         """
         - readPermissionType:
@@ -654,6 +655,8 @@ class Timeline:
             contents["text"] = text
         if sharedPostId is not None:
             contents["sharedPostId"] = sharedPostId
+        if textMeta is not None:
+            contents["textMeta"] = textMeta
         data = {"postInfo": postInfo, "contents": contents}
         hr = self.server.additionalHeaders(
             self.server.timelineHeaders,
@@ -663,7 +666,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/create.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/create.json", params
         )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
@@ -680,7 +683,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/update.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/update.json", params
         )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
@@ -696,7 +699,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/delete.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/delete.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -712,7 +715,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/get.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/get.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -740,7 +743,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/list.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/list.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -803,7 +806,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/comment/create.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/comment/create.json", params
         )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
@@ -819,7 +822,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/comment/delete.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/comment/delete.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -844,7 +847,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/comment/getList.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/comment/getList.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -873,7 +876,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/like/create.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/like/create.json", params
         )
         r = self.server.postContent(url, headers=hr, json=data)
         return r.json()
@@ -889,7 +892,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v41/like/cancel.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v41/like/cancel.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -920,7 +923,7 @@ class Timeline:
             },
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v41/like/getList.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v41/like/getList.json", params
         )
         r = self.server.postContent(url, headers=hr)
         return r.json()
@@ -949,7 +952,7 @@ class Timeline:
     def sendPostToTalk(self, postId: str, receiveMids: list):
         data = {"postId": postId, "receiveMids": receiveMids}
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/post/sendPostToTalk.json", {}
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/post/sendPostToTalk.json", {}
         )
         hr = self.server.additionalHeaders(
             self.server.timelineHeaders,
@@ -1488,7 +1491,7 @@ class Timeline:
             {"x-lhm": "GET", "content-type": "application/json"},
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/otoaccount/sync.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/otoaccount/sync.json", params
         )
         r = self.server.postContent(url, headers=hr)
         resp = r.json()
@@ -1496,7 +1499,7 @@ class Timeline:
             # update oto accounts cache.
             result = resp.get("result")
             if result is None:
-                self.log(f"Can't update oto accounts.")
+                self.log(f"Can't update oto accounts: {resp}")
             else:
                 updated = result.get("updated", [])
                 for i in updated:
@@ -1515,7 +1518,7 @@ class Timeline:
             {"x-lhm": "POST", "content-type": "application/json"},
         )
         url = self.server.urlEncode(
-            self.LINE_HOST_DOMAIN, "/mh/api/v57/otoaccount/create.json", params
+            self.LINE_HOST_DOMAIN, "/ext/note/nt/api/v57/otoaccount/create.json", params
         )
         r = self.server.postContent(url, json=params, headers=hr)
         return r.json()
