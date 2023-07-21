@@ -127,6 +127,8 @@ class CHRLINE(
     def initAll(self):
         self.checkNextToken(False)
         self.profile = self.getProfile()
+        if self.profile is None:
+            raise RuntimeError(f"Can't get user profile, maybe the device version {self.APP_VER} is too old.\nTry use CHRLINE(..., version='...') to set new version.")
         __profile_err = self.checkAndGetValue(self.profile, "error")
         if __profile_err is not None:
             self.log(f"登入失敗... {__profile_err}")

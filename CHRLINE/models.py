@@ -427,6 +427,14 @@ class Models(object):
                     if path in [self.LINE_NORMAL_ENDPOINT, "/S4"]:
                         path = "/S5"
                         ttype = 5
+                else:
+                    # 2023/07/21 PATCH.
+                    # on new version || CHROMEOS
+                    # bin protocol will got timeout and respone None.
+                    if path == self.LINE_NORMAL_ENDPOINT:
+                        ttype = 4
+                        path = "/S4"
+
                 bdata.protocol = ttype
         headers["x-lal"] = self.LINE_LANGUAGE
         if encType is None:
@@ -437,7 +445,6 @@ class Models(object):
             headers[
                 "origin"
             ] = "chrome-extension://CHRLINE-v2.5.0-rc-will-not-be-released"
-
         data = bdata
         if type(data) in [DummyProtocolSerializer, list]:
             data = bdata = bytes(bdata)
