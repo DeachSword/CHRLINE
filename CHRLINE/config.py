@@ -130,7 +130,7 @@ class Config(object):
         r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\""
     )
 
-    TOKEN_V3_SUPPORT = ["DESKTOPWIN", "DESKTOPMAC"]
+    TOKEN_V3_SUPPORT = ["DESKTOPWIN", "DESKTOPMAC", "CHROMEOS"]
     SYNC_SUPPORT = ["IOS", "IOSIPAD", "ANDROID", "CHROMEOS"]
 
     def __init__(self, type="CHROME"):
@@ -145,8 +145,8 @@ class Config(object):
             self.APP_VER = "7.16.1.3000"
             self.SYSTEM_NAME = "MAC"
         elif type == "CHROMEOS":
-            self.APP_VER = "3.0.2"
-            self.SYSTEM_NAME = "Chrome OS"
+            self.APP_VER = "3.0.3"
+            self.SYSTEM_NAME = "Chrome_OS"  # for TokenV3.1
             self.SYSTEM_VER = "1"
         # elif type == "ANDROIDLITE":
         # self.APP_VER = "2.17.1"
