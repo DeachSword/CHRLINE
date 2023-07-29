@@ -236,3 +236,43 @@ class PrimaryAccountInitService(object):
         ]
         sqrd = self.generateDummyProtocol('lookupAvailableEap', params, 4)
         return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 4, headers=self.register_headers)
+    
+    def getAllowedRegistrationMethod(self, authSessionId: str, countryCode: str):
+        """
+        Get allowed registration method.
+        
+        ---
+        1: Phone - getPhoneVerifMethodV2
+        2: Eap   - verifyEapAccountForRegistration
+        """
+        params = [
+            [11, 1, authSessionId],
+            [11, 2, countryCode]
+        ]
+        sqrd = self.generateDummyProtocol('getAllowedRegistrationMethod', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 4, headers=self.register_headers)
+    
+    def verifyEapAccountForRegistration(self, authSessionId: str, _type: int, accessToken: str, countryCode: str, deviceModel="SM-N950F"):
+        """
+        Verify eap account for registration.
+        
+        - type:
+            UNKNOWN(0),
+            FACEBOOK(1),
+            APPLE(2),
+            GOOGLE(3);
+        """
+        params = [
+            [11, 1, authSessionId, "authSessionId"],
+            [12, 2, [
+                [11, 1, self.uuid, "udid"],
+                [11, 2, deviceModel, "deviceModel"]
+            ], "device", "Device"],
+            [12, 3, [
+                [8, 1, _type, "type"],
+                [11, 2, accessToken, "accessToken"],
+                [11, 3, countryCode, "accessToken"]
+            ], "socialLogin", "SocialLogin"],
+        ]
+        sqrd = self.generateDummyProtocol('verifyEapAccountForRegistration', params, 4)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 4, headers=self.register_headers)
