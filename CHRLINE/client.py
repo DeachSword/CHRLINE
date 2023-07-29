@@ -91,6 +91,10 @@ class CHRLINE(
         savePath: `str`
             Set base-save dir path.
         """
+        if device == "CHROMEOS" and version is None:
+            raise ValueError(
+                'Please specify the version of LINE for CHROMEOS: `CHRLINE(..., version="3")`\nor just use other device type to login: `CHRLINE(..., device="DESTOPWIN")`'
+            )
         self.encType = encType
         self.isDebug = debug
         self.customDataId = customDataId
@@ -128,7 +132,9 @@ class CHRLINE(
         self.checkNextToken(False)
         self.profile = self.getProfile()
         if self.profile is None:
-            raise RuntimeError(f"Can't get user profile, maybe the device version {self.APP_VER} is too old.\nTry use CHRLINE(..., version='...') to set new version.")
+            raise RuntimeError(
+                f"Can't get user profile, maybe the device version {self.APP_VER} is too old.\nTry use CHRLINE(..., version='...') to set new version."
+            )
         __profile_err = self.checkAndGetValue(self.profile, "error")
         if __profile_err is not None:
             self.log(f"登入失敗... {__profile_err}")
@@ -140,6 +146,7 @@ class CHRLINE(
             self.handleNextToken(b)
             return self.initAll()
         self.mid = self.checkAndGetValue(self.profile, "mid", 1)
+        assert self.mid is not None
         __displayName = self.checkAndGetValue(self.profile, "displayName", 20)
         self.log(f"[{__displayName}] 登入成功 ({self.mid}) / {self.DEVICE_TYPE}")
         if self.customDataId is None:
