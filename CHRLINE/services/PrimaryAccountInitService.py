@@ -276,3 +276,10 @@ class PrimaryAccountInitService(object):
         ]
         sqrd = self.generateDummyProtocol('verifyEapAccountForRegistration', params, 4)
         return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 4, headers=self.register_headers)
+
+    def registerPrimaryUsingEapAccount(self, authSessionId):
+        params = [
+            [11, 1, authSessionId]
+        ]      
+        sqrd = self.generateDummyProtocol('registerPrimaryUsingEapAccount', params, 3)
+        return self.postPackDataAndGetUnpackRespData("/acct/pais/v1" ,sqrd, 3, headers=self.register_headers)
