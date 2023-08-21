@@ -30,7 +30,7 @@ class Helpers(object, metaclass=abc.ABCMeta):
     def sendLiff(
         self,
         to,
-        messages,
+        messages_,
         tryConsent=True,
         forceIssue=False,
         liffId="1562242036-RW04okm",
@@ -57,7 +57,7 @@ class Helpers(object, metaclass=abc.ABCMeta):
                         hasConsent = self.tryConsentLiff(channelId)
                     if hasConsent:
                         return self.sendLiff(
-                            to, messages, tryConsent=False, liffId=liffId
+                            to, messages_, tryConsent=False, liffId=liffId
                         )
                 raise Exception(f"Failed to send Liff: {to}")
             except Exception as e:
@@ -76,10 +76,10 @@ class Helpers(object, metaclass=abc.ABCMeta):
             "X-Requested-With": "jp.naver.line.android",
         }
         liff_headers["authorization"] = "Bearer %s" % (token)
-        if type(messages) == list:
-            messages = {"messages": messages}
+        if type(messages_) == list:
+            messages = {"messages": messages_}
         else:
-            messages = {"messages": [messages]}
+            messages = {"messages": [messages_]}
         resp = self.server.postContent(
             "https://api.line.me/message/v3/share",
             headers=liff_headers,
@@ -88,7 +88,7 @@ class Helpers(object, metaclass=abc.ABCMeta):
         if resp.status_code == 200:
             self.liff_token_cache[cache_key] = token
         elif use_cache:
-            return self.sendLiff(to, messages, False, True, liffId)
+            return self.sendLiff(to, messages_, False, True, liffId)
         return resp.text
 
     def tryConsentLiff(self, channelId, on=None, referer=None):
