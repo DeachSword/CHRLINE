@@ -57,7 +57,7 @@ phone2 = cl.getPhoneVerifMethodV2(session, phone, region)
 print(f"[PHONE] {phone2[3]}")
 print(f"[VerifMethod] {phone2[1]}") # if it is not include number 1, maybe will return error
 
-sendPin = cl.requestToSendPhonePinCode(session, phone, region, phone2[1][0])
+sendPin = cl.requestToSendPhonePinCode(session, phone2[3], region, phone2[1][0])
 print(f"[SEND PIN CODE] {sendPin}")
 
 pin = input('Enter Pin code: ')
