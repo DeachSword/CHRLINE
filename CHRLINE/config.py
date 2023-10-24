@@ -117,10 +117,10 @@ class Config(object):
     LINE_LANGUAGE = "zh-Hant_TW"
     LINE_SERVICE_REGION = "TW"
 
-    APP_TYPE = "CHROMEOS"
-    APP_VER = "11.19.2"
-    SYSTEM_NAME = "DeachSword"
-    SYSTEM_VER = "12.1.4"
+    APP_TYPE = "IOSIPAD"
+    APP_VER = "13.16.0"
+    SYSTEM_NAME = "iOS"
+    SYSTEM_VER = "15.0.1"
     IP_ADDR = "8.8.8.8"
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
     CONSENT_CHANNEL_ID_REGEX = re.compile(
@@ -130,43 +130,45 @@ class Config(object):
         r"<input type=\"hidden\" name=\"__csrf\" id=\"__csrf\" value=\"([^\"]+)\""
     )
 
-    TOKEN_V3_SUPPORT = ["DESKTOPWIN", "DESKTOPMAC", "CHROMEOS"]
+    TOKEN_V3_SUPPORT = ["DESKTOPWIN", "DESKTOPMAC", "CHROMEOS", "ANDROIDSECONDARY"]
     SYNC_SUPPORT = ["IOS", "IOSIPAD", "ANDROID", "CHROMEOS"]
 
-    def __init__(self, type="CHROME"):
+    def __init__(self, type="IOSIPAD"):
         self.APP_NAME = None
         self.DEVICE_TYPE = type
         self.isSecondary = False
         if type == "DESKTOPWIN":
-            self.APP_VER = "7.16.1.3000"
+            self.APP_VER = "8.3.0.3186"
             self.SYSTEM_NAME = "WINDOWS"
             self.SYSTEM_VER = "10.0.0-NT-x64"
         elif type == "DESKTOPMAC":
-            self.APP_VER = "7.16.1.3000"
+            self.APP_VER = "8.3.0"
             self.SYSTEM_NAME = "MAC"
+            self.SYSTEM_VER = "13.0.1 22A400"
         elif type == "CHROMEOS":
             self.APP_VER = "3.0.3"
             self.SYSTEM_NAME = "Chrome_OS"  # for TokenV3.1
             self.SYSTEM_VER = "1"
-        # elif type == "ANDROIDLITE":
-        # self.APP_VER = "2.17.1"
-        # self.SYSTEM_NAME = "Android OS"
-        # self.isSecondary = True
         elif type in ["ANDROID", "ANDROIDSECONDARY"]:
-            self.APP_VER = "13.4.1"
+            self.APP_VER = "13.16.2"
             self.SYSTEM_NAME = "Android OS"
+            self.SYSTEM_VER = "12"
         elif type == "IOS":
-            self.APP_VER = "13.3.0"
+            self.APP_VER = "13.16.0"
             self.SYSTEM_NAME = "iOS"
+            self.SYSTEM_VER = "15.0.1"
         elif type == "IOSIPAD":
-            self.APP_VER = "13.3.0"
+            self.APP_VER = "13.16.0"
             self.SYSTEM_NAME = "iOS"
+            self.SYSTEM_VER = "15.0.1"
         elif type == "WATCHOS":
-            self.APP_VER = "13.3.0"
+            self.APP_VER = "13.16.0"
             self.SYSTEM_NAME = "Watch OS"
+            self.SYSTEM_VER = "15.0.1" #iOS os ?
         elif type == "WEAROS":
-            self.APP_VER = "13.4.1"
+            self.APP_VER = "13.16.2"
             self.SYSTEM_NAME = "Wear OS"
+            self.SYSTEM_VER = "12"
         elif type == "OPENCHAT_PLUS":
             pass
         elif type == "CHANNELGW":
